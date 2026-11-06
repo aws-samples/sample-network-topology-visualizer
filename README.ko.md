@@ -87,7 +87,7 @@ aws s3api put-public-access-block --bucket "$PKG_BUCKET" \
 aws s3 cp out/nettopo-source.zip "s3://$PKG_BUCKET/nettopo-source.zip" \
   --sse AES256 --profile "$PROFILE" --region "$REGION"
 
-# 2. 스택 A(수집기) 올리기 (약 15분)
+# 2. 스택 A(수집기) 올리기 (수 분 · 시험에서는 약 2분)
 aws cloudformation deploy \
   --template-file infra/stack-a-collector.yaml \
   --stack-name nettopo-collector \
