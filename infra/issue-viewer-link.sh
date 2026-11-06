@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 스택 C 의 「보는 링크」(CloudFront 서명 URL, 고정 정책)를 만든다 — ADR 0003 D2-2 · 런북 5단계.
+# 스택 C 의 「보는 링크」(CloudFront 서명 URL, 고정 정책)를 만든다 — 안내서 docs/install-guide.md 6단계.
 #
 #   infra/issue-viewer-link.sh --stack nettopo-viewer --region <스택 A·C 리전> --profile <프로필> \
 #     --key <비밀키.pem> --days <일수>  > link.txt
@@ -81,7 +81,7 @@ fi
 
 printf '%s?Expires=%s&Signature=%s&Key-Pair-Id=%s&Hash-Algorithm=SHA256\n' "$resource" "$expires" "$signature" "$keypair"
 when=$(date -u -d "@$expires" '+%Y-%m-%d %H:%M UTC' 2>/dev/null || date -u -r "$expires" '+%Y-%m-%d %H:%M UTC')
-echo "만료: $when · 이 링크를 가진 사람은 누구나 본다 · 전부 무효화 = 키 교체(런북 5단계)" >&2
+echo "만료: $when · 이 링크를 가진 사람은 누구나 본다 · 전부 무효화 = 키 교체(docs/install-guide.md 6단계)" >&2
 
 # 발급 기록(#141) — 「만료 · Key-Pair-Id · 발급 시각」 한 줄. 링크·서명은 적지 않는다.
 # 키를 겹쳐 교체할 때 deploy.sh 가 이 기록에서 「옛 키로 낸 링크의 가장 늦은 만료」 = 옛 키를 빼도 되는 때를 읽는다.
