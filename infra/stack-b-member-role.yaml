@@ -1,0 +1,532 @@
+# NetworkTopology Stack B - read-only role for a source account (NetworkReadOnlyRole). One per account; deploy directly or via StackSets.
+# Usage, parameters and clean-up: README.md; security design and data handling: SECURITY.md.
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >-
+  NetworkTopology member account role - a read-only role that only the hub account's collector principals can assume
+  (46 network read actions + cloudwatch:GetMetricData
+  + 9 optional evidence probes + 2 service quota reads, +6 only when flow log reading is on, 0 writes).
+
+Parameters:
+  HubAccountId:
+    Type: String
+    Description: 12-digit ID of the hub account that runs collection. It is only passed as a parameter, never stored in the repository.
+    AllowedPattern: "^[0-9]{12}$"
+    ConstraintDescription: Must be a 12-digit account ID.
+
+  RoleName:
+    Type: String
+    Default: NetworkReadOnlyRole
+    Description: >-
+      Role name. The default must match `DEFAULT_ROLE_NAME` in `engine/src/nettopo/cli.py:46` and Stack A's
+      `MemberRoleName`. If you change it, change all three places together:
+      (1) `--role-name` when collecting, (2) Stack A `MemberRoleName` (BuildRole's `sts:AssumeRole` is scoped
+      to this name), (3) if a person collects from the hub, the inline policy of that IdC permission set
+      (when its `sts:AssumeRole` is scoped to the role name - miss it and the hub identity gets
+      AccessDenied even when the trust policy is right).
+
+  HubPermissionSetName:
+    Type: String
+    Default: ""
+    Description: >-
+      Optional. IdC permission set name a person uses to collect from the hub account with the local CLI.
+      Leave empty to not trust people (scheduled collection and 5-minute observation still work). IdC adds a
+      random suffix to the role name, so the condition matches it with `*`.
+
+  HubPermissionSetNameExtra:
+    Type: String
+    Default: ""
+    Description: >-
+      Optional extra hub permission set to trust, e.g. the one a person uses to check tier-2 metrics
+      locally. Leave empty to add nothing.
+
+  HubCollectorRoleNamePattern:
+    Type: String
+    Default: nettopo-collector-BuildRole-*
+    Description: >-
+      Physical name pattern of Stack A's CodeBuild role. Stack A does not set `RoleName`, so
+      CloudFormation names it `<stack name>-BuildRole-<random>` - check the real name before deploying
+      (`aws cloudformation describe-stack-resource --stack-name nettopo-collector
+      --logical-resource-id BuildRole`). The default does not match if Stack A has another stack name.
+
+  HubStateRoleNamePattern:
+    Type: String
+    Default: nettopo-collector-StateRole-*
+    Description: >-
+      Physical name pattern of Stack A's state-tier Lambda role (`<stack name>-StateRole-<random>`).
+      Leave empty and the 5-minute observation cannot enter this account.
+
+  ExternalId:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^[-\\w+=,.@:/]{2,1224}$"
+    Description: >-
+      Optional. If set, the role can be assumed only with this external ID (sts:ExternalId); give the same
+      value to Stack A `MemberExternalId`. Empty = no external ID condition (unchanged behavior).
+
+  PrincipalOrgId:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^o-[a-z0-9]{10,32}$"
+    Description: >-
+      Optional. If set (o-...), only principals in this AWS Organizations organization can assume the role
+      (aws:PrincipalOrgID) - the hub account must be in the same organization. Empty = no organization condition.
+
+  AllowedRegions:
+    Type: CommaDelimitedList
+    Default: us-east-1,us-west-2,ap-northeast-2
+    Description: >-
+      Collection regions allowed via `aws:RequestedRegion`. When you add collection regions, add them here too -
+      otherwise those regions get AccessDenied and stay `partial` in the snapshot (invariant 4).
+      Measured 2026-09-22: collecting with the engine's region discovery (17 active) while this stayed at the default 3
+      produced 168 `denied` rows = 14 regions x 12 types. That is a report, not a fault.
+      Leave empty to drop the condition and open all regions (not recommended).
+
+  FlowLogReading:
+    Type: String
+    Default: DISABLED
+    AllowedValues: [ENABLED, DISABLED]
+    Description: >-
+      Flow log reading. When ENABLED, VPC flow logs are read only in cycles where live monitoring is on, to confirm
+      traffic on internet and peering lines. When DISABLED, permissions and the screen are unchanged.
+
+  FlowLogGroupNamePrefixes:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^[-_./#A-Za-z0-9]*[A-Za-z0-9][-_./#A-Za-z0-9]*(,[-_./#A-Za-z0-9]*[A-Za-z0-9][-_./#A-Za-z0-9]*)*$"
+    Description: >-
+      CloudWatch Logs flow log group names to read (comma-separated). Use full group names - a short prefix also opens
+      application logs. Leave empty and flow logs delivered to CloudWatch Logs show as "no permission".
+
+  FlowLogCentralBucketArns:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^arn:aws[a-z-]*:s3:::[a-z0-9][a-z0-9.-]{1,61}[a-z0-9](,arn:aws[a-z-]*:s3:::[a-z0-9][a-z0-9.-]{1,61}[a-z0-9])*$"
+    Description: >-
+      ARNs of central flow log buckets in other accounts, e.g. log archive (comma-separated, no path). That bucket's policy
+      must also allow this member role. Buckets in this account are read without listing them.
+
+  FlowLogKmsKeyArns:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^arn:aws[a-z-]*:kms:[a-z0-9-]+:[0-9]{12}:key/(mrk-)?[-a-f0-9]+(,arn:aws[a-z-]*:kms:[a-z0-9-]+:[0-9]{12}:key/(mrk-)?[-a-f0-9]+)*$"
+    Description: >-
+      KMS customer-managed key ARNs that encrypt flow log buckets (comma separated, not aliases). If empty, flow logs in
+      SSE-KMS customer-key buckets show as "cannot decrypt with the KMS key". SSE-S3 and KMS log groups are read without it.
+
+Conditions:
+  NoRegionsGiven: !Equals [!Join ["", !Ref AllowedRegions], ""]
+  NoPermissionSet: !Equals [!Ref HubPermissionSetName, ""]
+  HasPermissionSet: !Not [!Equals [!Ref HubPermissionSetName, ""]]
+  NoExtraPermissionSet: !Equals [!Ref HubPermissionSetNameExtra, ""]
+  HasExtraPermissionSet: !Not [!Equals [!Ref HubPermissionSetNameExtra, ""]]
+  NoStateRolePattern: !Equals [!Ref HubStateRoleNamePattern, ""]
+  HasExternalId: !Not [!Equals [!Ref ExternalId, ""]]
+  HasPrincipalOrgId: !Not [!Equals [!Ref PrincipalOrgId, ""]]
+  HasTrustStringCondition: !Or [!Condition HasExternalId, !Condition HasPrincipalOrgId]
+  FlowLogsOn: !Equals [!Ref FlowLogReading, ENABLED]
+  HasGroupPrefixes: !And [!Condition FlowLogsOn, !Not [!Equals [!Ref FlowLogGroupNamePrefixes, ""]]]
+  HasCentralBuckets: !And [!Condition FlowLogsOn, !Not [!Equals [!Ref FlowLogCentralBucketArns, ""]]]
+  HasKmsKeys: !And [!Condition FlowLogsOn, !Not [!Equals [!Ref FlowLogKmsKeyArns, ""]]]
+
+Resources:
+  MemberRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Ref RoleName
+      Description: !Sub "NetworkTopology read-only collection entry point (hub ${HubAccountId})"
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: OnlyTheCollectorPrincipalsInTheHubAccount
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:${AWS::Partition}:iam::${HubAccountId}:root"
+            Action: sts:AssumeRole
+            Condition:
+              ArnLike:
+                aws:PrincipalArn:
+                  - !If
+                    - NoPermissionSet
+                    - !Ref "AWS::NoValue"
+                    - !Sub "arn:${AWS::Partition}:iam::${HubAccountId}:role/aws-reserved/sso.amazonaws.com/*AWSReservedSSO_${HubPermissionSetName}_*"
+                  - !If
+                    - NoExtraPermissionSet
+                    - !Ref "AWS::NoValue"
+                    - !Sub "arn:${AWS::Partition}:iam::${HubAccountId}:role/aws-reserved/sso.amazonaws.com/*AWSReservedSSO_${HubPermissionSetNameExtra}_*"
+                  - !Sub "arn:${AWS::Partition}:iam::${HubAccountId}:role/${HubCollectorRoleNamePattern}"
+                  - !If
+                    - NoStateRolePattern
+                    - !Ref "AWS::NoValue"
+                    - !Sub "arn:${AWS::Partition}:iam::${HubAccountId}:role/${HubStateRoleNamePattern}"
+              # Optional hardening - both empty = no extra condition (unchanged behavior)
+              StringEquals: !If
+                - HasTrustStringCondition
+                - sts:ExternalId: !If [HasExternalId, !Ref ExternalId, !Ref "AWS::NoValue"]
+                  aws:PrincipalOrgID: !If [HasPrincipalOrgId, !Ref PrincipalOrgId, !Ref "AWS::NoValue"]
+                - !Ref "AWS::NoValue"
+      Policies:
+        - PolicyName: ReadNetworkTopology
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadNetworkTopology
+                Effect: Allow
+                Action:
+                  - ec2:DescribeVpcs
+                  - ec2:DescribeSubnets
+                  - ec2:DescribeRouteTables
+                  - ec2:DescribeInternetGateways
+                  - ec2:DescribeNatGateways
+                  - ec2:DescribeTransitGateways
+                  - ec2:DescribeTransitGatewayAttachments
+                  - ec2:DescribeVpcPeeringConnections
+                  - ec2:DescribeVpcEndpoints
+                  - ec2:DescribeVpcEndpointServiceConfigurations
+                  - ec2:DescribeVpcEndpointServices
+                  - ec2:DescribeSecurityGroups
+                  - ec2:DescribeNetworkAcls
+                  - ec2:DescribeNetworkInterfaces
+                  - elasticloadbalancing:DescribeLoadBalancers
+                  - elasticloadbalancing:DescribeListeners
+                  - elasticloadbalancing:DescribeTargetGroups
+                  - elasticloadbalancing:DescribeTargetHealth
+                  - elasticloadbalancing:DescribeTags
+                  - elasticloadbalancing:DescribeRules
+                  - elasticloadbalancing:DescribeListenerCertificates
+                  - wafv2:GetWebACLForResource
+                  - wafv2:GetWebACL
+                  - wafv2:ListWebACLs
+                  - wafv2:ListResourcesForWebACL
+                  - directconnect:DescribeConnections
+                  - directconnect:DescribeVirtualInterfaces
+                  - directconnect:DescribeDirectConnectGateways
+                  - directconnect:DescribeDirectConnectGatewayAssociations
+                  - ec2:DescribeInstances
+                  - autoscaling:DescribeAutoScalingGroups
+                  - eks:ListClusters
+                  - eks:DescribeCluster
+                  - network-firewall:ListFirewalls
+                  - network-firewall:DescribeFirewall
+                  - ec2:DescribeTransitGatewayRouteTables
+                  - ec2:GetTransitGatewayRouteTableAssociations
+                  - ec2:GetTransitGatewayRouteTablePropagations
+                  - ec2:SearchTransitGatewayRoutes
+                  - ec2:GetTransitGatewayPrefixListReferences
+                  - ec2:DescribeTransitGatewayVpcAttachments
+                  - ec2:DescribeVpcAttribute
+                  - ec2:DescribeDhcpOptions
+                  - ec2:DescribeInstanceConnectEndpoints
+                  - rds:DescribeDBInstances
+                  - ecs:ListClusters
+                  - ecs:ListServices
+                  - ecs:DescribeServices
+                  - sagemaker:ListNotebookInstances
+                  - sagemaker:DescribeNotebookInstance
+                  - sagemaker:ListDomains
+                  - sagemaker:DescribeDomain
+                  - sagemaker:ListEndpoints
+                  - sagemaker:DescribeEndpoint
+                  - sagemaker:DescribeEndpointConfig
+                  - sagemaker:DescribeModel
+                  - ec2:DescribeVpnGateways
+                  - ec2:DescribeCustomerGateways
+                  - lambda:ListFunctions
+                  - ec2:DescribeVpnConnections
+                  - elasticache:DescribeCacheClusters
+                  - elasticache:DescribeCacheSubnetGroups
+                  - elasticache:DescribeReplicationGroups
+                  - rds:DescribeDBClusters
+                  - rds:DescribeDBSubnetGroups
+                  - es:ListDomainNames
+                  - es:DescribeDomains
+                  - kafka:ListClustersV2
+                  - kafka:ListNodes
+                  - ec2:DescribeManagedPrefixLists
+                  - ec2:GetManagedPrefixListEntries
+                  - ec2:DescribeAddresses
+                  - rds:DescribeDBProxies
+                  - rds:DescribeDBProxyTargets
+                  - ec2:DescribeTransitGatewayConnects
+                  - ec2:DescribeTransitGatewayConnectPeers
+                  - vpc-lattice:ListServiceNetworks
+                  - vpc-lattice:ListServiceNetworkVpcAssociations
+                  - vpc-lattice:ListServiceNetworkServiceAssociations
+                  - vpc-lattice:ListServices
+                  - vpc-lattice:ListTargetGroups
+                  - vpc-lattice:ListTargets
+                Resource: "*"
+                Condition: !If
+                  - NoRegionsGiven
+                  - !Ref "AWS::NoValue"
+                  - StringEquals:
+                      aws:RequestedRegion: !Ref AllowedRegions
+              # 배치 D(2.10.0) — API Gateway 는 액션이 `apigateway:GET` 하나뿐이라 **경로 ARN** 으로 좁힌다(와일드카드 액션 없음 ·
+              #   REST `GetRestApis`·`GetResources`·`GetVpcLinks` · HTTP `GetApis`·`GetIntegrations`·`GetVpcLinks`). 리전 조건은 수집 문장과 같다
+              - Sid: ReadApiGateway
+                Effect: Allow
+                Action:
+                  - apigateway:GET
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:apigateway:*::/restapis"
+                  - !Sub "arn:${AWS::Partition}:apigateway:*::/restapis/*/resources"
+                  - !Sub "arn:${AWS::Partition}:apigateway:*::/vpclinks"
+                  - !Sub "arn:${AWS::Partition}:apigateway:*::/apis"
+                  - !Sub "arn:${AWS::Partition}:apigateway:*::/apis/*/integrations"
+                Condition: !If
+                  - NoRegionsGiven
+                  - !Ref "AWS::NoValue"
+                  - StringEquals:
+                      aws:RequestedRegion: !Ref AllowedRegions
+              # 배치 D(2.10.0) — Global Accelerator 의 API 는 us-west-2 에만 있다(수집 리전과 무관 · 엔진 `Spec.region`) — CloudFront 와 같은 이유로 별 문장
+              - Sid: ReadGlobalAccelerator
+                Effect: Allow
+                Action:
+                  - globalaccelerator:ListAccelerators
+                  - globalaccelerator:ListListeners
+                  - globalaccelerator:ListEndpointGroups
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: us-west-2
+              # #129(2.11.0) — Cloud WAN(Network Manager) API 도 us-west-2 에만 있다(엔진 `Spec.region` · Global Accelerator 와 같은 이유로 별 문장)
+              - Sid: ReadCloudWan
+                Effect: Allow
+                Action:
+                  - networkmanager:ListCoreNetworks
+                  - networkmanager:ListAttachments
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: us-west-2
+              - Sid: ReadCloudFrontGlobal
+                Effect: Allow
+                Action:
+                  - cloudfront:ListDistributions
+                  - cloudfront:ListVpcOrigins
+                  - cloudfront:ListCachePolicies
+                  - cloudfront:ListOriginAccessControls
+                  - route53:ListHostedZones
+                  - route53:ListResourceRecordSets
+                  - route53:GetHostedZone
+                  - wafv2:ListWebACLs
+                  - wafv2:GetWebACL
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: us-east-1
+              # Account name: no AccountId = the calling account only
+              - Sid: ReadAccountName
+                Effect: Allow
+                Action:
+                  - account:GetAccountInformation
+                Resource: !Sub "arn:${AWS::Partition}:account::${AWS::AccountId}:account"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: us-east-1
+              - Sid: ReadFlowMetrics
+                Effect: Allow
+                Action:
+                  - cloudwatch:GetMetricData
+                Resource: "*"
+                Condition: !If
+                  - NoRegionsGiven
+                  - !Ref "AWS::NoValue"
+                  - StringEquals:
+                      aws:RequestedRegion: !Ref AllowedRegions
+              - Sid: ReadCloudFrontMetrics
+                Effect: Allow
+                Action:
+                  - cloudwatch:GetMetricData
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: [us-east-1, us-west-2]
+              - Sid: ReadServiceQuotas
+                Effect: Allow
+                Action:
+                  - servicequotas:GetServiceQuota
+                  - servicequotas:GetAWSDefaultServiceQuota
+                Resource: "*"
+                Condition: !If
+                  - NoRegionsGiven
+                  - !Ref "AWS::NoValue"
+                  - StringEquals:
+                      aws:RequestedRegion: !Ref AllowedRegions
+              - Sid: DetectOptionalEvidence
+                Effect: Allow
+                Action:
+                  - ec2:DescribeFlowLogs
+                  - ec2:DescribeInstances
+                  - ec2:DescribeVpnConnections
+                  - ecs:ListClusters
+                  - ecs:DescribeClusters
+                  - eks:ListClusters
+                  - eks:DescribeAddon
+                  - logs:DescribeDeliverySources
+                  - route53resolver:ListResolverEndpoints
+                Resource: "*"
+                Condition: !If
+                  - NoRegionsGiven
+                  - !Ref "AWS::NoValue"
+                  - StringEquals:
+                      aws:RequestedRegion: !Ref AllowedRegions
+
+  MemberFlowLogFindPolicy:
+    Type: AWS::IAM::RolePolicy
+    Condition: FlowLogsOn
+    Properties:
+      RoleName: !Ref MemberRole
+      PolicyName: MemberFlowLogFind
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: FlowLogFindGroups
+            Effect: Allow
+            Action: logs:DescribeLogGroups
+            Resource: !Sub "arn:${AWS::Partition}:logs:*:${AWS::AccountId}:log-group:*"
+            Condition: !If
+              - NoRegionsGiven
+              - !Ref "AWS::NoValue"
+              - StringEquals:
+                  aws:RequestedRegion: !Ref AllowedRegions
+          - Sid: FlowLogOwnBucketMeta
+            Effect: Allow
+            Action: s3:GetBucketLocation
+            Resource: !Sub "arn:${AWS::Partition}:s3:::*"
+            Condition:
+              StringEquals:
+                s3:ResourceAccount: !Ref "AWS::AccountId"
+          - Sid: FlowLogOwnBucketList
+            Effect: Allow
+            Action: s3:ListBucket
+            Resource: !Sub "arn:${AWS::Partition}:s3:::*"
+            Condition:
+              StringEquals:
+                s3:ResourceAccount: !Ref "AWS::AccountId"
+              StringLike:
+                s3:prefix:
+                  - !Sub "*AWSLogs/${AWS::AccountId}/vpcflowlogs/*"
+                  - !Sub "*AWSLogs/aws-account-id=${AWS::AccountId}/aws-service=vpcflowlogs/*"
+          - Sid: FlowLogOwnObjectRead
+            Effect: Allow
+            Action: s3:GetObject
+            Resource:
+              - !Sub "arn:${AWS::Partition}:s3:::*AWSLogs/${AWS::AccountId}/vpcflowlogs/*"
+              - !Sub "arn:${AWS::Partition}:s3:::*AWSLogs/aws-account-id=${AWS::AccountId}/aws-service=vpcflowlogs/*"
+            Condition:
+              StringEquals:
+                s3:ResourceAccount: !Ref "AWS::AccountId"
+
+  MemberFlowLogGroupsPolicy:
+    Type: AWS::IAM::RolePolicy
+    Condition: HasGroupPrefixes
+    Properties:
+      RoleName: !Ref MemberRole
+      PolicyName: MemberFlowLogGroups
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: FlowLogReadGroups
+            Effect: Allow
+            Action:
+              - logs:DescribeLogStreams
+              - logs:GetLogEvents
+            Resource: !Split
+              - ","
+              - !Sub
+                - "arn:*:logs:*:*:log-group:${Names}*"
+                - Names: !Join ["*,arn:*:logs:*:*:log-group:", !Split [",", !Ref FlowLogGroupNamePrefixes]]
+            Condition: !If
+              - NoRegionsGiven
+              - !Ref "AWS::NoValue"
+              - StringEquals:
+                  aws:RequestedRegion: !Ref AllowedRegions
+          - Sid: FlowLogReadGroupsOwnAccountOnly
+            Effect: Deny
+            Action:
+              - logs:DescribeLogStreams
+              - logs:GetLogEvents
+            NotResource: !Sub "arn:${AWS::Partition}:logs:*:${AWS::AccountId}:log-group:*"
+
+  MemberFlowLogCentralPolicy:
+    Type: AWS::IAM::RolePolicy
+    Condition: HasCentralBuckets
+    Properties:
+      RoleName: !Ref MemberRole
+      PolicyName: MemberFlowLogCentral
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: FlowLogCentralBucketMeta
+            Effect: Allow
+            Action: s3:GetBucketLocation
+            Resource: !Split [",", !Ref FlowLogCentralBucketArns]
+          - Sid: FlowLogCentralBucketList
+            Effect: Allow
+            Action: s3:ListBucket
+            Resource: !Split [",", !Ref FlowLogCentralBucketArns]
+            Condition:
+              StringLike:
+                s3:prefix:
+                  - !Sub "*AWSLogs/${AWS::AccountId}/vpcflowlogs/*"
+                  - !Sub "*AWSLogs/aws-account-id=${AWS::AccountId}/aws-service=vpcflowlogs/*"
+          - Sid: FlowLogCentralObjectRead
+            Effect: Allow
+            Action: s3:GetObject
+            Resource: !Split
+              - ","
+              - !Sub
+                - "${Arns}/*"
+                - Arns: !Join ["/*,", !Split [",", !Ref FlowLogCentralBucketArns]]
+          - Sid: FlowLogCentralOwnKeysOnly
+            Effect: Deny
+            Action: s3:GetObject
+            NotResource:
+              - !Sub "arn:${AWS::Partition}:s3:::*AWSLogs/${AWS::AccountId}/vpcflowlogs/*"
+              - !Sub "arn:${AWS::Partition}:s3:::*AWSLogs/aws-account-id=${AWS::AccountId}/aws-service=vpcflowlogs/*"
+            Condition:
+              StringNotEquals:
+                s3:ResourceAccount: !Ref "AWS::AccountId"
+
+  MemberFlowLogKmsPolicy:
+    Type: AWS::IAM::RolePolicy
+    Condition: HasKmsKeys
+    Properties:
+      RoleName: !Ref MemberRole
+      PolicyName: MemberFlowLogKms
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: FlowLogKmsDecryptViaS3
+            Effect: Allow
+            Action: kms:Decrypt
+            Resource: !Split [",", !Ref FlowLogKmsKeyArns]
+            Condition:
+              StringLike:
+                kms:ViaService: "s3.*.amazonaws.com"
+
+Outputs:
+  MemberRoleArn:
+    Description: Role ARN that collection assumes. Put this account ID in the hub's `--accounts` list.
+    Value: !GetAtt MemberRole.Arn
+
+  VerifyCommand:
+    Condition: HasPermissionSet
+    Description: >-
+      One-off probe that checks the trust. If assume fails, the snapshot only shows `coverage: denied`,
+      which looks the same as "no role at all" - run this after deploying and confirm it succeeds.
+    Value: !Sub >-
+      aws sts assume-role --role-arn ${MemberRole.Arn}
+      --role-session-name nettopo-verify --profile <hub-profile> --region ${AWS::Region}
+
+  VerifyMetricsCommand:
+    Condition: HasExtraPermissionSet
+    Description: >-
+      Probe that checks the tier-2 metrics profile can enter too. Check it separately (measured 2026-09-24):
+      even after adding `sts:AssumeRole` to the hub permission set and reprovisioning, if this trust policy lacks
+      that permission set you get the same AccessDenied, and the two denials cannot be told apart by message.
+    Value: !Sub >-
+      aws sts assume-role --role-arn ${MemberRole.Arn}
+      --role-session-name nettopo-verify --profile <hub-metrics-profile> --region ${AWS::Region}

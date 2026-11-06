@@ -1,0 +1,263 @@
+{
+  "schema_version": "1.18.0",
+  "run": {
+    "observed_at": "2026-01-02T03:09:05Z",
+    "tool_version": "0.0.0+fixture",
+    "topology_collected_at": "2026-01-02T03:04:05Z"
+  },
+  "scope": {
+    "account_ids": ["111122223333"],
+    "regions": ["us-east-1"],
+    "resource_types": ["internet_gateway", "load_balancer", "route_table", "subnet", "vpc"]
+  },
+  "layers": {
+    "describe": true,
+    "metric": false
+  },
+  "sources": [
+    {
+      "kind": "container_insights",
+      "state": "off",
+      "used": false,
+      "scope": { "unit": "ecs_cluster", "enabled_ids": 0, "total_ids": 1 }
+    },
+    {
+      "kind": "vpc_flow_log",
+      "state": "off",
+      "used": false,
+      "scope": { "unit": "vpc", "enabled_ids": 0, "total_ids": 1 }
+    }
+  ],
+  "observations": [
+    {
+      "target_id": "association|network_acl/111122223333/us-east-1/acl-0aaa1111bbbb7777|subnet/111122223333/us-east-1/subnet-0aaa1111bbbb3333",
+      "target_kind": "edge",
+      "status": "none",
+      "why": "네트워크 ACL 과 서브넷의 연결에는 AWS 가 상태를 제공하지 않습니다 — 이 연결의 상태는 판정하지 않습니다",
+      "evidence": null,
+      "error_count": null,
+      "partial": false
+    },
+    {
+      "target_id": "association|network_acl/111122223333/us-east-1/acl-0aaa1111bbbb7777|subnet/111122223333/us-east-1/subnet-0aaa1111bbbb4444",
+      "target_kind": "edge",
+      "status": "none",
+      "why": "네트워크 ACL 과 서브넷의 연결에는 AWS 가 상태를 제공하지 않습니다 — 이 연결의 상태는 판정하지 않습니다",
+      "evidence": null,
+      "error_count": null,
+      "partial": false
+    },
+    {
+      "target_id": "association|route_table/111122223333/us-east-1/rtb-0aaa1111bbbb6666|subnet/111122223333/us-east-1/subnet-0aaa1111bbbb3333",
+      "target_kind": "edge",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeRouteTables",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false
+    },
+    {
+      "target_id": "association|route_table/111122223333/us-east-1/rtb-0aaa1111bbbb6666|subnet/111122223333/us-east-1/subnet-0aaa1111bbbb4444",
+      "target_kind": "edge",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeRouteTables",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false
+    },
+    {
+      "target_id": "internet_gateway/111122223333/us-east-1/igw-0aaa1111bbbb5555",
+      "target_kind": "node",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeInternetGateways",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false
+    },
+    {
+      "target_id": "network_acl/111122223333/us-east-1/acl-0aaa1111bbbb7777",
+      "target_kind": "node",
+      "status": "none",
+      "why": "네트워크 ACL 은 규칙의 묶음이며 AWS 가 「상태」를 제공하지 않습니다 — 트래픽을 막고 있는지는 규칙과 트래픽을 함께 봐야 알 수 있고, 이를 관측할 수단이 없습니다",
+      "evidence": null,
+      "error_count": null,
+      "partial": false
+    },
+    {
+      "target_id": "route|route_table/111122223333/us-east-1/rtb-0aaa1111bbbb6666|internet_gateway/111122223333/us-east-1/igw-0aaa1111bbbb5555",
+      "target_kind": "edge",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeRouteTables",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false
+    },
+    {
+      "target_id": "subnet/111122223333/us-east-1/subnet-0aaa1111bbbb3333",
+      "target_kind": "node",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeSubnets",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false
+    },
+    {
+      "target_id": "subnet/111122223333/us-east-1/subnet-0aaa1111bbbb4444",
+      "target_kind": "node",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeSubnets",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false
+    },
+    {
+      "target_id": "vpc/111122223333/us-east-1/vpc-0aaa1111bbbb2222",
+      "target_kind": "node",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeVpcs",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false
+    }
+  ],
+  "coverage": [
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "internet_gateway",
+      "layer": "describe",
+      "status": "ok",
+      "reason": null,
+      "item_count": 1
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "internet_gateway",
+      "layer": "metric",
+      "status": "skipped",
+      "reason": null,
+      "item_count": null
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "load_balancer",
+      "layer": "describe",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "elasticloadbalancing:DescribeLoadBalancers",
+        "message": "이 역할에는 elasticloadbalancing:DescribeLoadBalancers 가 없다"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "load_balancer",
+      "layer": "metric",
+      "status": "skipped",
+      "reason": null,
+      "item_count": null
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "route_table",
+      "layer": "describe",
+      "status": "ok",
+      "reason": null,
+      "item_count": 3
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "route_table",
+      "layer": "metric",
+      "status": "skipped",
+      "reason": null,
+      "item_count": null
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "subnet",
+      "layer": "describe",
+      "status": "ok",
+      "reason": null,
+      "item_count": 2
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "subnet",
+      "layer": "metric",
+      "status": "skipped",
+      "reason": null,
+      "item_count": null
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "vpc",
+      "layer": "describe",
+      "status": "ok",
+      "reason": null,
+      "item_count": 1
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "vpc",
+      "layer": "metric",
+      "status": "skipped",
+      "reason": null,
+      "item_count": null
+    }
+  ],
+  "history": {
+    "baseline_at": "2026-01-02T03:04:05Z",
+    "resolution_seconds": 300,
+    "retention_seconds": 604800,
+    "truncated": false,
+    "flap_collapse_threshold": 4,
+    "max_changes": 5000
+  },
+  "changes": []
+}

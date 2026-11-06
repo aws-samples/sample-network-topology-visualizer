@@ -1,0 +1,1209 @@
+# NetworkTopology Stack A - collector (CodeBuild + EventBridge + private S3). Deploy in the monitoring account; any Region.
+# Usage, parameters and clean-up: README.md; security design and data handling: SECURITY.md.
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >-
+  AWS Network Topology - Stack A (collector). Read-only collect + render to a private S3 bucket.
+  No public endpoint is created by this template.
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: {default: "Source"}
+        Parameters: [SourceLocation]
+      - Label: {default: "Collection scope"}
+        Parameters: [TargetAccounts, TargetRegions, MemberRoleName, MemberExternalId]
+      - Label: {default: "Schedule"}
+        Parameters: [Schedule, ScheduleState]
+      - Label: {default: "State tier (not created when left empty)"}
+        Parameters:
+          - StateLambdaSourceKey
+          - StateSchedule
+          - StateScheduleState
+          - StateTimeoutSeconds
+          - StateMemoryMb
+      - Label: {default: "Flow log reading (S5 - off by default, only with the state tier)"}
+        Parameters:
+          - FlowLogReading
+          - FlowLogGroupNamePrefixes
+          - FlowLogCentralBucketArns
+          - FlowLogKmsKeyArns
+      - Label: {default: "Build environment"}
+        Parameters: [BuildImage, LogRetentionDays]
+      - Label: {default: "Viewer (Stack C, optional)"}
+        Parameters: [ViewerOrigin, ViewerDistributionId]
+
+Parameters:
+  SourceLocation:
+    Type: String
+    AllowedPattern: "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]/.+\\.zip$"
+    Description: >-
+      S3 location of the source zip (bucket/key, without s3://), uploaded to your own private bucket.
+      The zip must contain engine/ and renderer/ exactly as laid out in the repository.
+
+  TargetAccounts:
+    Type: String
+    Default: ""
+    Description: >-
+      Comma-separated 12-digit source account IDs to add. The hub is always collected. Accounts are also discovered from hub TGW attachments and the union is collected - list only accounts the TGW does not know. Empty = discovery only; if discovery fails in every region the build fails, while with a list it proceeds with a warning.
+
+  TargetRegions:
+    Type: String
+    Default: ""
+    Description: >-
+      Comma-separated regions. Leave empty to collect only this stack's region (no auto-discovery -
+      the build role is scoped to exactly this list). The engine has no default for --region.
+
+  MemberRoleName:
+    Type: String
+    Default: NetworkReadOnlyRole
+    Description: Role name assumed in member accounts (must match the one Stack B creates).
+
+  MemberExternalId:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^[-\\w+=,.@:/]{2,1224}$"
+    Description: Optional. Same value as Stack B ExternalId; passed when assuming member roles. Empty = none.
+
+  ViewerOrigin:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^https://[a-z0-9][a-z0-9.-]*[a-z0-9]$"
+    Description: Optional. https:// + Stack C output ViewerDomain - narrows bucket CORS from any CloudFront domain to it.
+
+  ViewerDistributionId:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^E[A-Z0-9]{8,20}$"
+    Description: Optional. Stack C output DistributionId - only that distribution may read index.html (else any in this account).
+
+  Schedule:
+    Type: String
+    Default: rate(1 hour)
+    Description: Structure collection interval (EventBridge schedule expression).
+
+  ScheduleState:
+    Type: String
+    Default: ENABLED
+    AllowedValues: [ENABLED, DISABLED]
+    Description: >-
+      Whether the schedule starts enabled. For a trial deployment use DISABLED and run start-build once.
+
+  StateLambdaSourceKey:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^.+\\.zip$"
+    Description: >-
+      S3 key of the state-tier Lambda zip, in the same bucket as SourceLocation.
+      Leave empty to skip the state tier (5-minute observation). infra/build-state-lambda.sh prints the key.
+
+  StateSchedule:
+    Type: String
+    Default: rate(5 minutes)
+    Description: State observation interval (EventBridge schedule expression).
+
+  StateScheduleState:
+    Type: String
+    Default: ENABLED
+    AllowedValues: [ENABLED, DISABLED]
+    Description: Whether the state observation schedule starts enabled.
+
+  StateTimeoutSeconds:
+    Type: Number
+    Default: 240
+    MinValue: 60
+    MaxValue: 290
+    Description: State-tier timeout in seconds. Keep it shorter than the interval.
+
+  StateMemoryMb:
+    Type: Number
+    Default: 1024
+    MinValue: 512
+    MaxValue: 4096
+    Description: State-tier memory in MB. This also sets the vCPU share for parallel observation.
+
+  FlowLogReading:
+    Type: String
+    Default: DISABLED
+    AllowedValues: [ENABLED, DISABLED]
+    Description: >-
+      Flow log reading. When ENABLED, VPC flow logs are read only in cycles where live monitoring is on, to confirm
+      traffic on internet and peering lines. When DISABLED, permissions and the screen are unchanged.
+
+  FlowLogGroupNamePrefixes:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^[-_./#A-Za-z0-9]*[A-Za-z0-9][-_./#A-Za-z0-9]*(,[-_./#A-Za-z0-9]*[A-Za-z0-9][-_./#A-Za-z0-9]*)*$"
+    Description: >-
+      CloudWatch Logs flow log group names to read (comma-separated). Use full group names - a short prefix also opens
+      application logs. Leave empty and flow logs delivered to CloudWatch Logs show as "no permission".
+
+  FlowLogCentralBucketArns:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^arn:aws[a-z-]*:s3:::[a-z0-9][a-z0-9.-]{1,61}[a-z0-9](,arn:aws[a-z-]*:s3:::[a-z0-9][a-z0-9.-]{1,61}[a-z0-9])*$"
+    Description: >-
+      ARNs of central flow log buckets in other accounts, e.g. log archive (comma-separated, no path). That bucket's policy
+      must also allow this stack's state-tier role. Buckets in this account are read without listing them.
+
+  FlowLogKmsKeyArns:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^arn:aws[a-z-]*:kms:[a-z0-9-]+:[0-9]{12}:key/(mrk-)?[-a-f0-9]+(,arn:aws[a-z-]*:kms:[a-z0-9-]+:[0-9]{12}:key/(mrk-)?[-a-f0-9]+)*$"
+    Description: >-
+      KMS customer-managed key ARNs that encrypt flow log buckets (comma separated, not aliases). If empty, flow logs in
+      SSE-KMS customer-key buckets show as "cannot decrypt with the KMS key". SSE-S3 and KMS log groups are read without it.
+
+  BuildImage:
+    Type: String
+    Default: aws/codebuild/standard:7.0
+    Description: >-
+      CodeBuild image. Runtimes are selected by the buildspec runtime-versions (python 3.12, nodejs 20).
+
+  LogRetentionDays:
+    Type: Number
+    Default: 30
+    AllowedValues: [1, 3, 5, 7, 14, 30, 60, 90, 180, 365]
+    Description: CodeBuild log retention in days.
+
+Conditions:
+  NoRegionsGiven: !Equals [!Ref TargetRegions, ""]
+  StateTierEnabled: !Not [!Equals [!Ref StateLambdaSourceKey, ""]]
+  HasViewerOrigin: !Not [!Equals [!Ref ViewerOrigin, ""]]
+  HasViewerDistribution: !Not [!Equals [!Ref ViewerDistributionId, ""]]
+  FlowLogsOn: !And [!Condition StateTierEnabled, !Equals [!Ref FlowLogReading, ENABLED]]
+  HasGroupPrefixes: !And [!Condition FlowLogsOn, !Not [!Equals [!Ref FlowLogGroupNamePrefixes, ""]]]
+  HasCentralBuckets: !And [!Condition FlowLogsOn, !Not [!Equals [!Ref FlowLogCentralBucketArns, ""]]]
+  HasKmsKeys: !And [!Condition FlowLogsOn, !Not [!Equals [!Ref FlowLogKmsKeyArns, ""]]]
+
+Resources:
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules: [{ObjectOwnership: BucketOwnerEnforced}]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: {SSEAlgorithm: AES256}
+            BucketKeyEnabled: true
+      VersioningConfiguration: {Status: Enabled}
+      CorsConfiguration:
+        CorsRules:
+          - Id: live-channel
+            AllowedOrigins: ["null", !If [HasViewerOrigin, !Ref ViewerOrigin, "https://*.cloudfront.net"]]
+            AllowedMethods: [GET, PUT]
+            AllowedHeaders: [content-type, if-none-match, if-match]
+            ExposedHeaders: [ETag]
+            MaxAge: 3000
+      NotificationConfiguration: !If
+        - StateTierEnabled
+        - EventBridgeConfiguration: {EventBridgeEnabled: true}
+        - !Ref AWS::NoValue
+      LifecycleConfiguration:
+        Rules:
+          - Id: index-html-old-versions
+            Status: Enabled
+            Prefix: index.html
+            NoncurrentVersionExpiration: {NoncurrentDays: 1}
+          - Id: unsigned-page-old-versions
+            Status: Enabled
+            Prefix: unsigned/
+            NoncurrentVersionExpiration: {NoncurrentDays: 1}
+
+  ArtifactBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ArtifactBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt ArtifactBucket.Arn
+              - !Sub "${ArtifactBucket.Arn}/*"
+            Condition:
+              Bool: {"aws:SecureTransport": "false"}
+          - Sid: AllowViewerDistributionReadIndex
+            Effect: Allow
+            Principal: {Service: cloudfront.amazonaws.com}
+            Action: s3:GetObject
+            Resource: !Sub "${ArtifactBucket.Arn}/index.html"
+            Condition:
+              StringEquals: {"aws:SourceAccount": !Ref "AWS::AccountId"}
+              ArnLike:
+                aws:SourceArn: !If
+                  - HasViewerDistribution
+                  - !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${ViewerDistributionId}"
+                  - !Sub "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/*"
+
+  BuildLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/codebuild/${AWS::StackName}-collector"
+      RetentionInDays: !Ref LogRetentionDays
+
+  BuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: codebuild.amazonaws.com}
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals: {"aws:SourceAccount": !Ref "AWS::AccountId"}
+      Policies:
+        - PolicyName: ReadNetworkTopology
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadNetworkTopology
+                Effect: Allow
+                Action:
+                  - ec2:DescribeVpcs
+                  - ec2:DescribeSubnets
+                  - ec2:DescribeRouteTables
+                  - ec2:DescribeInternetGateways
+                  - ec2:DescribeNatGateways
+                  - ec2:DescribeTransitGateways
+                  - ec2:DescribeTransitGatewayAttachments
+                  - ec2:DescribeVpcPeeringConnections
+                  - ec2:DescribeVpcEndpoints
+                  - ec2:DescribeVpcEndpointServiceConfigurations
+                  - ec2:DescribeVpcEndpointServices
+                  - ec2:DescribeSecurityGroups
+                  - ec2:DescribeNetworkAcls
+                  - ec2:DescribeNetworkInterfaces
+                  - elasticloadbalancing:DescribeLoadBalancers
+                  - elasticloadbalancing:DescribeListeners
+                  - elasticloadbalancing:DescribeTargetGroups
+                  - elasticloadbalancing:DescribeTargetHealth
+                  - elasticloadbalancing:DescribeTags
+                  - elasticloadbalancing:DescribeRules
+                  - elasticloadbalancing:DescribeListenerCertificates
+                  - wafv2:GetWebACLForResource
+                  - wafv2:GetWebACL
+                  - wafv2:ListWebACLs
+                  - wafv2:ListResourcesForWebACL
+                  - directconnect:DescribeConnections
+                  - directconnect:DescribeVirtualInterfaces
+                  - directconnect:DescribeDirectConnectGateways
+                  - directconnect:DescribeDirectConnectGatewayAssociations
+                  - ec2:DescribeInstances
+                  - autoscaling:DescribeAutoScalingGroups
+                  - eks:ListClusters
+                  - eks:DescribeCluster
+                  - network-firewall:ListFirewalls
+                  - network-firewall:DescribeFirewall
+                  - ec2:DescribeTransitGatewayRouteTables
+                  - ec2:GetTransitGatewayRouteTableAssociations
+                  - ec2:GetTransitGatewayRouteTablePropagations
+                  - ec2:SearchTransitGatewayRoutes
+                  - ec2:GetTransitGatewayPrefixListReferences
+                  - ec2:DescribeTransitGatewayVpcAttachments
+                  - ec2:DescribeVpcAttribute
+                  - ec2:DescribeDhcpOptions
+                  - ec2:DescribeInstanceConnectEndpoints
+                  - rds:DescribeDBInstances
+                  - ecs:ListClusters
+                  - ecs:ListServices
+                  - ecs:DescribeServices
+                  - sagemaker:ListNotebookInstances
+                  - sagemaker:DescribeNotebookInstance
+                  - sagemaker:ListDomains
+                  - sagemaker:DescribeDomain
+                  - sagemaker:ListEndpoints
+                  - sagemaker:DescribeEndpoint
+                  - sagemaker:DescribeEndpointConfig
+                  - sagemaker:DescribeModel
+                  - ec2:DescribeVpnGateways
+                  - ec2:DescribeCustomerGateways
+                  - lambda:ListFunctions
+                  - ec2:DescribeVpnConnections
+                  - elasticache:DescribeCacheClusters
+                  - elasticache:DescribeCacheSubnetGroups
+                  - elasticache:DescribeReplicationGroups
+                  - rds:DescribeDBClusters
+                  - rds:DescribeDBSubnetGroups
+                  - es:ListDomainNames
+                  - es:DescribeDomains
+                  - kafka:ListClustersV2
+                  - kafka:ListNodes
+                  - ec2:DescribeManagedPrefixLists
+                  - ec2:GetManagedPrefixListEntries
+                  - ec2:DescribeAddresses
+                  - rds:DescribeDBProxies
+                  - rds:DescribeDBProxyTargets
+                  - ec2:DescribeTransitGatewayConnects
+                  - ec2:DescribeTransitGatewayConnectPeers
+                  - vpc-lattice:ListServiceNetworks
+                  - vpc-lattice:ListServiceNetworkVpcAssociations
+                  - vpc-lattice:ListServiceNetworkServiceAssociations
+                  - vpc-lattice:ListServices
+                  - vpc-lattice:ListTargetGroups
+                  - vpc-lattice:ListTargets
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: !If
+                      - NoRegionsGiven
+                      - [!Ref "AWS::Region"]
+                      - !Split [",", !Ref TargetRegions]
+              # API Gateway has one action (apigateway:GET) - scoped by path ARN
+              - Sid: ReadApiGateway
+                Effect: Allow
+                Action:
+                  - apigateway:GET
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:apigateway:*::/restapis"
+                  - !Sub "arn:${AWS::Partition}:apigateway:*::/restapis/*/resources"
+                  - !Sub "arn:${AWS::Partition}:apigateway:*::/vpclinks"
+                  - !Sub "arn:${AWS::Partition}:apigateway:*::/apis"
+                  - !Sub "arn:${AWS::Partition}:apigateway:*::/apis/*/integrations"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: !If
+                      - NoRegionsGiven
+                      - [!Ref "AWS::Region"]
+                      - !Split [",", !Ref TargetRegions]
+              # Global Accelerator API exists only in us-west-2
+              - Sid: ReadGlobalAccelerator
+                Effect: Allow
+                Action:
+                  - globalaccelerator:ListAccelerators
+                  - globalaccelerator:ListListeners
+                  - globalaccelerator:ListEndpointGroups
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: us-west-2
+              # Cloud WAN (Network Manager) API exists only in us-west-2
+              - Sid: ReadCloudWan
+                Effect: Allow
+                Action:
+                  - networkmanager:ListCoreNetworks
+                  - networkmanager:ListAttachments
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: us-west-2
+              # Global services (CloudFront, Route 53, CLOUDFRONT-scope WAF) sign in us-east-1
+              - Sid: ReadCloudFrontGlobal
+                Effect: Allow
+                Action:
+                  - cloudfront:ListDistributions
+                  - cloudfront:ListVpcOrigins
+                  - cloudfront:ListCachePolicies
+                  - cloudfront:ListOriginAccessControls
+                  - route53:ListHostedZones
+                  - route53:ListResourceRecordSets
+                  - route53:GetHostedZone
+                  - wafv2:ListWebACLs
+                  - wafv2:GetWebACL
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: us-east-1
+              # Account name: no AccountId = the calling account only
+              - Sid: ReadAccountName
+                Effect: Allow
+                Action:
+                  - account:GetAccountInformation
+                Resource: !Sub "arn:${AWS::Partition}:account::${AWS::AccountId}:account"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: us-east-1
+              - Sid: WhoAmI
+                Effect: Allow
+                Action: sts:GetCallerIdentity
+                Resource: "*"
+              - Sid: EnterMemberAccounts
+                Effect: Allow
+                Action: sts:AssumeRole
+                Resource: !Sub "arn:${AWS::Partition}:iam::*:role/${MemberRoleName}"
+        - PolicyName: SourceAndArtifacts
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadSourceZip
+                Effect: Allow
+                Action: [s3:GetObject, s3:GetObjectVersion]
+                Resource: !Sub
+                  - "arn:${AWS::Partition}:s3:::${Bucket}/*"
+                  - Bucket: !Select [0, !Split ["/", !Ref SourceLocation]]
+                Condition: {StringEquals: {"s3:ResourceAccount": !Ref "AWS::AccountId"}}
+              - Sid: DecryptSourceZip
+                Effect: Allow
+                Action: [kms:Decrypt, kms:DescribeKey]
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    kms:ViaService: !Sub "s3.${AWS::Region}.amazonaws.com"
+              - Sid: WriteArtifacts
+                Effect: Allow
+                Action: [s3:PutObject, s3:GetObject, s3:ListBucket]
+                Resource:
+                  - !GetAtt ArtifactBucket.Arn
+                  - !Sub "${ArtifactBucket.Arn}/*"
+                Condition: {StringEquals: {"s3:ResourceAccount": !Ref "AWS::AccountId"}}
+              - !If
+                - StateTierEnabled
+                - Sid: OnlyTheSignerPublishesThePage
+                  Effect: Deny
+                  Action: s3:PutObject
+                  Resource: !Sub "${ArtifactBucket.Arn}/index.html"
+                - !Ref AWS::NoValue
+              - Sid: Logs
+                Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !Sub "${BuildLogGroup.Arn}:*"
+
+  CollectorProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub "${AWS::StackName}-collector"
+      Description: nettopo collect + render to a private S3 bucket (read-only).
+      ServiceRole: !GetAtt BuildRole.Arn
+      TimeoutInMinutes: 30
+      Artifacts: {Type: NO_ARTIFACTS}
+      Source:
+        Type: S3
+        Location: !Ref SourceLocation
+        BuildSpec: buildspec.yml
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: !Ref BuildImage
+        EnvironmentVariables:
+          - {Name: ARTIFACT_BUCKET, Type: PLAINTEXT, Value: !Ref ArtifactBucket}
+          - {Name: TARGET_ACCOUNTS, Type: PLAINTEXT, Value: !Ref TargetAccounts}
+          - {Name: TARGET_REGIONS, Type: PLAINTEXT, Value: !Ref TargetRegions}
+          - {Name: MEMBER_ROLE_NAME, Type: PLAINTEXT, Value: !Ref MemberRoleName}
+          - {Name: MEMBER_EXTERNAL_ID, Type: PLAINTEXT, Value: !Ref MemberExternalId}
+          - {Name: LIVE_CHANNEL, Type: PLAINTEXT, Value: !If [StateTierEnabled, ENABLED, DISABLED]}
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: !Ref BuildLogGroup
+          StreamName: build
+
+  ScheduleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: events.amazonaws.com}
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals: {"aws:SourceAccount": !Ref "AWS::AccountId"}
+      Policies:
+        - PolicyName: StartCollectorBuild
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: codebuild:StartBuild
+                Resource: !GetAtt CollectorProject.Arn
+
+  ScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: !Sub "${AWS::StackName} structure collection schedule"
+      ScheduleExpression: !Ref Schedule
+      State: !Ref ScheduleState
+      Targets:
+        - Id: collector
+          Arn: !GetAtt CollectorProject.Arn
+          RoleArn: !GetAtt ScheduleRole.Arn
+
+  StateLogGroup:
+    Type: AWS::Logs::LogGroup
+    Condition: StateTierEnabled
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-state"
+      RetentionInDays: !Ref LogRetentionDays
+
+  StateDlq:
+    Type: AWS::SQS::Queue
+    Condition: StateTierEnabled
+    Properties:
+      MessageRetentionPeriod: 1209600
+      SqsManagedSseEnabled: true
+
+  StateDlqPolicy:
+    Type: AWS::SQS::QueuePolicy
+    Condition: StateTierEnabled
+    Properties:
+      Queues: [!Ref StateDlq]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: "sqs:*"
+            Resource: !GetAtt StateDlq.Arn
+            Condition:
+              Bool: {"aws:SecureTransport": "false"}
+
+  StateRole:
+    Type: AWS::IAM::Role
+    Condition: StateTierEnabled
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: lambda.amazonaws.com}
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals: {"aws:SourceAccount": !Ref "AWS::AccountId"}
+      Policies:
+        - PolicyName: ObserveNetworkState
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadNetworkTopology
+                Effect: Allow
+                Action:
+                  - ec2:DescribeVpcs
+                  - ec2:DescribeSubnets
+                  - ec2:DescribeRouteTables
+                  - ec2:DescribeInternetGateways
+                  - ec2:DescribeNatGateways
+                  - ec2:DescribeTransitGateways
+                  - ec2:DescribeTransitGatewayAttachments
+                  - ec2:DescribeVpcPeeringConnections
+                  - ec2:DescribeVpcEndpoints
+                  - ec2:DescribeVpcEndpointServiceConfigurations
+                  - ec2:DescribeVpcEndpointServices
+                  - ec2:DescribeSecurityGroups
+                  - ec2:DescribeNetworkAcls
+                  - ec2:DescribeNetworkInterfaces
+                  - elasticloadbalancing:DescribeLoadBalancers
+                  - elasticloadbalancing:DescribeListeners
+                  - elasticloadbalancing:DescribeTargetGroups
+                  - elasticloadbalancing:DescribeTargetHealth
+                  - elasticloadbalancing:DescribeTags
+                  - elasticloadbalancing:DescribeRules
+                  - elasticloadbalancing:DescribeListenerCertificates
+                  - wafv2:GetWebACLForResource
+                  - wafv2:GetWebACL
+                  - wafv2:ListWebACLs
+                  - wafv2:ListResourcesForWebACL
+                  - directconnect:DescribeConnections
+                  - directconnect:DescribeVirtualInterfaces
+                  - directconnect:DescribeDirectConnectGateways
+                  - directconnect:DescribeDirectConnectGatewayAssociations
+                  - ec2:DescribeInstances
+                  - autoscaling:DescribeAutoScalingGroups
+                  - eks:ListClusters
+                  - eks:DescribeCluster
+                  - network-firewall:ListFirewalls
+                  - network-firewall:DescribeFirewall
+                  - ec2:DescribeTransitGatewayRouteTables
+                  - ec2:GetTransitGatewayRouteTableAssociations
+                  - ec2:GetTransitGatewayRouteTablePropagations
+                  - ec2:SearchTransitGatewayRoutes
+                  - ec2:GetTransitGatewayPrefixListReferences
+                  - ec2:DescribeTransitGatewayVpcAttachments
+                  - ec2:DescribeVpcAttribute
+                  - ec2:DescribeDhcpOptions
+                  - ec2:DescribeInstanceConnectEndpoints
+                  - rds:DescribeDBInstances
+                  - ecs:ListClusters
+                  - ecs:ListServices
+                  - ecs:DescribeServices
+                  - sagemaker:ListNotebookInstances
+                  - sagemaker:DescribeNotebookInstance
+                  - sagemaker:ListDomains
+                  - sagemaker:DescribeDomain
+                  - sagemaker:ListEndpoints
+                  - sagemaker:DescribeEndpoint
+                  - sagemaker:DescribeEndpointConfig
+                  - sagemaker:DescribeModel
+                  - ec2:DescribeVpnGateways
+                  - ec2:DescribeCustomerGateways
+                  - lambda:ListFunctions
+                  - ec2:DescribeVpnConnections
+                  - elasticache:DescribeCacheClusters
+                  - elasticache:DescribeCacheSubnetGroups
+                  - elasticache:DescribeReplicationGroups
+                  - rds:DescribeDBClusters
+                  - rds:DescribeDBSubnetGroups
+                  - es:ListDomainNames
+                  - es:DescribeDomains
+                  - kafka:ListClustersV2
+                  - kafka:ListNodes
+                  - ec2:DescribeManagedPrefixLists
+                  - ec2:GetManagedPrefixListEntries
+                  - ec2:DescribeAddresses
+                  - rds:DescribeDBProxies
+                  - rds:DescribeDBProxyTargets
+                  - ec2:DescribeTransitGatewayConnects
+                  - ec2:DescribeTransitGatewayConnectPeers
+                  - vpc-lattice:ListServiceNetworks
+                  - vpc-lattice:ListServiceNetworkVpcAssociations
+                  - vpc-lattice:ListServiceNetworkServiceAssociations
+                  - vpc-lattice:ListServices
+                  - vpc-lattice:ListTargetGroups
+                  - vpc-lattice:ListTargets
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: !If
+                      - NoRegionsGiven
+                      - [!Ref "AWS::Region"]
+                      - !Split [",", !Ref TargetRegions]
+              # API Gateway has one action (apigateway:GET) - scoped by path ARN
+              - Sid: ReadApiGateway
+                Effect: Allow
+                Action:
+                  - apigateway:GET
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:apigateway:*::/restapis"
+                  - !Sub "arn:${AWS::Partition}:apigateway:*::/restapis/*/resources"
+                  - !Sub "arn:${AWS::Partition}:apigateway:*::/vpclinks"
+                  - !Sub "arn:${AWS::Partition}:apigateway:*::/apis"
+                  - !Sub "arn:${AWS::Partition}:apigateway:*::/apis/*/integrations"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: !If
+                      - NoRegionsGiven
+                      - [!Ref "AWS::Region"]
+                      - !Split [",", !Ref TargetRegions]
+              # Global Accelerator API exists only in us-west-2
+              - Sid: ReadGlobalAccelerator
+                Effect: Allow
+                Action:
+                  - globalaccelerator:ListAccelerators
+                  - globalaccelerator:ListListeners
+                  - globalaccelerator:ListEndpointGroups
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: us-west-2
+              # Cloud WAN (Network Manager) API exists only in us-west-2
+              - Sid: ReadCloudWan
+                Effect: Allow
+                Action:
+                  - networkmanager:ListCoreNetworks
+                  - networkmanager:ListAttachments
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: us-west-2
+              # Global services (CloudFront, Route 53, CLOUDFRONT-scope WAF) sign in us-east-1
+              - Sid: ReadCloudFrontGlobal
+                Effect: Allow
+                Action:
+                  - cloudfront:ListDistributions
+                  - cloudfront:ListVpcOrigins
+                  - cloudfront:ListCachePolicies
+                  - cloudfront:ListOriginAccessControls
+                  - route53:ListHostedZones
+                  - route53:ListResourceRecordSets
+                  - route53:GetHostedZone
+                  - wafv2:ListWebACLs
+                  - wafv2:GetWebACL
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: us-east-1
+              - Sid: DetectOptionalEvidence
+                Effect: Allow
+                Action:
+                  - ec2:DescribeFlowLogs
+                  - ec2:DescribeInstances
+                  - ec2:DescribeVpnConnections
+                  - ecs:ListClusters
+                  - ecs:DescribeClusters
+                  - eks:ListClusters
+                  - eks:DescribeAddon
+                  - logs:DescribeDeliverySources
+                  - route53resolver:ListResolverEndpoints
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: !If
+                      - NoRegionsGiven
+                      - [!Ref "AWS::Region"]
+                      - !Split [",", !Ref TargetRegions]
+              - Sid: ReadFlowMetrics
+                Effect: Allow
+                Action: cloudwatch:GetMetricData
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: !If
+                      - NoRegionsGiven
+                      - [!Ref "AWS::Region"]
+                      - !Split [",", !Ref TargetRegions]
+              - Sid: ReadCloudFrontMetrics
+                Effect: Allow
+                Action: cloudwatch:GetMetricData
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: [us-east-1, us-west-2]
+              - Sid: ReadServiceQuotas
+                Effect: Allow
+                Action:
+                  - servicequotas:GetServiceQuota
+                  - servicequotas:GetAWSDefaultServiceQuota
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    aws:RequestedRegion: !If
+                      - NoRegionsGiven
+                      - [!Ref "AWS::Region"]
+                      - !Split [",", !Ref TargetRegions]
+              - Sid: WhoAmI
+                Effect: Allow
+                Action: sts:GetCallerIdentity
+                Resource: "*"
+              - Sid: EnterMemberAccounts
+                Effect: Allow
+                Action: sts:AssumeRole
+                Resource: !Sub "arn:${AWS::Partition}:iam::*:role/${MemberRoleName}"
+        - PolicyName: StateDocuments
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadInputs
+                Effect: Allow
+                Action: s3:GetObject
+                Resource:
+                  - !Sub "${ArtifactBucket.Arn}/control/desired.json"
+                  - !Sub "${ArtifactBucket.Arn}/structure-latest.json"
+                  - !Sub "${ArtifactBucket.Arn}/structure-previous.json"
+                  - !Sub "${ArtifactBucket.Arn}/state-latest.json"
+                  - !Sub "${ArtifactBucket.Arn}/snapshots/structure/*"
+                Condition: {StringEquals: {"s3:ResourceAccount": !Ref "AWS::AccountId"}}
+              - Sid: DistinguishMissingKeyFromDenied
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt ArtifactBucket.Arn
+                Condition: {StringEquals: {"s3:ResourceAccount": !Ref "AWS::AccountId"}}
+              - Sid: WriteStateDocuments
+                Effect: Allow
+                Action: s3:PutObject
+                Resource:
+                  - !Sub "${ArtifactBucket.Arn}/snapshots/state/*"
+                  - !Sub "${ArtifactBucket.Arn}/state-latest.json"
+                Condition: {StringEquals: {"s3:ResourceAccount": !Ref "AWS::AccountId"}}
+              - Sid: Logs
+                Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !Sub "${StateLogGroup.Arn}:*"
+              - Sid: FailedCycles
+                Effect: Allow
+                Action: sqs:SendMessage
+                Resource: !GetAtt StateDlq.Arn
+
+  StateFlowLogFindPolicy:
+    Type: AWS::IAM::RolePolicy
+    Condition: FlowLogsOn
+    Properties:
+      RoleName: !Ref StateRole
+      PolicyName: StateFlowLogFind
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: FlowLogFindGroups
+            Effect: Allow
+            Action: logs:DescribeLogGroups
+            Resource: !Sub "arn:${AWS::Partition}:logs:*:${AWS::AccountId}:log-group:*"
+            Condition:
+              StringEquals:
+                aws:RequestedRegion: !If
+                  - NoRegionsGiven
+                  - [!Ref "AWS::Region"]
+                  - !Split [",", !Ref TargetRegions]
+          - Sid: FlowLogOwnBucketMeta
+            Effect: Allow
+            Action: s3:GetBucketLocation
+            Resource: !Sub "arn:${AWS::Partition}:s3:::*"
+            Condition:
+              StringEquals:
+                s3:ResourceAccount: !Ref "AWS::AccountId"
+          - Sid: FlowLogOwnBucketList
+            Effect: Allow
+            Action: s3:ListBucket
+            Resource: !Sub "arn:${AWS::Partition}:s3:::*"
+            Condition:
+              StringEquals:
+                s3:ResourceAccount: !Ref "AWS::AccountId"
+              StringLike:
+                s3:prefix:
+                  - !Sub "*AWSLogs/${AWS::AccountId}/vpcflowlogs/*"
+                  - !Sub "*AWSLogs/aws-account-id=${AWS::AccountId}/aws-service=vpcflowlogs/*"
+          - Sid: FlowLogOwnObjectRead
+            Effect: Allow
+            Action: s3:GetObject
+            Resource:
+              - !Sub "arn:${AWS::Partition}:s3:::*AWSLogs/${AWS::AccountId}/vpcflowlogs/*"
+              - !Sub "arn:${AWS::Partition}:s3:::*AWSLogs/aws-account-id=${AWS::AccountId}/aws-service=vpcflowlogs/*"
+            Condition:
+              StringEquals:
+                s3:ResourceAccount: !Ref "AWS::AccountId"
+
+  StateFlowLogGroupsPolicy:
+    Type: AWS::IAM::RolePolicy
+    Condition: HasGroupPrefixes
+    Properties:
+      RoleName: !Ref StateRole
+      PolicyName: StateFlowLogGroups
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: FlowLogReadGroups
+            Effect: Allow
+            Action:
+              - logs:DescribeLogStreams
+              - logs:GetLogEvents
+            Resource: !Split
+              - ","
+              - !Sub
+                - "arn:*:logs:*:*:log-group:${Names}*"
+                - Names: !Join ["*,arn:*:logs:*:*:log-group:", !Split [",", !Ref FlowLogGroupNamePrefixes]]
+            Condition:
+              StringEquals:
+                aws:RequestedRegion: !If
+                  - NoRegionsGiven
+                  - [!Ref "AWS::Region"]
+                  - !Split [",", !Ref TargetRegions]
+          - Sid: FlowLogReadGroupsOwnAccountOnly
+            Effect: Deny
+            Action:
+              - logs:DescribeLogStreams
+              - logs:GetLogEvents
+            NotResource: !Sub "arn:${AWS::Partition}:logs:*:${AWS::AccountId}:log-group:*"
+
+  StateFlowLogCentralPolicy:
+    Type: AWS::IAM::RolePolicy
+    Condition: HasCentralBuckets
+    Properties:
+      RoleName: !Ref StateRole
+      PolicyName: StateFlowLogCentral
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: FlowLogCentralBucketMeta
+            Effect: Allow
+            Action: s3:GetBucketLocation
+            Resource: !Split [",", !Ref FlowLogCentralBucketArns]
+          - Sid: FlowLogCentralBucketList
+            Effect: Allow
+            Action: s3:ListBucket
+            Resource: !Split [",", !Ref FlowLogCentralBucketArns]
+            Condition:
+              StringLike:
+                s3:prefix:
+                  - !Sub "*AWSLogs/${AWS::AccountId}/vpcflowlogs/*"
+                  - !Sub "*AWSLogs/aws-account-id=${AWS::AccountId}/aws-service=vpcflowlogs/*"
+          - Sid: FlowLogCentralObjectRead
+            Effect: Allow
+            Action: s3:GetObject
+            Resource: !Split
+              - ","
+              - !Sub
+                - "${Arns}/*"
+                - Arns: !Join ["/*,", !Split [",", !Ref FlowLogCentralBucketArns]]
+          - Sid: FlowLogCentralOwnKeysOnly
+            Effect: Deny
+            Action: s3:GetObject
+            NotResource:
+              - !Sub "arn:${AWS::Partition}:s3:::*AWSLogs/${AWS::AccountId}/vpcflowlogs/*"
+              - !Sub "arn:${AWS::Partition}:s3:::*AWSLogs/aws-account-id=${AWS::AccountId}/aws-service=vpcflowlogs/*"
+            Condition:
+              StringNotEquals:
+                s3:ResourceAccount: !Ref "AWS::AccountId"
+
+  StateFlowLogKmsPolicy:
+    Type: AWS::IAM::RolePolicy
+    Condition: HasKmsKeys
+    Properties:
+      RoleName: !Ref StateRole
+      PolicyName: StateFlowLogKms
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: FlowLogKmsDecryptViaS3
+            Effect: Allow
+            Action: kms:Decrypt
+            Resource: !Split [",", !Ref FlowLogKmsKeyArns]
+            Condition:
+              StringLike:
+                kms:ViaService: "s3.*.amazonaws.com"
+
+  StateFunction:
+    Type: AWS::Lambda::Function
+    Condition: StateTierEnabled
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-state"
+      Description: >-
+        Read-only 5-minute observation of the latest structure snapshot. Off by default
+        (control/desired.json). No inbound endpoint.
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: handler.handler
+      Role: !GetAtt StateRole.Arn
+      Timeout: !Ref StateTimeoutSeconds
+      MemorySize: !Ref StateMemoryMb
+      ReservedConcurrentExecutions: 1
+      Code:
+        S3Bucket: !Select [0, !Split ["/", !Ref SourceLocation]]
+        S3Key: !Ref StateLambdaSourceKey
+      Environment:
+        Variables:
+          ARTIFACT_BUCKET: !Ref ArtifactBucket
+          MEMBER_ROLE_NAME: !Ref MemberRoleName
+          MEMBER_EXTERNAL_ID: !Ref MemberExternalId
+          FLOW_LOGS: !Ref FlowLogReading
+      DeadLetterConfig:
+        TargetArn: !GetAtt StateDlq.Arn
+      LoggingConfig:
+        LogGroup: !Ref StateLogGroup
+
+  StateInvokeConfig:
+    Type: AWS::Lambda::EventInvokeConfig
+    Condition: StateTierEnabled
+    Properties:
+      FunctionName: !Ref StateFunction
+      Qualifier: $LATEST
+      MaximumRetryAttempts: 2
+      MaximumEventAgeInSeconds: 240
+
+  StateScheduleRule:
+    Type: AWS::Events::Rule
+    Condition: StateTierEnabled
+    Properties:
+      Description: !Sub "${AWS::StackName} state observation schedule (5 min)"
+      ScheduleExpression: !Ref StateSchedule
+      State: !Ref StateScheduleState
+      Targets:
+        - Id: state
+          Arn: !GetAtt StateFunction.Arn
+
+  StateInvokePermission:
+    Type: AWS::Lambda::Permission
+    Condition: StateTierEnabled
+    Properties:
+      FunctionName: !GetAtt StateFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt StateScheduleRule.Arn
+
+  StateWakeRule:
+    Type: AWS::Events::Rule
+    Condition: StateTierEnabled
+    Properties:
+      Description: !Sub "${AWS::StackName} state observation - right away when the control key is written or a new structure lands"
+      State: !Ref StateScheduleState
+      EventPattern:
+        source: [aws.s3]
+        detail-type: [Object Created]
+        detail:
+          bucket: {name: [!Ref ArtifactBucket]}
+          object: {key: [control/desired.json, structure-latest.json]}
+      Targets:
+        - Id: state-wake
+          Arn: !GetAtt StateFunction.Arn
+
+  StateWakePermission:
+    Type: AWS::Lambda::Permission
+    Condition: StateTierEnabled
+    Properties:
+      FunctionName: !GetAtt StateFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt StateWakeRule.Arn
+
+  SignerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Condition: StateTierEnabled
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${AWS::StackName}-signer"
+      RetentionInDays: !Ref LogRetentionDays
+
+  SignerRole:
+    Type: AWS::IAM::Role
+    Condition: StateTierEnabled
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: lambda.amazonaws.com}
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals: {"aws:SourceAccount": !Ref "AWS::AccountId"}
+      Policies:
+        - PolicyName: SignLiveChannel
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: SignStateRead
+                Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub "${ArtifactBucket.Arn}/state-latest.json"
+                Condition: {StringEquals: {"s3:ResourceAccount": !Ref "AWS::AccountId"}}
+              - Sid: SignControlWrite
+                Effect: Allow
+                Action: s3:PutObject
+                Resource: !Sub "${ArtifactBucket.Arn}/control/desired.json"
+                Condition: {StringEquals: {"s3:ResourceAccount": !Ref "AWS::AccountId"}}
+              - Sid: SignControlConditionalWrite
+                Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub "${ArtifactBucket.Arn}/control/desired.json"
+                Condition: {StringEquals: {"s3:ResourceAccount": !Ref "AWS::AccountId"}}
+              - Sid: ScreenSeesMissingStateAs404
+                Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt ArtifactBucket.Arn
+                Condition: {StringEquals: {"s3:ResourceAccount": !Ref "AWS::AccountId"}}
+              - Sid: ReadUnsignedPage
+                Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub "${ArtifactBucket.Arn}/unsigned/index.html"
+                Condition: {StringEquals: {"s3:ResourceAccount": !Ref "AWS::AccountId"}}
+              - Sid: RewriteAddressSlot
+                Effect: Allow
+                Action: [s3:GetObject, s3:PutObject]
+                Resource: !Sub "${ArtifactBucket.Arn}/index.html"
+                Condition: {StringEquals: {"s3:ResourceAccount": !Ref "AWS::AccountId"}}
+              - Sid: Logs
+                Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !Sub "${SignerLogGroup.Arn}:*"
+              - Sid: FailedCycles
+                Effect: Allow
+                Action: sqs:SendMessage
+                Resource: !GetAtt StateDlq.Arn
+
+  SignerFunction:
+    Type: AWS::Lambda::Function
+    Condition: StateTierEnabled
+    Properties:
+      FunctionName: !Sub "${AWS::StackName}-signer"
+      Description: >-
+        Publishes index.html from the unsigned build output with freshly signed live-channel URLs
+        (address slot only). No inbound endpoint.
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: signer.handler
+      Role: !GetAtt SignerRole.Arn
+      Timeout: 60
+      MemorySize: 256
+      ReservedConcurrentExecutions: 1
+      Code:
+        S3Bucket: !Select [0, !Split ["/", !Ref SourceLocation]]
+        S3Key: !Ref StateLambdaSourceKey
+      Environment:
+        Variables:
+          ARTIFACT_BUCKET: !Ref ArtifactBucket
+      DeadLetterConfig:
+        TargetArn: !GetAtt StateDlq.Arn
+      LoggingConfig:
+        LogGroup: !Ref SignerLogGroup
+
+  SignerInvokeConfig:
+    Type: AWS::Lambda::EventInvokeConfig
+    Condition: StateTierEnabled
+    Properties:
+      FunctionName: !Ref SignerFunction
+      Qualifier: $LATEST
+      MaximumRetryAttempts: 2
+      MaximumEventAgeInSeconds: 240
+
+  SignerScheduleRule:
+    Type: AWS::Events::Rule
+    Condition: StateTierEnabled
+    Properties:
+      Description: !Sub "${AWS::StackName} live URL re-signing (5 min)"
+      ScheduleExpression: !Ref StateSchedule
+      State: !Ref StateScheduleState
+      Targets:
+        - Id: signer
+          Arn: !GetAtt SignerFunction.Arn
+
+  SignerAfterBuildRule:
+    Type: AWS::Events::Rule
+    Condition: StateTierEnabled
+    Properties:
+      Description: !Sub "${AWS::StackName} re-signing right after a successful structure build"
+      EventPattern:
+        source: [aws.codebuild]
+        detail-type: [CodeBuild Build State Change]
+        detail:
+          build-status: [SUCCEEDED]
+          project-name: [!Ref CollectorProject]
+      State: ENABLED
+      Targets:
+        - Id: signer
+          Arn: !GetAtt SignerFunction.Arn
+
+  SignerSchedulePermission:
+    Type: AWS::Lambda::Permission
+    Condition: StateTierEnabled
+    Properties:
+      FunctionName: !GetAtt SignerFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt SignerScheduleRule.Arn
+
+  SignerAfterBuildPermission:
+    Type: AWS::Lambda::Permission
+    Condition: StateTierEnabled
+    Properties:
+      FunctionName: !GetAtt SignerFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt SignerAfterBuildRule.Arn
+
+Outputs:
+  ArtifactBucketName:
+    Description: Artifact bucket (private). There is no public URL - download with aws s3 cp.
+    Value: !Ref ArtifactBucket
+  ProjectName:
+    Description: Collector build project. Run the first build once by hand.
+    Value: !Ref CollectorProject
+  StartBuildCommand:
+    Description: Run one collection
+    Value: !Sub "aws codebuild start-build --project-name ${CollectorProject} --region ${AWS::Region}"
+  DownloadCommand:
+    Description: Download the output (open it via file://)
+    Value: !Sub "aws s3 cp s3://${ArtifactBucket}/index.html ./out/index.html --region ${AWS::Region}"
+  StateFunctionName:
+    Condition: StateTierEnabled
+    Description: State observation function. Off by default - uploads nothing until control/desired.json exists.
+    Value: !Ref StateFunction
+  StateDlqUrl:
+    Condition: StateTierEnabled
+    Description: Queue holding failed cycles. Empty is normal.
+    Value: !Ref StateDlq
+  SignerFunctionName:
+    Condition: StateTierEnabled
+    Description: Page publishing and re-signing function (every 5 min and after each build). Fills the address slot of the unsigned build output and writes index.html.
+    Value: !Ref SignerFunction
+  StateInvokeCommand:
+    Condition: StateTierEnabled
+    Description: Run one observation by hand (the time is the history key; no wall clock)
+    Value: !Sub >-
+      aws lambda invoke --function-name ${StateFunction} --cli-binary-format raw-in-base64-out
+      --payload '{"time":"2026-09-24T07:05:00Z"}' /tmp/state-invoke.json --region ${AWS::Region}

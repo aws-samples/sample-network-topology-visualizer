@@ -1,0 +1,17 @@
+# 수집기(엔진)의 런타임 의존성 — **전부 == 고정 + 해시**. 수집기 CodeBuild 가 이 파일로 설치한다
+# (buildspec.yml: 빌드 안에서 새 가상환경 → `$VENV/bin/python -m pip install --require-hashes -r engine/requirements.lock
+#  -r engine/build-requirements.lock` → `--no-build-isolation --no-deps ./engine`).
+#
+# 🔴 pyproject 의 `boto3>=1.34` 만으로 설치하면 빌드하는 날의 최신 boto3·botocore 가 들어간다 — 검사를 통과한 적 없는 판이
+#    매시 수집을 돈다. `awsguard.py` 가 훅을 거는 것은 botocore 다 — 검사를 통과한 그 botocore 여야 한다.
+# 🔴 버전 = 엔진 검사(`pytest engine` · `pytest infra/tests scripts/tests schema/tests`)를 통과시킨 설치본. 올릴 때는 그 버전으로
+#    검사를 다시 통과시킨 뒤 7줄을 함께 바꾼다(해시 = PyPI 휠의 sha256 — `pip download --no-deps --only-binary :all:` 로 받아
+#    `shasum -a 256` 한 값과 PyPI JSON API 의 digests 가 같은지 확인한다).
+# 휠은 전부 순수 파이썬(py3-none-any)이라 해시가 플랫폼과 무관하다. 상태 단 Lambda 는 따로 고정한다(infra/state-lambda/requirements.lock).
+boto3==1.43.119 --hash=sha256:d1718edae48c3241d289c0ece8a515399a7242c406e35328b9685c4d24039186
+botocore==1.43.119 --hash=sha256:6026aec97914a4fa116915fd3b05af899912eff51b93fb8dff95aa228a3e761b
+jmespath==1.1.0 --hash=sha256:a5663118de4908c91729bea0acadca56526eb2698e83de10cd116ae0f4e97c64
+python-dateutil==2.9.0.post0 --hash=sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427
+s3transfer==0.19.3 --hash=sha256:24eb7535804306355e31c952a90022bf5b2f9d760f9a11062c7493a217c08553
+six==1.17.0 --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274
+urllib3==2.8.0 --hash=sha256:0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3

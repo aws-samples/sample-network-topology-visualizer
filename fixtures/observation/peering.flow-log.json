@@ -1,0 +1,347 @@
+{
+  "schema_version": "1.18.0",
+  "run": {
+    "observed_at": "2026-01-02T03:09:05Z",
+    "tool_version": "0.0.0+fixture",
+    "topology_collected_at": "2026-01-02T03:04:05Z"
+  },
+  "scope": {
+    "account_ids": [
+      "111122223333"
+    ],
+    "regions": [
+      "us-east-1"
+    ],
+    "resource_types": [
+      "route_table",
+      "subnet",
+      "vpc",
+      "vpc_peering_connection"
+    ]
+  },
+  "layers": {
+    "describe": true,
+    "metric": true,
+    "flow_log": true
+  },
+  "sources": [
+    {
+      "kind": "vpc_flow_log",
+      "state": "on",
+      "used": true,
+      "scope": {
+        "unit": "vpc",
+        "enabled_ids": 2,
+        "total_ids": 2
+      },
+      "detail": null,
+      "resources": [
+        {
+          "id": "fl-0bbb1111cccc0060",
+          "level": "network_interface",
+          "used": false,
+          "why_code": "format_v2",
+          "why": "기본 형식(v2)이라 경로 번호 필드가 없다",
+          "detail": null
+        },
+        {
+          "id": "fl-0bbb1111cccc0061",
+          "level": "vpc",
+          "attached_to": "vpc/111122223333/us-east-1/vpc-0bbb1111cccc0001",
+          "used": true,
+          "detail": null
+        },
+        {
+          "id": "fl-0bbb1111cccc0062",
+          "level": "vpc",
+          "attached_to": "vpc/111122223333/us-east-1/vpc-0bbb1111cccc0002",
+          "used": false,
+          "why_code": "fields_missing",
+          "why": "사용자 지정 형식에 판정에 필요한 필드가 빠졌다 — 빠진 필드를 넣어 다시 만든다",
+          "detail": "빠진 필드 traffic-path"
+        }
+      ]
+    }
+  ],
+  "observations": [
+    {
+      "target_id": "association|route_table/111122223333/us-east-1/rtb-0bbb1111cccc0031|subnet/111122223333/us-east-1/subnet-0bbb1111cccc0011",
+      "target_kind": "edge",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeRouteTables",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false
+    },
+    {
+      "target_id": "peering|vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050|vpc/111122223333/us-east-1/vpc-0bbb1111cccc0001|requester",
+      "target_kind": "edge",
+      "status": "live",
+      "why": null,
+      "evidence": {
+        "api": "logs:GetLogEvents",
+        "metric": "flow_log",
+        "datapoints": 3,
+        "window_seconds": 900,
+        "observed_on": "subnet/111122223333/us-east-1/subnet-0bbb1111cccc0011"
+      },
+      "error_count": 0,
+      "partial": false
+    },
+    {
+      "target_id": "peering|vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050|vpc/111122223333/us-east-1/vpc-0bbb1111cccc0002|accepter",
+      "target_kind": "edge",
+      "status": "live",
+      "why": null,
+      "evidence": {
+        "api": "logs:GetLogEvents",
+        "metric": "flow_log",
+        "datapoints": 3,
+        "window_seconds": 900,
+        "observed_on": "subnet/111122223333/us-east-1/subnet-0bbb1111cccc0011"
+      },
+      "error_count": 0,
+      "partial": false
+    },
+    {
+      "target_id": "route|route_table/111122223333/us-east-1/rtb-0bbb1111cccc0030|vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050",
+      "target_kind": "edge",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeRouteTables",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false,
+      "by_subnet": [
+        {
+          "subnet_id": "subnet/111122223333/us-east-1/subnet-0bbb1111cccc0012",
+          "status": "live",
+          "evidence": {
+            "api": "logs:GetLogEvents",
+            "metric": "flow_log",
+            "datapoints": 1,
+            "window_seconds": 900,
+            "observed_on": "subnet/111122223333/us-east-1/subnet-0bbb1111cccc0012"
+          }
+        }
+      ]
+    },
+    {
+      "target_id": "route|route_table/111122223333/us-east-1/rtb-0bbb1111cccc0031|vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050",
+      "target_kind": "edge",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeRouteTables",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false,
+      "by_subnet": [
+        {
+          "subnet_id": "subnet/111122223333/us-east-1/subnet-0bbb1111cccc0011",
+          "status": "live",
+          "evidence": {
+            "api": "logs:GetLogEvents",
+            "metric": "flow_log",
+            "datapoints": 2,
+            "window_seconds": 900,
+            "observed_on": "subnet/111122223333/us-east-1/subnet-0bbb1111cccc0011"
+          }
+        }
+      ]
+    },
+    {
+      "target_id": "route|route_table/111122223333/us-east-1/rtb-0bbb1111cccc0040|vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050",
+      "target_kind": "edge",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeRouteTables",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false
+    },
+    {
+      "target_id": "subnet/111122223333/us-east-1/subnet-0bbb1111cccc0011",
+      "target_kind": "node",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeSubnets",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false
+    },
+    {
+      "target_id": "subnet/111122223333/us-east-1/subnet-0bbb1111cccc0012",
+      "target_kind": "node",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeSubnets",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false
+    },
+    {
+      "target_id": "subnet/111122223333/us-east-1/subnet-0bbb1111cccc0021",
+      "target_kind": "node",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeSubnets",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false
+    },
+    {
+      "target_id": "vpc/111122223333/us-east-1/vpc-0bbb1111cccc0001",
+      "target_kind": "node",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeVpcs",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false
+    },
+    {
+      "target_id": "vpc/111122223333/us-east-1/vpc-0bbb1111cccc0002",
+      "target_kind": "node",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeVpcs",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false
+    },
+    {
+      "target_id": "vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050",
+      "target_kind": "node",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeVpcPeeringConnections",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false
+    }
+  ],
+  "coverage": [
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "route_table",
+      "layer": "describe",
+      "status": "ok",
+      "reason": null,
+      "item_count": 4
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "route_table",
+      "layer": "metric",
+      "status": "ok",
+      "reason": null,
+      "item_count": 0
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "subnet",
+      "layer": "describe",
+      "status": "ok",
+      "reason": null,
+      "item_count": 3
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "subnet",
+      "layer": "metric",
+      "status": "ok",
+      "reason": null,
+      "item_count": 0
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "vpc",
+      "layer": "describe",
+      "status": "ok",
+      "reason": null,
+      "item_count": 2
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "vpc",
+      "layer": "metric",
+      "status": "ok",
+      "reason": null,
+      "item_count": 0
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "vpc_peering_connection",
+      "layer": "describe",
+      "status": "ok",
+      "reason": null,
+      "item_count": 1
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "vpc_peering_connection",
+      "layer": "metric",
+      "status": "ok",
+      "reason": null,
+      "item_count": 0
+    }
+  ],
+  "history": {
+    "baseline_at": "2026-01-02T03:04:05Z",
+    "resolution_seconds": 300,
+    "retention_seconds": 604800,
+    "truncated": false,
+    "flap_collapse_threshold": 4,
+    "max_changes": 5000
+  },
+  "changes": []
+}

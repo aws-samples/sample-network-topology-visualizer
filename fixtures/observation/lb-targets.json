@@ -1,0 +1,1914 @@
+{
+  "changes": [],
+  "coverage": [
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "customer_gateway",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "customer_gateway",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "direct_connect_connection",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "direct_connect_connection",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "direct_connect_gateway",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "direct_connect_gateway",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "direct_connect_virtual_interface",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "direct_connect_virtual_interface",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 11,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "ec2_instance",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "ec2_instance",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "ec2_instance_connect_endpoint",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "ec2_instance_connect_endpoint",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 3,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "ecs_service",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "ecs_service",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "eks_cluster",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "eks_cluster",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "elasticache_cluster",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "elasticache_cluster",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "internet_gateway",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "internet_gateway",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 31,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "load_balancer",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "load_balancer",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "msk_cluster",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "msk_cluster",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "nat_gateway",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "nat_gateway",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "network_firewall",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "network_firewall",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "opensearch_domain",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "opensearch_domain",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "rds_db_cluster",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "rds_db_cluster",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 3,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "rds_db_instance",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "rds_db_instance",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 5,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "route_table",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "route_table",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "sagemaker_domain",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "sagemaker_domain",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "sagemaker_endpoint",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "sagemaker_endpoint",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "sagemaker_notebook_instance",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "sagemaker_notebook_instance",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 6,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "subnet",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "subnet",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "transit_gateway",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "transit_gateway",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "transit_gateway_attachment",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "transit_gateway_attachment",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "transit_gateway_route_table",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "transit_gateway_route_table",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "vpc",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "vpc",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "vpc_endpoint",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "vpc_endpoint",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "vpc_peering_connection",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "vpc_peering_connection",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "vpn_connection",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "vpn_connection",
+      "status": "skipped"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "layer": "describe",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "vpn_gateway",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": null,
+      "layer": "metric",
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "vpn_gateway",
+      "status": "skipped"
+    }
+  ],
+  "history": {
+    "baseline_at": "2026-01-02T03:04:05Z",
+    "flap_collapse_threshold": 4,
+    "max_changes": 5000,
+    "resolution_seconds": 300,
+    "retention_seconds": 604800,
+    "truncated": false
+  },
+  "layers": {
+    "describe": true,
+    "metric": false
+  },
+  "observations": [
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeRouteTables",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "association|route_table/111122223333/us-east-1/rtb-0abc1234def56071|subnet/111122223333/us-east-1/subnet-0abc1234def56011",
+      "target_kind": "edge",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeRouteTables",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "association|route_table/111122223333/us-east-1/rtb-0abc1234def56071|subnet/111122223333/us-east-1/subnet-0abc1234def56012",
+      "target_kind": "edge",
+      "why": null
+    },
+    {
+      "error_count": null,
+      "evidence": null,
+      "partial": false,
+      "status": "none",
+      "target_id": "auto_scaling_group/111122223333/us-east-1/standby-asg",
+      "target_kind": "node",
+      "why": "Auto Scaling 그룹은 인스턴스의 논리적 묶음입니다 — 트래픽은 그룹 안의 인스턴스가 처리하며, 그룹의 인스턴스 수로는 트래픽 흐름을 판단할 수 없습니다"
+    },
+    {
+      "error_count": null,
+      "evidence": null,
+      "partial": false,
+      "status": "none",
+      "target_id": "auto_scaling_group/111122223333/us-east-1/web-asg",
+      "target_kind": "node",
+      "why": "Auto Scaling 그룹은 인스턴스의 논리적 묶음입니다 — 트래픽은 그룹 안의 인스턴스가 처리하며, 그룹의 인스턴스 수로는 트래픽 흐름을 판단할 수 없습니다"
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeInstances",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "ec2_instance/111122223333/us-east-1/i-0abc1234def56101",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeInstances",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "ec2_instance/111122223333/us-east-1/i-0abc1234def56102",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeInstances",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "ec2_instance/111122223333/us-east-1/i-0abc1234def56103",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeInstances",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "ec2_instance/111122223333/us-east-1/i-0abc1234def56104",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeInstances",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "ec2_instance/111122223333/us-east-1/i-0abc1234def56105",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeInstances",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "ec2_instance/111122223333/us-east-1/i-0abc1234def56106",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeInstances",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "ec2_instance/111122223333/us-east-1/i-0abc1234def56201",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeInstances",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "ec2_instance/111122223333/us-east-1/i-0abc1234def56301",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeInstances",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "ec2_instance/111122223333/us-east-1/i-0abc1234def56302",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeInstances",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "ec2_instance/111122223333/us-east-1/i-0abc1234def56401",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeInstances",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "ec2_instance/111122223333/us-east-1/i-0abc1234def56402",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ecs:DescribeServices",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "ecs_service/111122223333/us-east-1/lbt-ecs%2Fapi-svc",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ecs:DescribeServices",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "ecs_service/111122223333/us-east-1/lbt-ecs%2Fbridge-svc",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 1,
+      "evidence": {
+        "api": "ecs:DescribeServices",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "down",
+      "target_id": "ecs_service/111122223333/us-east-1/lbt-ecs%2Fidle-svc",
+      "target_kind": "node",
+      "why": "원하는 태스크 수가 0입니다 — 서비스가 멈춰 있습니다"
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "eks:DescribeCluster",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "eks_cluster/111122223333/us-east-1/lbt-eks",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticache:DescribeCacheClusters",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "elasticache_cluster/111122223333/us-east-1/lbt-cache-0001-001",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeInternetGateways",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "internet_gateway/111122223333/us-east-1/igw-0abc1234def56041",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeLoadBalancers",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer/111122223333/us-east-1/edge-nlb",
+      "target_kind": "node",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 16,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 16,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeLoadBalancers",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer/111122223333/us-east-1/int-alb",
+      "target_kind": "node",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 4,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 4,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeLoadBalancers",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer/111122223333/us-east-1/web-alb",
+      "target_kind": "node",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 1,
+        "healthy": 15,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 16,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/edge-nlb|ec2_instance/111122223333/us-east-1/i-0abc1234def56201",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/edge-nlb|elasticache_cluster/111122223333/us-east-1/lbt-cache-0001-001",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/edge-nlb|external_ip/111122223333/us-east-1/172.16.5.9",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/edge-nlb|external_ip/111122223333/us-east-1/192.168.10.5",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/edge-nlb|external_ip/111122223333/us-east-1/192.168.10.6",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/edge-nlb|lambda_function/111122223333/us-east-1/orders-fn",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/edge-nlb|load_balancer/111122223333/us-east-1/int-alb",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/edge-nlb|load_balancer/111122223333/us-east-1/web-alb",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/edge-nlb|msk_cluster/111122223333/us-east-1/lbt-kafka",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 2,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 2,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/edge-nlb|opensearch_domain/111122223333/us-east-1/lbt-search",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/edge-nlb|rds_db_cluster/111122223333/us-east-1/lbt-aurora",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/edge-nlb|rds_db_instance/111122223333/us-east-1/orders-db",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/edge-nlb|vpc_endpoint/111122223333/us-east-1/vpce-0abc1234def56301",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/int-alb|ec2_instance/111122223333/us-east-1/i-0abc1234def56201",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/int-alb|ecs_service/111122223333/us-east-1/lbt-ecs%2Fbridge-svc",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 3,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 3,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/int-alb|ecs_service/111122223333/us-east-1/lbt-ecs%2Fidle-svc",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 0,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 0,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/web-alb|ec2_instance/111122223333/us-east-1/i-0abc1234def56101",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/web-alb|ec2_instance/111122223333/us-east-1/i-0abc1234def56102",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/web-alb|ec2_instance/111122223333/us-east-1/i-0abc1234def56103",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/web-alb|ec2_instance/111122223333/us-east-1/i-0abc1234def56104",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/web-alb|ec2_instance/111122223333/us-east-1/i-0abc1234def56105",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/web-alb|ec2_instance/111122223333/us-east-1/i-0abc1234def56106",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/web-alb|ec2_instance/111122223333/us-east-1/i-0abc1234def56201",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/web-alb|ec2_instance/111122223333/us-east-1/i-0abc1234def56401",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 2,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 2,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/web-alb|ec2_instance/111122223333/us-east-1/i-0abc1234def56402",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 1,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/web-alb|ecs_service/111122223333/us-east-1/lbt-ecs%2Fapi-svc",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 2,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 2,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/web-alb|eks_cluster/111122223333/us-east-1/lbt-eks",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 0,
+        "healthy": 2,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 2,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "elasticloadbalancing:DescribeTargetHealth",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "load_balancer_target|load_balancer/111122223333/us-east-1/web-alb|lambda_function/111122223333/us-east-1/thumbnailer",
+      "target_kind": "edge",
+      "targets": {
+        "draining": 0,
+        "health_check_off": 1,
+        "healthy": 0,
+        "initial": 0,
+        "other_unavailable": 0,
+        "total": 1,
+        "unhealthy": 0,
+        "unused": 0
+      },
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "kafka:ListClustersV2",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "msk_cluster/111122223333/us-east-1/lbt-kafka",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "es:DescribeDomains",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "opensearch_domain/111122223333/us-east-1/lbt-search",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "rds:DescribeDBClusters",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "rds_db_cluster/111122223333/us-east-1/lbt-aurora",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "rds:DescribeDBInstances",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "rds_db_instance/111122223333/us-east-1/lbt-aurora-1",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "rds:DescribeDBInstances",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "rds_db_instance/111122223333/us-east-1/lbt-aurora-2",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "rds:DescribeDBInstances",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "rds_db_instance/111122223333/us-east-1/orders-db",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeRouteTables",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "route|route_table/111122223333/us-east-1/rtb-0abc1234def56071|internet_gateway/111122223333/us-east-1/igw-0abc1234def56041",
+      "target_kind": "edge",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeRouteTables",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "route|route_table/111122223333/us-east-1/rtb-0abc1234def56072|transit_gateway/111122223333/us-east-1/tgw-0abc1234def56051",
+      "target_kind": "edge",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeRouteTables",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "route|route_table/111122223333/us-east-1/rtb-0abc1234def56072|vpn_gateway/111122223333/us-east-1/vgw-0abc1234def56061",
+      "target_kind": "edge",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeSubnets",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "subnet/111122223333/us-east-1/subnet-0abc1234def56011",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeSubnets",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "subnet/111122223333/us-east-1/subnet-0abc1234def56012",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeSubnets",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "subnet/111122223333/us-east-1/subnet-0abc1234def56021",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeSubnets",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "subnet/111122223333/us-east-1/subnet-0abc1234def56022",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeSubnets",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "subnet/111122223333/us-east-1/subnet-0abc1234def56031",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeSubnets",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "subnet/111122223333/us-east-1/subnet-0abc1234def56032",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeTransitGateways",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "transit_gateway/111122223333/us-east-1/tgw-0abc1234def56051",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeTransitGatewayAttachments",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0abc1234def56052",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeVpcs",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "vpc/111122223333/us-east-1/vpc-0abc1234def56001",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeVpcEndpoints",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "vpc_endpoint/111122223333/us-east-1/vpce-0abc1234def56301",
+      "target_kind": "node",
+      "why": null
+    },
+    {
+      "error_count": 0,
+      "evidence": {
+        "api": "ec2:DescribeVpnGateways",
+        "datapoints": null,
+        "metric": null,
+        "window_seconds": null
+      },
+      "partial": false,
+      "status": "up",
+      "target_id": "vpn_gateway/111122223333/us-east-1/vgw-0abc1234def56061",
+      "target_kind": "node",
+      "why": null
+    }
+  ],
+  "run": {
+    "observed_at": "2026-01-02T03:04:05Z",
+    "tool_version": "test",
+    "topology_collected_at": "2026-01-02T03:04:05Z"
+  },
+  "schema_version": "1.18.0",
+  "scope": {
+    "account_ids": [
+      "111122223333"
+    ],
+    "regions": [
+      "us-east-1"
+    ],
+    "resource_types": [
+      "customer_gateway",
+      "direct_connect_connection",
+      "direct_connect_gateway",
+      "direct_connect_virtual_interface",
+      "ec2_instance",
+      "ec2_instance_connect_endpoint",
+      "ecs_service",
+      "eks_cluster",
+      "elasticache_cluster",
+      "internet_gateway",
+      "load_balancer",
+      "msk_cluster",
+      "nat_gateway",
+      "network_firewall",
+      "opensearch_domain",
+      "rds_db_cluster",
+      "rds_db_instance",
+      "route_table",
+      "sagemaker_domain",
+      "sagemaker_endpoint",
+      "sagemaker_notebook_instance",
+      "subnet",
+      "transit_gateway",
+      "transit_gateway_attachment",
+      "transit_gateway_route_table",
+      "vpc",
+      "vpc_endpoint",
+      "vpc_peering_connection",
+      "vpn_connection",
+      "vpn_gateway"
+    ]
+  },
+  "sources": []
+}

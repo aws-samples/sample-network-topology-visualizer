@@ -1,0 +1,573 @@
+/* 색은 docs/canvas-principles.md §8 토큰만. 여기 없는 색을 쓰지 마라.
+   렌더러(flow.js)의 C 상수와 값을 같게 둔다(규약이다 — 두 곳을 비교하는 검사는 없다). */
+:root {
+  --bg: #0a0d12;
+  --lane: #131a24;
+  --box: #1b2432;
+  --chip: #24303f;
+  --line: #46586e;
+  --wire: #7f91a5;
+  --text: #f2f6fa;
+  --dim: #9fb0c0;
+  --accent: #ffffff;
+  /* v9-B: 상태색은 선명도로 갈린다(§8.2) */
+  --ok: #2fe08a;
+  --warn: #ffcf1a;
+  --err: #ff3b30;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg); color: var(--text); overflow: hidden;
+  font: 13px/1.45 -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Segoe UI', sans-serif;
+}
+#app { display: flex; flex-direction: column; height: 100vh; }
+
+#top {
+  display: flex; align-items: center; gap: 8px; padding: 0 14px; height: 48px;
+  border-bottom: 1px solid var(--line); background: var(--lane); flex: 0 0 auto;
+}
+.brand { font-weight: 650; letter-spacing: .2px; }
+.brand small { color: var(--dim); font-weight: 400; margin-left: 6px; }
+/* 🔴 `#crumbs`(계정 색 네모 + 계정ID 알약)는 **폐기**됐다 — 대장 75. 상단바는 기능 버튼만 담는다(검사 68).
+   되살리지 마라: 30계정에서 요약해도 315 px 를 먹고, 1440 px 에서 버튼을 화면 밖으로 밀어낸다. */
+.btn.on { color: var(--text); border-color: var(--accent); }
+.spacer { flex: 1; }
+#search {
+  width: 250px; height: 28px; padding: 0 10px; border-radius: 6px; color: var(--text);
+  background: var(--chip); border: 1px solid var(--line); outline: none; font-size: 12px;
+}
+#search:focus { border-color: var(--accent); }
+.btn {
+  height: 28px; padding: 0 10px; display: flex; align-items: center; border-radius: 6px;
+  background: var(--chip); border: 1px solid var(--line); color: var(--dim);
+  font-size: 12px; cursor: pointer; user-select: none; white-space: nowrap;
+}
+.btn:hover { color: var(--text); border-color: var(--wire); }
+.btn.warn { border-color: var(--warn); color: var(--warn); }
+/* 사용률 버튼(§17.25 · 대장 127) — 모니터링 값이 없으면 흐리게 서 있다(누를 수 없다는 뜻 · 숨기면 있는 줄을 모른다) */
+.btn.dis, .btn.dis:hover { opacity: .4; cursor: default; color: var(--dim); border-color: var(--line); }
+
+/* 햄버거(☰ · `#menu`)는 지웠다(사용자 결정 2026-10-20 · 대장 130). 아래 두 팝오버는 그 메뉴와 같던 형태 그대로다. */
+
+/* §3g 범위 축 팝오버(G1). 옛 햄버거와 **같은 형태**다 — 새 어휘를 만들면 「이건 뭐지」가 늘어난다.
+   30계정에서 목록이 화면을 넘으므로 높이를 제한하고 안에서 스크롤한다(상단바를 터뜨리지 않는
+   이유가 바로 이것이다). `#ax-scope` 아래에 뜨도록 right 를 햄버거보다 넉넉히 준다. */
+/* 실시간 켜기 팝오버. 햄버거·범위와 **같은 형태**다. 항목이 문장이라 폭을 넉넉히 준다. */
+#monpop { display: none; }
+#monpop.on {
+  display: block; position: fixed; top: 44px; right: 10px; z-index: 40;
+  min-width: 150px; max-width: 420px; padding: 4px; border-radius: 8px;
+  background: var(--lane); border: 1px solid var(--line);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .45); font-size: 12px;
+}
+#monpop .phead { padding: 6px 10px 4px; color: var(--dim); white-space: normal; line-height: 1.5; }
+#monpop .mitem {
+  padding: 6px 10px; border-radius: 5px; color: var(--dim); cursor: pointer; white-space: nowrap;
+}
+#monpop .mitem:hover { color: var(--text); background: var(--chip); }
+#monpop .mdur { display: flex; gap: 4px; align-items: center; padding: 2px 10px 6px; white-space: nowrap; }
+#monpop .mdl { color: var(--dim); margin-right: 4px; }
+#monpop .mdc { padding: 2px 7px; border-radius: 5px; border: 1px solid var(--line); color: var(--dim); cursor: pointer; }
+#monpop .mdc:hover { color: var(--text); }
+#monpop.own .mdur { display: none; }
+#monpop .mdc.on { color: var(--text); background: var(--chip); border-color: var(--dim); }
+#scopes { display: none; }
+#scopes.on {
+  display: block; position: fixed; top: 44px; right: 10px; z-index: 40;
+  min-width: 150px; max-height: 60vh; overflow-y: auto; padding: 4px; border-radius: 8px;
+  background: var(--lane); border: 1px solid var(--line);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .45); font-size: 12px;
+}
+#scopes .sitem {
+  padding: 6px 10px; border-radius: 5px; color: var(--dim); cursor: pointer; white-space: nowrap;
+}
+#scopes .sitem:hover { color: var(--text); background: var(--chip); }
+/* 🔁 대장 134: 계정 줄 = 체크박스(여러 개) · 「전체」 = 점 하나. 체크박스는 표시일 뿐이라 클릭을 받지 않는다(줄이 받는다 — flow.js 주석).
+   「전체」의 점 자리와 체크박스 자리를 같은 폭으로 비워 글자 줄이 흔들리지 않는다. */
+#scopes .sitem.on { color: var(--text); }
+#scopes .sitem.all.on::before { content: '\25CF'; color: var(--accent); }
+#scopes .sitem.all::before { content: '\2003'; display: inline-block; width: 13px; margin-right: 6px; text-align: center; }
+#scopes .sitem input { width: 13px; height: 13px; margin: 0 6px 0 0; vertical-align: -2px; pointer-events: none; accent-color: var(--accent); }
+#scopes .msep { height: 1px; margin: 4px 6px; background: var(--line); }
+
+/* 필터 배너(§13-49). 필터는 파괴적이므로 «지금 무엇을 제거했는지»가 상시로 보여야 한다 */
+#fbar { display: none; }
+#fbar.on {
+  display: flex; align-items: center; gap: 10px; flex: 0 0 auto; height: 28px; padding: 0 14px;
+  background: var(--chip); border-bottom: 1px solid var(--warn); color: var(--warn); font-size: 11.5px;
+}
+#fbar b { color: var(--text); }
+#fbar .x { margin-left: auto; cursor: pointer; text-decoration: underline; }
+
+/* 확인 모달 — 제거 전에 한 번 멈춘다 */
+#modal { position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+  background: rgba(10, 13, 18, .72); z-index: 5; }
+#modal.on { display: flex; }
+#modal .mcard { width: 420px; background: var(--lane); border: 1px solid var(--warn); border-radius: 8px;
+  padding: 16px; box-shadow: 0 20px 60px rgba(0, 0, 0, .7); }
+#modal .mtitle { font-weight: 650; margin-bottom: 8px; }
+#modal .mmsg { font-size: 12px; line-height: 1.6; }
+#modal .mnote { color: var(--dim); font-size: 11px; margin: 10px 0 14px; line-height: 1.6; }
+#modal .mrow { display: flex; gap: 8px; justify-content: flex-end; }
+
+#main { flex: 1; display: flex; min-height: 0; }
+#stage { position: relative; flex: 1; min-width: 0; }
+#svg { width: 100%; height: 100%; display: block; cursor: grab; }
+#svg.drag { cursor: grabbing; }
+
+/* 🔴 흐름 선(`path.flow`)의 대시는 **움직이지 않는다**(§8.3 · 사용자 결정 2026-09-24).
+   정적 대시는 「이 선은 트래픽 경로다」라는 종류 표시일 뿐이고, 움직임은 **관측된 사실**
+   전용으로 아래 `path.obsflow` 에만 남겼다. 기본 화면에서 움직이는 것은 하나도 없다.
+   (옛 `@keyframes flowdash` 는 지웠다 — 되살리면 켜기 전에 온 화면이 흐르고 관측이 묻힌다.) */
+
+/* 모니터링 흐름: 관측된 경로 위를 **작은 원들이 흐른다**(§8.3 「선의 초록 + 흐르는 점」).
+   구현 = 같은 경로를 덮는 오버레이 path 1개 + `stroke-linecap=round` + 길이 0 에 가까운 대시
+   → 둥근 점이 된다. `animateMotion`(SMIL)을 쓰지 않는 이유: 점 개수만큼 DOM 이 늘고
+   `prefers-reduced-motion` 을 CSS 로 못 끈다. dasharray 합(0.1+19.9=20 · §17.25 개정 — 세모가 점에 묻히지 않게 넓혔다)과 이동량이 같아야
+   점 간격이 일정하게 이어진다. 🔴 `S.anim` 이 꺼지면 `aws-canvas.js` 가 **오버레이를 아예 내보내지
+   않는다** — 초록 굵은 선이 남아 「흐름이 관측됐다」는 뜻은 유지된다(죽은 인코딩 방지). */
+@keyframes flowdots { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -20px; } }
+#svg.anim path.obsflow { animation: flowdots 2.52s linear infinite; }
+@media (prefers-reduced-motion: reduce) { #svg.anim path.obsflow { animation: none; } }
+
+/* 모니터링: 지표가 흐르는 아이콘의 테(ADR 0006 `live`) — 합(4+3=7)=이동량(-7px)이라 대시가 이어진다(§17.20). */
+@keyframes livedash { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -7px; } }
+#svg.anim circle.aw-live { animation: livedash 1.1s linear infinite; }
+@media (prefers-reduced-motion: reduce) { #svg.anim circle.aw-live { animation: none; } }
+
+#side {
+  width: 320px; flex: 0 0 320px; border-left: 1px solid var(--line);
+  background: var(--lane); overflow: auto; padding: 14px; display: none;
+}
+#side.on { display: block; }
+#side .close { margin-left: auto; color: var(--dim); cursor: pointer; }
+#side table { width: 100%; border-collapse: collapse; font-size: 12px; }
+#side td { padding: 4px 0; vertical-align: top; border-bottom: 1px solid var(--line); }
+#side td.k { color: var(--dim); width: 42%; }
+#side .sec { margin: 14px 0 6px; color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; }
+#side .off { color: var(--dim); font-size: 11.5px; line-height: 1.7; }
+
+/* 🔴 `#status`(하단 계측 줄) 규칙은 2026-09-21 에 **지웠다** — 요소 자체가 사라졌다.
+   계측값은 `__flowApi.dump()` 에 있다. 되살리지 마라(검사 84). */
+/* 폭 상한 = 오른쪽 아래 버튼 열(`#chrome`) + 여백. 비교 칸을 열면 캔버스가 절반이 돼 상한 없이는
+   줄이 버튼 열 밑으로 들어간다(§3j J1 · 검사 85 ⑩ — 1920 에서 실제로 겹쳤다).
+   🔴 버튼 열 폭은 **글꼴이 정한다**(가장 긴 「전체 보기」) — macOS 57px · AppleGothic 64px · CI(우분투)는 64px 초과(도움말 오른쪽 끝이 상한 884 에 묶여 있는데 겹쳤다).
+   옛 상한(100% - 88px)은 「!」 없을 때 여백이 6px 뿐이라 CI 에서 겹쳤다(2026-10-24 · PR #160). 그래서 「!」 있을 때
+   (아래 `#probs:not([hidden]) ~ #help` · left 50 + 100% - 158px)와 **같은 오른쪽 끝**(100% - 108px)으로 맞춘다 —
+   버튼 열이 약 95px 까지 넓어져도 겹치지 않는다. */
+#help {
+  position: absolute; left: 12px; bottom: 10px; color: var(--dim); font-size: 11px; max-width: calc(100% - 120px);
+  background: var(--lane); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--line);
+}
+#help kbd {
+  background: var(--chip); border: 1px solid var(--line); border-radius: 4px;
+  padding: 0 4px; font-size: 10.5px; color: var(--text);
+}
+
+/* ================ 웨이브 2 (§13-53~64) ================
+   전부 캔버스 **밖** DOM 이다 — SVG 안에 그리면 내보내기(검사 60)에 섞여 들어간다. */
+
+/* 배너 (§13-53·54·56·63) — 기본은 요약 1줄, 상세는 접힌다 */
+#bans { flex: 0 0 auto; display: flex; flex-direction: column; }
+#bans .bansum {
+  display: flex; align-items: center; gap: 8px; padding: 5px 14px; cursor: pointer;
+  background: var(--lane); border-bottom: 1px solid var(--line); font-size: 11.5px;
+}
+#bans .bpill {
+  padding: 1px 8px; border-radius: 10px; border: 1px solid var(--line); color: var(--dim);
+}
+#bans .bpill.warn { color: var(--warn); border-color: var(--warn); }
+/* «최신 화면 열기»(QA B P3) — 요약 줄의 알약이 곧 버튼이다 */
+#bans .bpill.bgo { cursor: pointer; font-weight: 600; }
+#bans .bpill.snap { color: var(--warn); border-color: var(--warn); }
+#bans .bsrc { color: var(--dim); opacity: 0.75; }
+#bans .bmore { margin-left: auto; color: var(--dim); }
+#bans .bansum:hover .bmore { color: var(--text); }
+#bans .bandetail { display: none; }
+#bans.open .bandetail { display: block; }
+#bans .ban {
+  padding: 5px 14px; font-size: 11.5px; border-bottom: 1px solid var(--line);
+  background: var(--lane); color: var(--dim);
+}
+#bans .ban.partial { color: var(--warn); border-left: 3px solid var(--warn); }
+#bans .ban.mode { color: var(--warn); border-left: 3px solid var(--warn); }
+#bans .ban.slow { border-left: 3px solid var(--line); }
+/* ADR 0006: 「지금 어떤가」는 경고가 아니라 **지금 무엇을 보고 있나**다 → warn 색을 쓰지 않는다.
+   이상 건수는 요약 알약이 warn 으로 따로 말한다(상세는 접혀 있는 것이 기본이다 — §13-54). */
+#bans .ban.mon { color: var(--text); border-left: 3px solid var(--accent); }
+/* §3h H2 둘째 줄(지표 대상 두 숫자). mon 과 클래스를 가르는 이유 = 검사 94 가 `.ban.mon` 을 센다. */
+#bans .ban.montgt { color: var(--text); border-left: 3px solid var(--accent); }
+/* §3i 대장 97: 「그릴 규칙이 없다」. partial 과 같은 경고색을 쓰되 줄은 따로 둔다 —
+   같은 클래스로 합치면 검사 54(수집 실패 1:1)가 이 줄까지 세어 조용히 거짓이 된다. */
+#bans .ban.unplaced { color: var(--warn); border-left: 3px solid var(--warn); }
+/* §3h H2: 「권한이 없어 모른다」. partial 과 색은 같되 줄·클래스를 따로 둔다 — 조치가
+   「스택 B 를 배포한다」로 다르고, 합치면 검사 54(수집 실패 1:1)가 이 줄까지 센다. */
+#bans .ban.deny { color: var(--warn); border-left: 3px solid var(--warn); }
+/* ADR 0009 D6: 「고객이 켠 것」. 🔴 `deny`(우리 권한)와 **다른 줄·다른 색**이다 — 경고가 아니라
+   판정의 근거 표기이므로 `mon` 과 같은 무게다. warn 으로 칠하면 사람은 흐름 로그를 켜지 않은
+   것을 «고장»으로 읽고, 합치면 검사 54(수집 실패 1:1)·92(해치)가 이 줄까지 센다. */
+#bans .ban.src { color: var(--text); border-left: 3px solid var(--accent); }
+/* 대장 108: 못 읽은 흐름 로그 한 개당 한 줄. 고객이 켠 것을 못 쓴 사실이라 warn 이다 — `src` 와 클래스를 가르는
+   이유 = 검사 100 이 `.ban.src` 를 1줄로 센다. */
+#bans .ban.srclog { color: var(--warn); border-left: 3px solid var(--warn); }
+
+/* 모드 칩 (§13-63) */
+/* 🔴 `height` 고정 + 기본 `flex-shrink:1` 조합은 좁은 폭에서 **박스 크기를 그대로 두고 글자만
+   흘러넘친다** — 1680 px 에서 「라이브」가 22px 칩 안에서 2줄이 됐다(검사 68 이 1920 만 재서 놓쳤다).
+   높이로 줄바꿈을 재면 못 잡는다: 재는 것은 scrollWidth/Height 다. 칩은 줄이지 않고 안 접는다. */
+.chip {
+  height: 22px; display: inline-flex; align-items: center; padding: 0 8px; border-radius: 11px;
+  font-size: 11px; border: 1px solid var(--line); color: var(--dim); background: var(--chip);
+  white-space: nowrap; flex: 0 0 auto;
+}
+.chip.live { color: var(--ok); border-color: var(--ok); }
+.chip.snapshot { color: var(--warn); border-color: var(--warn); }
+/* §3k K4 — 편집이 없으면 숨긴다. `.chip`·`.btn` 의 display 가 `hidden` 속성을 이기므로 명시한다. */
+#modechip[hidden], #btn-live[hidden] { display: none; }
+/* 대장 128(§17.26 C-1): 상태를 얻을 길이 없는 화면(상태 함수 없는 스택 A · 구조만 구운 파일)은 세 버튼을 숨긴다 — 흐리게가 아니다 */
+#btn-mon[hidden], #btn-util[hidden], #btn-hist[hidden] { display: none; }
+
+/* 빈 상태 (§13-56) — 카드 0일 때만 */
+#empty {
+  position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); display: none;
+  max-width: 420px; text-align: center; color: var(--dim); font-size: 12.5px; line-height: 1.8;
+  background: var(--lane); border: 1px solid var(--line); border-radius: 8px; padding: 16px 20px;
+}
+#empty.on { display: block; }
+
+/* 크롬 (§13-59) — 리스트 뷰(z 2) 위에 떠 있어야 한다. 밑에 깔리면 목록을 연 뒤
+   줌·맞춤·닫기에 손이 닿지 않는다. */
+#chrome {
+  position: absolute; right: 12px; bottom: 10px; z-index: 4;
+  display: flex; flex-direction: column; gap: 4px;
+}
+#chrome .cbtn {
+  min-width: 30px; height: 26px; display: flex; align-items: center; justify-content: center;
+  padding: 0 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--lane);
+  color: var(--dim); font-size: 11.5px; cursor: pointer; user-select: none;
+}
+#chrome .cbtn:hover { color: var(--text); border-color: var(--accent); }
+
+/* 왼쪽 아래 「!」(대장 129 · §17.26 C-3·C-7) — 진짜 문제가 있을 때만 서고 늘 빨강이다(중립 상태 없음 · 사용자 결정 2026-10-20).
+   도움말 줄은 원이 있을 때만 원 오른쪽으로 비킨다. 상자는 원 바로 위에 붙는다 · `#svg` 밖(내보내기 0). */
+#probs {
+  position: absolute; left: 12px; bottom: 10px; z-index: 4; width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none;
+  background: var(--err); color: #ffffff; font-weight: 800; font-size: 16px; line-height: 1;
+  border: 2px solid #ffffff; box-shadow: 0 2px 10px rgba(0, 0, 0, .5);
+}
+#probs[hidden] { display: none; }
+#probs.on { outline: 2px solid var(--accent); outline-offset: 2px; }
+#probs:not([hidden]) ~ #help { left: 50px; max-width: calc(100% - 158px); }
+#probpop {
+  position: absolute; left: 12px; bottom: 46px; z-index: 4; display: none; flex-direction: column;
+  width: min(720px, calc(100% - 110px)); max-height: 60%; overflow: auto;
+  background: var(--lane); border: 1px solid var(--err); border-radius: 8px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, .55); font-size: 12px; color: var(--text);
+}
+#probpop.on { display: flex; }
+#probpop .phd { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--line); font-size: 13px; }
+#probpop .px { margin-left: auto; cursor: pointer; color: var(--dim); padding: 0 4px; }
+#probpop .px:hover { color: var(--text); }
+#probpop .psec { padding: 8px 12px 10px; }
+#probpop .psec + .psec { border-top: 1px solid var(--line); }
+#probpop .pst { font-weight: 650; margin-bottom: 6px; }
+#probpop .pl { line-height: 1.6; padding: 4px 0 4px 10px; border-left: 3px solid var(--err); margin-bottom: 5px; }
+#probpop .pnote { color: var(--dim); margin-bottom: 6px; }
+#probpop .pacts { display: flex; gap: 6px; margin-bottom: 6px; }
+#probpop .lbtn {
+  padding: 2px 8px; border: 1px solid var(--line); border-radius: 6px;
+  color: var(--dim); cursor: pointer; font-size: 11px;
+}
+#probpop .lbtn:hover { color: var(--text); border-color: var(--accent); }
+#probpop .lwrap { overflow: auto; max-height: 40vh; }
+#probpop table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+#probpop th {
+  position: sticky; top: 0; background: var(--box); color: var(--dim); text-align: left;
+  padding: 5px 8px; border-bottom: 1px solid var(--line); cursor: pointer; white-space: nowrap;
+}
+#probpop td { padding: 4px 8px; border-bottom: 1px solid var(--line); color: var(--text); vertical-align: top; }
+/* 「모니터링 이상」 절(§17.26 C-8) — `<table>` 이 아니다(「캔버스에 없는 리소스」 표의 줄 수를 재는 검사와 섞이지 않게). 줄 = display: contents */
+#probpop .pmt {
+  display: grid; grid-template-columns: auto auto auto minmax(110px, 1fr) auto minmax(150px, 2fr);
+  font-size: 11.5px; overflow: auto; max-height: 40vh; margin-bottom: 6px;
+}
+#probpop .pmh, #probpop .pmr { display: contents; }
+#probpop .pmh > span {
+  position: sticky; top: 0; background: var(--box); color: var(--dim); padding: 5px 8px;
+  border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+#probpop .pmr > span { padding: 4px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+#probpop .pmr.lopen > span { cursor: pointer; }
+#probpop .pmr.lopen:hover > span { background: var(--box); }
+#probpop .pmd > summary { cursor: pointer; }
+
+/* 정보창 안 링크 */
+#side .wlink { color: var(--wire); cursor: pointer; border-bottom: 1px dotted var(--wire); }
+
+/* 독 = 오른쪽 패널의 상위 탭 (대장 101). 변경 이력 / 특이사항이 **배타**로 쓴다 —
+   동시 개방을 허용하면 1920 폭에서 캔버스가 1280 으로 줄어든다. */
+#side .dock {
+  display: flex; gap: 4px; align-items: center; margin: 0 0 10px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--line);
+}
+#side .dtab {
+  padding: 3px 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--dim);
+  font-size: 11px; cursor: pointer;
+}
+#side .dtab.on { color: var(--text); border-color: var(--accent); }
+/* 변경 이력 목록 — 「무언가 바뀐 시각」의 줄이다(대장 94: 격자가 아니다). */
+#side .hrow {
+  display: flex; gap: 8px; align-items: baseline; padding: 6px 6px; cursor: pointer;
+  border-left: 3px solid transparent; border-bottom: 1px solid var(--line); font-size: 12px;
+}
+#side .hrow:hover { background: var(--chip); }
+#side .hrow.on { border-left-color: var(--accent); background: var(--chip); }
+#side .hrow .hat { color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* 이름이 먼저 보인다(§3j J0 · 검사 118 ①) — 폭이 모자라면 시각·반복이 다음 줄로 내려가고 이름 칸은 12em 을
+   지킨다. 188 배포본에서 한 줄에 우겨 넣은 상태 줄 7개가 전부 「로드밸…」로 잘렸다(2026-09-28). */
+#side .hrow { flex-wrap: wrap; row-gap: 2px; }
+#side .hrow .hwhat {
+  color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1 1 12em; min-width: 12em;
+}
+#side .hrow.past .hat { color: var(--warn); }
+/* 같은 시각 · 같은 글자라 식별자 끝 `(…xxxx)` 를 붙인 줄(§3j J0 · 2026-10-21 QA C Q-4) — 자르지 않고 접는다.
+   잘라 버리면 두 줄이 보이는 글자로는 다시 같아진다(독 폭 320px 에서 이름이 길면 꼬리가 먼저 잘린다). */
+#side .hrow.hsplit .hwhat { white-space: normal; overflow-wrap: break-word; }
+#side .hrow .htail { white-space: nowrap; }
+/* 실제로 멈춘/시작한 분 — 목록 시각(확인한 때)과 따로 선다(ADR 0008 D6 보강). 색은 쓰지 않는다. */
+#side .hrow .hocc { color: var(--text); font-variant-numeric: tabular-nums; font-size: 11px; white-space: nowrap; }
+#side .hrow .hn { margin-left: auto; color: var(--dim); font-size: 10.5px; white-space: nowrap; }
+/* 접힌 반복의 양 끝(§3j J0 「반복」 · QA B-20) — 폭이 모자라면 다음 줄로 내려가고 그 안에서도 접힌다. 자르면 시작이 사라진다. */
+#side .hrow .hn.hfold { white-space: normal; text-align: right; }
+/* 끊김(`→ down`)은 이력의 두 목적 중 하나다(사용자 결정 2026-09-24) → 목록에서 먼저 보여야 한다.
+   적색은 **심각도 전용**이라는 §8.3 규칙에 맞는 용처다(끊김 = 심각도). */
+#side .hrow .hcut {
+  color: var(--err); border: 1px solid var(--err); border-radius: 4px; padding: 0 4px;
+  font-size: 10px; white-space: nowrap;
+}
+#side .hrow.cut .hwhat { color: var(--text); }
+/* 묶음 줄(§3j J0) — 펼침 표시는 줄 끝, 펼친 이름은 줄 아래 들여 쓴다. */
+#side .hrow .hexp { margin-left: auto; color: var(--dim); padding: 0 4px; }
+#side .hrow .hn + .hexp { margin-left: 0; }
+#side .hsub { border-bottom: 1px solid var(--line); padding: 2px 0 4px 24px; }
+#side .hsub .hitem {
+  color: var(--dim); font-size: 11.5px; padding: 2px 6px; cursor: pointer;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#side .hsub .hitem:hover { background: var(--chip); color: var(--text); }
+/* 누른 이름 줄(§3j J3 · 2026-10-21) — 카메라가 그 항목으로 갔다 */
+#side .hsub .hitem.on { background: var(--chip); color: var(--text); box-shadow: inset 2px 0 0 var(--accent); }
+/* 🔴 한계·되짚기 공백은 **지우지 않고 접는다**(사용자 결정 2026-09-24: 목록이 주인공이다).
+   되짚는 중이면 같은 사실을 **배너 맨 위가 펼쳐서** 말하므로 접혀도 읽힌다 — 그래서 여기서만
+   접는 것이 허용된다. 두 곳에서 다 지우지 마라(사람이 「그때는 이랬다」로 오판한다). */
+#side .hcutoff { margin: 8px 0 0; padding: 6px 8px; border-left: 2px solid var(--dim); font-size: 11px; line-height: 1.6; }
+#side .hmore { margin: 10px 0 0; }
+#side .hmore > summary { color: var(--dim); font-size: 11px; cursor: pointer; }
+#side .hlim { margin: 8px 0 0; color: var(--dim); font-size: 11px; line-height: 1.7; }
+
+/* 태그 버킷 (§13-62) · 쿼리 에러 (§13-56) */
+#fbar .qerr { color: var(--warn); }
+#fbar .qnote { color: var(--warn); }
+.mbuckets { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.mbuckets .bk { font-size: 11px; color: var(--dim); display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.mbuckets .bkey {
+  padding: 1px 6px; border: 1px solid var(--line); border-radius: 5px; cursor: pointer; color: var(--text);
+}
+.mbuckets .bkey:hover { border-color: var(--accent); }
+.mnote code { background: var(--chip); border-radius: 4px; padding: 0 4px; }
+
+/* §15 검증 오버레이의 규칙은 `verify-overlay.js` 가 주입할 때 같이 넣는다 — 고객 화면에는 오버레이가 없다
+   (사용자 결정 2026-10-20 · 대장 82 개정). 여기 되돌리지 마라. */
+/* §4c 대장 80: 배율 표시. 버튼이 아니라 **읽는 것**이라 data-act 가 없다(검사 59 의 목록 불변) */
+#chrome .czoom {
+  min-width: 30px; height: 22px; display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; border: 1px dashed var(--line); background: var(--bg);
+  color: var(--text); font-size: 11px; font-weight: 650; user-select: none;
+}
+
+/* §3j 이력 비교 화면. 부모: `#cmp` = 캔버스 오른쪽 칸(열 때만 DOM 에 있다). 칸 안: `body.cmp` = 그림만. */
+#cmp { flex: 1; min-width: 0; display: flex; flex-direction: column; border-left: 1px solid var(--line); background: var(--bg); }
+#cmp .chead {
+  display: flex; align-items: center; gap: 8px; padding: 6px 10px; flex: 0 0 auto;
+  border-bottom: 1px solid var(--line); background: var(--lane); font-size: 12px; color: var(--text);
+}
+#cmp .ctitle { flex: 1; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* 칸 머리를 누르면 그 시각 변경 전부로 맞춘다(§3j J3 · 2026-10-21) */
+#cmp .ctitle[data-call] { cursor: pointer; }
+#cmp .ctitle[data-call]:hover { text-decoration: underline; }
+#cmp .close { cursor: pointer; color: var(--dim); padding: 0 4px; }
+#cmp .close:hover { color: var(--text); }
+#cmp .clist { flex: 0 0 auto; max-height: 30%; overflow: auto; }
+#cmp .clist .cl { padding: 4px 10px; font-size: 11.5px; color: var(--dim); border-bottom: 1px solid var(--line); }
+#cmp .clist .cl.err { color: var(--warn); }
+#cmp iframe { flex: 1; border: 0; width: 100%; min-height: 0; display: block; background: var(--bg); }
+body.cmp #top, body.cmp #scopes, body.cmp #monpop, body.cmp #fbar, body.cmp #bans,
+body.cmp #side, body.cmp #probs, body.cmp #probpop, body.cmp #help,
+body.cmp #modal, body.cmp #empty { display: none !important; }
+body.cmp #chrome .cbtn:not([data-act="zin"]):not([data-act="zout"]):not([data-act="fit"]):not([data-act="reset"]) { display: none; }
+
+/* ---- §17 새 도식(AWS 아키텍처 모양) ----
+   🔴 그림의 색·선은 SVG 속성으로 박혀 있다(내보내기는 CSS 를 가져가지 않는다). 여기 있는 것은
+   **상호작용 상태**뿐이다 — 고름(흐림)·열린 VPC·검색 흐림·정보창·상단바 보기 선택. 클래스는 전부 `aw-` 접두다. */
+#awscard, #awsleg, #awsnote { display: none; }
+/* 상단바 안의 보기 선택(AZ·서브넷)·범례·ⓘ — 높이·글자는 상단바 `.btn` 과 같다(검사 68). */
+#awsbar { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; font-size: 12px; }
+#awsbar .ck { display: flex; align-items: center; gap: 5px; color: var(--text); cursor: pointer; user-select: none; white-space: nowrap; }
+#awsbar .ck input { margin: 0; accent-color: #8C4FFF; width: 14px; height: 14px; cursor: pointer; }
+#awsbar button.btn { font: inherit; font-size: 12px; }
+/* 팝오버는 상단바 오른쪽(범례·ⓘ 버튼) 바로 아래에 뜬다 */
+#stage.aws #awsleg, #stage.aws #awsnote {
+  position: absolute; right: 12px; top: 10px; background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+  padding: 10px 12px; font-size: 12px; line-height: 1.6; color: #c9d1d9; z-index: 6;
+}
+#awsnote { max-width: 560px; }
+#awsleg { width: 340px; max-height: calc(100% - 70px); overflow: auto; line-height: 1.3 !important; }
+#awsleg h4 { margin: 8px 0 4px; color: #8b949e; font-size: 11.5px; font-weight: 600; }
+#awsleg h4:first-child { margin-top: 0; }
+#awsleg .aw-lg { display: flex; align-items: center; gap: 9px; padding: 2px 0; }
+#awsleg .aw-lg svg { flex: none; }
+#svg.aws .aw-ic, #svg.aws .aw-pt, #svg.aws .aw-sn, #svg.aws .aw-vt { cursor: pointer; }
+#svg.aws .aw-hitl { cursor: pointer; }
+#svg.aws .aw-vt:hover .aw-tri, #svg.aws .aw-vt:hover .aw-vn { fill: #fff; }
+#svg.aws .aw-vpc.aw-open .aw-vb { stroke: #e6edf3; stroke-width: 2; }
+/* 검색 흐림(§17.21) · VPC 는 틀·이름만(안의 서브넷·AZ 는 자기 판정). 클릭 흐림은 검색이 남긴 것(.aw-skeep)을 건너뛴다 = 검색이 이긴다(§17.18-3) */
+#svg.aws .aw-sdim, #svg.aws .aw-vpc.aw-sdimv > :not(.aw-sn):not(.aw-az) { opacity: .25; }
+/* 비교 칸 「생김」 시각의 흐림(§3j J4 개정 · QA B P8) — 검색 흐림과 같은 0.25 · 검색 흐림과 다른 클래스(칸 안에는 검색이 없지만 서로 지우지 않게) */
+#svg.aws .aw-cdim, #svg.aws .aw-vpc.aw-cdimv > :not(.aw-sn):not(.aw-az) { opacity: .25; }
+#svg.aw-sel .aw-ic:not(.aw-hl):not(.aw-skeep), #svg.aw-sel .aw-ln:not(.aw-hl):not(.aw-skeep), #svg.aw-sel .aw-pt:not(.aw-hl):not(.aw-skeep) { opacity: .12; }
+#svg.aw-sel .aw-sn:not(.aw-hl):not(.aw-ctx):not(.aw-skeep), #svg.aw-sel .aw-az:not(.aw-ctx):not(.aw-skeep), #svg.aw-sel .aw-reg:not(.aw-ctx):not(.aw-skeep),
+#svg.aw-sel .aw-acct:not(.aw-ctx):not(.aw-skeep), #svg.aw-sel .aw-glob:not(.aw-ctx):not(.aw-skeep),
+#svg.aw-sel .aw-vpc:not(.aw-hl):not(.aw-ctx):not(.aw-skeep) > :not(.aw-sn):not(.aw-az) { opacity: .2; }
+#svg.aw-sel .aw-ln.aw-hl .aw-vis { stroke: #f0f6fc; stroke-width: 2.4; }
+#svg.aw-sel .aw-sn.aw-hl > rect:first-child { stroke: #f0f6fc; stroke-width: 1.8; }
+#svg.aw-sel .aw-vpc.aw-hl .aw-vb { stroke: #f0f6fc; stroke-width: 2.2; }
+#svg.aw-sel #aw-ar path { fill: #f0f6fc; }
+#stage.aws #awscard { position: absolute; width: 560px; max-width: calc(100% - 24px); max-height: 72%; overflow: hidden; flex-direction: column; background: #161b22; border: 1px solid #484f58;
+  border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,.5); font-size: 12px; z-index: 5; color: #c9d1d9; }
+/* 긴 창에서도 투명도 줄이 창 안에 남는다 — 몸통만 줄어들고 스크롤한다(30계정에서 몸통이 창보다 길어 줄이 창 밖으로 밀려 잘렸다) */
+#awscard .aw-body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 10px 12px; }
+#awscard .aw-op { flex: none; display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: #161b22; border-top: 1px solid #30363d;
+  border-radius: 0 0 8px 8px; color: #8b949e; user-select: none; }
+#awscard .aw-op input { flex: 1; accent-color: #8b949e; margin: 0; }
+#awscard .aw-op b { width: 34px; text-align: right; color: #c9d1d9; font-weight: 500; }
+#awscard h3 { margin: 0; font-size: 13.5px; color: #e6edf3; overflow-wrap: break-word; }
+#awscard h3 .aw-tri { color: #8b949e; margin-right: 6px; }
+#awscard .aw-sub { color: #8b949e; margin: 2px 0 8px; }
+/* 대장 58 콘솔 딥링크 — 부제 아래 한 줄. 눌러야 이동한다(자동 요청 0). */
+#awscard .aw-clink { display: inline-block; margin: 0 0 8px; color: #58a6ff; font-size: 11.5px; text-decoration: none; }
+#awscard .aw-clink:hover { text-decoration: underline; }
+/* 칸 머리(라우팅 테이블·보안 그룹·네트워크 ACL)의 작은 「콘솔 ↗」 · 링크 옆 소유 계정 안내(계정이 둘 이상인 화면) */
+#awscard h4 .aw-clink-s { margin: 0 0 0 6px; font-weight: 400; font-size: 11px; }
+#awscard .aw-cacct { color: #8b949e; font-size: 11px; margin-left: 4px; }
+#awscard table { border-collapse: collapse; width: 100%; }
+/* 정보창 = 콘솔 표현(§17.11 「콘솔 표현 원칙」 · 사용자 결정 2026-10-24) — 폭 560 · ID 는 중간에서 끊지 않는다(`break-all` 금지 · 한 낱말이 칸보다 길 때만 꺾는다) */
+#awscard td { border-top: 1px solid #21262d; padding: 4px 3px; vertical-align: top; white-space: pre-wrap; overflow-wrap: break-word; }
+#awscard td:first-child { color: #8b949e; width: 150px; }
+/* 누르면 그 정보창으로 가는 줄 값(§17.41 「웹 ACL」 → 그 WAF) */
+#awscard td.aw-go { color: #79c0ff; text-decoration: underline; cursor: pointer; }
+#awscard td.aw-go:hover, #awscard td.aw-go:focus-visible { background: #21262d; outline: none; }
+#awscard .aw-mem { margin-top: 8px; }
+#awscard .aw-mem div { padding: 3px 0; border-top: 1px solid #21262d; }
+#awscard .aw-mem small { color: #8b949e; display: block; }
+/* 묶음 멤버 줄 = 누르면 그 낱개 정보창(§17.11 · 검사 162) — 줄 모양은 위 글자 줄과 같고 누를 수 있다는 것만 더한다 */
+#awscard .aw-mem .aw-mr { display: block; width: 100%; text-align: left; background: none; border: 0; border-top: 1px solid #21262d; border-radius: 0;
+  color: #c9d1d9; font: inherit; padding: 3px 4px; cursor: pointer; }
+#awscard .aw-mem .aw-mr:hover, #awscard .aw-mem .aw-mr:focus-visible { background: #21262d; color: #e6edf3; outline: none; }
+#awscard .aw-mem .aw-mr[hidden], #awscard .aw-mem .aw-memz[hidden] { display: none; }
+#awscard .aw-mem .aw-memn, #awscard .aw-mem .aw-memz { border-top: 0; color: #8b949e; font-size: 11.5px; }
+#awscard .aw-mem .aw-mema { background: none; border: 0; padding: 0; color: #58a6ff; font: inherit; cursor: pointer; }
+#awscard .aw-mem .aw-memq { display: block; width: 100%; box-sizing: border-box; margin: 6px 0 4px; padding: 4px 6px; background: #0d1117;
+  border: 1px solid #30363d; border-radius: 4px; color: #e6edf3; font: inherit; }
+#awscard .aw-back { display: block; margin: 0 0 6px; padding: 0; background: none; border: 0; color: #58a6ff; font: inherit; font-size: 11.5px; cursor: pointer; }
+#awscard .aw-back:hover, #awscard .aw-back:focus-visible { text-decoration: underline; outline: none; }
+#awscard .aw-rtb { color: #c9d1d9; cursor: pointer; user-select: none; display: block; width: fit-content; margin-top: 6px; padding: 3px 8px;
+  border: 1px solid #30363d; border-radius: 5px; background: #21262d; }
+#awscard .aw-rtb:hover { border-color: #8b949e; }
+#awscard .aw-rtl { margin: 2px 0 4px; padding-left: 4px; border-left: 2px solid #30363d; }
+#awscard .aw-rtl h4 { margin: 8px 0 3px; font-size: 12px; color: #e6edf3; overflow-wrap: break-word; }
+#awscard .aw-rtl .aw-r { display: flex; gap: 10px; padding: 2px 4px; border-radius: 4px; cursor: pointer; }
+#awscard .aw-rtl .aw-r:hover { background: #21262d; }
+#awscard .aw-rtl .aw-r > span:first-child { width: 150px; flex: none; font-family: ui-monospace, Menlo, monospace; overflow-wrap: break-word; }
+#awscard .aw-rtl .aw-r > span:last-child { white-space: pre-wrap; overflow-wrap: break-word; min-width: 0; }
+#awscard .aw-rtl .aw-r.aw-t > span { width: auto; flex: 1 1 auto; min-width: 0; font-family: inherit; }
+#awscard .aw-rtl .aw-r.aw-nk { cursor: default; }
+#awscard .aw-rtl .aw-r.aw-nk:hover { background: none; }
+#awscard .aw-secs { margin-top: 4px; }
+#awscard .aw-obsh { margin: 10px 0 3px; padding-top: 6px; border-top: 1px solid #30363d; font-size: 12px; font-weight: 600; color: #e6edf3; }
+#awscard .aw-bh { color: #f85149; font-weight: 600; }
+#awscard .aw-mt { color: #8b949e; }
+#awscard .aw-wn { color: #d29922; font-weight: 600; }
+
+/* ---- 사용률(§17.25) — 막대·메뉴·목록은 `#svg` 밖 HTML. 그림(배지·세모)의 모양은 SVG 속성이고 여기는 고르기 상태뿐이다 ---- */
+#awsut { display: none; position: absolute; left: 12px; top: 10px; z-index: 5; align-items: center; gap: 8px; font-size: 12px; color: #c9d1d9; }
+#awsut .ut-l { color: #8b949e; }
+#awsut .ut-seg { display: inline-flex; border: 1px solid #30363d; border-radius: 6px; overflow: hidden; }
+#awsut button { font: inherit; font-size: 12px; color: #c9d1d9; background: #161b22; border: 0; padding: 4px 9px; cursor: pointer; }
+#awsut .ut-seg button + button { border-left: 1px solid #30363d; }
+#awsut .ut-v.on { background: #30363d; color: #f0f6fc; }
+#awsut .ut-b { border: 1px solid #30363d; border-radius: 6px; }
+#awsut .ut-b.on { border-color: #8b949e; }
+#awsut button:disabled { opacity: .35; cursor: default; }
+#awsut .ut-chip { display: inline-flex; align-items: center; gap: 4px; background: #1f2630; border: 1px solid #FF9F1C; border-radius: 12px; padding: 1px 4px 1px 10px; }
+#awsut .ut-chip button { background: none; padding: 0 5px; }
+#awsut .ut-pop { position: absolute; left: 0; top: 34px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 8px 10px; max-height: 60vh; overflow: auto; }
+#awsut .ut-h { color: #8b949e; font-size: 11.5px; margin: 2px 0 6px; }
+#awsut .ut-g { color: #8b949e; font-size: 11px; margin: 8px 0 2px; }
+#awsut .ut-w { display: flex; width: 100%; text-align: left; padding: 3px 6px; border-radius: 4px; }
+#awsut .ut-w:hover, #awsut .ut-r:hover { background: #1f2630; }
+#awsut .ut-ck { display: inline-block; width: 16px; }
+#awsut .ut-tabs { display: flex; gap: 4px; margin-bottom: 6px; }
+#awsut .ut-tab { border: 1px solid #30363d; border-radius: 6px; }
+#awsut .ut-tab.on { background: #30363d; color: #f0f6fc; }
+#awsut table { border-collapse: collapse; white-space: nowrap; }
+#awsut th { color: #8b949e; font-weight: 500; text-align: left; padding: 3px 10px 3px 0; border-bottom: 1px solid #30363d; }
+#awsut td { padding: 3px 10px 3px 0; }
+#awsut .ut-r { cursor: pointer; }
+#awsut .ut-r.on td { color: #f0f6fc; }
+#awsut .ut-bar { display: inline-block; height: 6px; background: #FF9F1C; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+#awsut .ut-sh { color: #8b949e; font-size: 11px; }
+/* 고르기 — 고른 선은 자기 색 그대로 3.8px(0.25s) · 다른 선 .25 · 배지 .3 · 다른 세모 숨김 · 아이콘 .35 */
+@keyframes utgrow { to { stroke-width: 3.8px; } }
+#svg.aw-upick .aw-ln.aw-uhl .aw-vis, #svg.aw-upick .aw-fl.aw-uhl .aw-flv { animation: utgrow .25s forwards; }
+#svg.aw-upick .aw-ln:not(.aw-uhl), #svg.aw-upick .aw-fl:not(.aw-uhl) { opacity: .25; }
+#svg.aw-upick .aw-ub:not(.aw-uhl), #svg.aw-upick .aw-wg { opacity: .3; }
+#svg.aw-upick .aw-ub.aw-uhl { fill: #f0f6fc; }
+/* 사용률 세모 층(§17.25 「성능」) — 그림과 같은 판 · 누르기를 받지 않는다 */
+#awsutl { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+#svg.aw-upick .aw-utt:not(.aw-uhl), #awsutl.aw-upick .aw-utt:not(.aw-uhl) { display: none; }
+#svg.aw-upick .aw-ic:not(.aw-uhl), #svg.aw-upick .aw-pt:not(.aw-uhl) { opacity: .35; }
+#svg.aw-upick .aw-ic.aw-uhl, #svg.aw-upick .aw-pt.aw-uhl { filter: drop-shadow(0 0 4px rgba(240, 246, 252, .55)); }
+#svg.aw-upick .aw-vpc.aw-uhl .aw-vb { stroke-width: 3.8; }
+#svg.aw-upick .aw-sn.aw-uhl > rect:first-child { stroke: #f0f6fc; stroke-width: 2.4; }
+
+/* 콘솔식 표(§17.11 「콘솔 표현 원칙」) — 머리줄 + 열(콘솔 열 이름·순서) · 560 에 안 들어가면 두 줄 행(둘째 줄 = 나머지 열 · 회색 작은 글씨).
+   열 폭은 열 정의(`w`)로 고정해 행끼리 줄이 맞는다 · ID 칸은 한 줄(끊지 않는다) · 행은 `.aw-r`(누르면 그 자원 · 검사 129 의 줄 누름과 같은 길) */
+#awscard .aw-tbl { margin: 2px 0 4px; }
+#awscard .aw-tbl .aw-gh, #awscard .aw-rtl .aw-r.aw-g { display: block; padding: 3px 4px; border-top: 1px solid #21262d; border-radius: 0; }
+#awscard .aw-tbl .aw-gh { color: #8b949e; font-weight: 600; font-size: 11.5px; border-top: 0; }
+#awscard .aw-tbl .aw-l1, #awscard .aw-tbl .aw-l2 { display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+#awscard .aw-tbl .aw-l2 { color: #8b949e; font-size: 11px; margin-top: 1px; }
+/* 칸 = 정해진 폭(열 정의 w) · 🔁 2026-10-26 칸 내용이 칸보다 길면 칸이 넓어진다(`min-width: min-content`) — 옛 `min-width: 0` 은 글자가 옆 칸 위로 넘치거나
+   (ID 칸 nowrap) 마지막 칸이 글자 한 자 폭으로 눌려 줄 높이가 비정상으로 커졌다(마지막 칸 flex-shrink · 사용자 스크린샷 「가상 인터페이스」 표) */
+#awscard .aw-tbl .aw-l1 > span, #awscard .aw-tbl .aw-l2 > span { flex: none; width: auto; min-width: min-content; font-family: inherit; white-space: normal; overflow-wrap: break-word; }
+#awscard .aw-tbl span.aw-c-id { font-family: ui-monospace, Menlo, monospace; white-space: normal; }
+#awscard .aw-tbl .aw-gh span.aw-c-id { font-family: inherit; }
+/* 사용자가 지은 긴 이름 칸(`any` · 예: CloudFront 오리진 이름) — 칸 폭(열 정의 w)을 지키고 낱말 안에서도 줄을 바꾼다. 칸 겹침·가로 넘침 0 (검사 164) */
+#awscard .aw-tbl span.aw-c-any { min-width: 0; overflow-wrap: anywhere; }
+#awscard .aw-tbl span.aw-c-last { flex: 1 0 auto; }
+#awscard .aw-tbl .aw-st-ok { color: #3fb950; }
+#awscard .aw-tbl .aw-st-ok::before { content: '✓ '; }
+#awscard .aw-tbl .aw-st-bad { color: #f85149; font-weight: 600; }
+#awscard .aw-tbl .aw-st-bad::before { content: '⊘ '; }
+#awscard .aw-tbl .aw-tmt { color: #8b949e; padding: 3px 4px; }
+/* 칸 안의 작은 탭(콘솔 탭 순서 · 예: TGW 라우팅 테이블 「연결 · 전파 · 접두사 목록 참조 · 경로」) */
+#awscard .aw-tabs { display: flex; gap: 2px; margin: 4px 0 2px; border-bottom: 1px solid #30363d; }
+#awscard .aw-tab { background: none; border: 0; border-bottom: 2px solid transparent; color: #8b949e; font: inherit; font-size: 11.5px; padding: 3px 8px; cursor: pointer; }
+#awscard .aw-tab[aria-selected="true"] { color: #e6edf3; border-bottom-color: #58a6ff; }
+#awscard .aw-tab:hover, #awscard .aw-tab:focus-visible { color: #e6edf3; outline: none; }
+#awscard .aw-tpane[hidden] { display: none; }
+#awscard .aw-rtl .aw-gd { color: #8b949e; font-size: 11.5px; margin: 0 0 4px; overflow-wrap: break-word; }
+/* ID·CIDR 낱말은 한 줄(§17.11 「콘솔 표현 원칙」 — 하이픈·빗금에서 꺾이지 않는다) */
+#awscard .aw-nb { white-space: nowrap; }

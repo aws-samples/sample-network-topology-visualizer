@@ -1,0 +1,15 @@
+# 엔진을 빌드하는 도구(빌드 백엔드 hatchling 과 그 의존성) — **전부 == 고정 + 해시**. 실행 때는 쓰지 않는다.
+# 수집기 CodeBuild 가 런타임 lock 과 함께 설치한 뒤 빌드 격리 없이 엔진을 빌드한다(buildspec.yml · 새 가상환경 안:
+#   `$VENV/bin/python -m pip install --require-hashes -r engine/requirements.lock -r engine/build-requirements.lock`
+#   → `$VENV/bin/python -m pip install --no-build-isolation --no-deps ./engine`).
+#
+# 🔴 빌드 격리(기본값)로 두면 pip 가 pyproject 의 `hatchling>=1.24` 를 빌드하는 날의 최신 판으로 받아 온다 — 런타임 lock 을
+#    고정해도 이 한 칸이 고정되지 않는다. `--no-build-isolation` 은 이 파일로 설치한 판을 그대로 쓴다.
+# 해시 = PyPI 휠의 sha256(`pip download --no-deps --only-binary :all:` 로 받아 `shasum -a 256` 한 값 = PyPI JSON API digests).
+# 휠은 전부 순수 파이썬(py3-none-any). tomli 는 python < 3.11 에서만 필요하다(CodeBuild 는 3.12).
+hatchling==1.32.4 --hash=sha256:08ecf7548fb48205e7f213d70c71e67b8271b7242093dc3f1da578b42c734a2c
+packaging==26.3 --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c
+pathspec==1.1.1 --hash=sha256:a00ce642f577bf7f473932318056212bc4f8bfdf53128c78bbd5af0b9b20b189
+pluggy==1.7.0 --hash=sha256:7dd7b0d8832ba3cb632c306926ded123429211b83641b35dc5c41ad2d34f9bec
+tomlkit==0.15.2 --hash=sha256:05562412163a3037b94497385fb7f9204c637bc605af7a48199e41cf2272f437
+trove-classifiers==2026.9.21.13 --hash=sha256:8b1ff4f9c191b1040b71c37f1e445ab99732911e3cd91de52838453a854d7a17

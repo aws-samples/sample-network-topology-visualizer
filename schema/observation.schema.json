@@ -1,0 +1,1294 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sample-network-topology-visualizer:schema:observation",
+  "title": "NetworkTopology observation",
+  "description": "구조가 아니라 «상태»의 계약. topology.json 과 짝을 이루는 두 번째 파일이며, 둘을 한 파일에 합치지 않는다(ADR 0004 §결정, engine/src/nettopo/collect.py:480). 구조는 바이트 동일해야 하고 상태는 매 주기 바뀌므로, 같은 파일에 두면 불변식 ②가 구조까지 잡아먹는다.",
+  "$comment": "설계 판단과 열린 판단은 docs/adr/0006-observation-schema.md 에 있다. 상태 어휘 4개(live·up·down·none)의 정본은 docs/contract-seams.md 「이음매 3」 이고 여기서 다시 정의하지 않는다 — 다섯 번째 어휘를 만들지 마라. 키는 snake_case, 정렬 규칙은 JSON Schema 로 표현할 수 없으므로 schema/tests/test_observation_schema.py 가 강제한다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run",
+    "scope",
+    "layers",
+    "sources",
+    "observations",
+    "coverage",
+    "history",
+    "changes"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "이 문서가 준수하는 스키마 버전. topology.schema.json 과 독립으로 올린다.",
+      "$comment": "1.0.0 으로 시작한다. topology 의 2.0.0 을 따라가지 않는 이유는 두 파일이 서로의 버전을 알 필요가 없기 때문이다 — 관측 계약만 깨지는 변경에 구조 픽스처를 마이그레이션하게 만들면, 무해한 변경을 피하려고 계약을 늘리지 않는 쪽으로 사람이 기울어진다. 짝을 맞추는 일은 run.topology_collected_at 이 한다. 🔴 올리는 규칙(1.1.0 에서 처음 적용): 선택 키·enum 값 추가 = minor(1.0.0 문서는 새 키 없이 그대로 유효하다) / 필수 키 추가·의미 변경·삭제 = major. 이력은 major 만 비교한다(engine/src/nettopo/history.py `_refusal()`) — minor 가 오르면 이전 문서와의 차분이 끊기지 않는다. const 이므로 생산자(engine/src/nettopo/observe.py 의 SCHEMA_VERSION)와 fixtures/observation/*.json 을 같은 커밋에서 올린다. 1.1.0 = 흐름 로그 판독기(ADR 0008 「D4b 개정」): layers.flow_log · observations[].by_subnet · sources[].resources · 피어링·IGW 행의 흐름 로그 근거. 1.2.0 = W3②(ADR 0006 「W3② LB 대상 상태」): observations[].targets. 1.3.0 = S5 2단계(ADR 0008 「D4c」): by_subnet 항목 status up(datapoints 0 = 「안 흐른다」) · 어태치먼트 선의 흐름 로그 근거(TGW 흐름 로그) · flow_log_evidence.datapoints 최소 0 — 1.2.0 문서는 그대로 유효하다. 1.4.0 = #27 사용률(ADR 0011 D7): layers.utilization · 최상위 utilization — 1.3.0 문서는 그대로 유효하다. 1.5.0 = 사용률을 모니터링과 떼어 냄(ADR 0011 D7 개정 2026-10-06): layers.utilization 이 layers.metric: true 를 더 요구하지 않는다(제약을 푼 것뿐 — 1.4.0 문서는 그대로 유효하다). 1.6.0 = DX VIF BGP 피어 수(ADR 0006 §O7 DX 행 · 2026-10-15): observations[].bgp — 1.5.0 문서는 그대로 유효하다. 1.7.0 = 접힌 반복의 시작(ADR 0006 결정 12 · 2026-10-15 고객 데모 발견): changes[].first_at · first_from(선택 키 — 1.6.0 문서는 그대로 유효하다). 1.8.0 = LB 대상 선(topology 2.7.0 `load_balancer_target` · ADR 0006 §O7 엣지 표): observations[].targets 를 그 선 행에도 둔다(그 선으로 묶인 등록들의 헬스 — 선택 키 · 1.7.0 문서는 그대로 유효하다). 1.10.0 = topology 2.9.0 의 수집 종류 4종(#114 · ElastiCache·Aurora/RDS 클러스터·OpenSearch·MSK)을 resource_type 에 더했다(enum 값 추가 — 1.8.0 문서는 그대로 유효하다 · 1.9.0 은 같은 날 병행한 배치 A 몫으로 비워 둔다). 1.9.0 = resource_type enum 에 `lambda_function` · `route53_hosted_zone`(topology 2.8.0 · 두 파일의 목록은 같아야 한다 — 관측은 Lambda 를 부르지 않는다 · enum 값 추가 = minor). 1.11.0 = resource_type enum 에 배치 D 수집 종류 5개(`elastic_ip` · `api_gateway` · `api_gateway_v2` · `rds_db_proxy` · `global_accelerator` · topology 2.10.0 · 관측은 다섯 다 부르지 않는다 — 상태 없음 · enum 값 추가 = minor). 1.12.0 = observations[].deleting(선택 키 · 사용자 결정 2026-10-21 QA C): 1층 값이 「지우는 중」인 행 = status none + deleting true · 이력은 그 전이를 적지 않는다 — 1.11.0 문서는 그대로 유효하다. 1.13.0 = utilization_window.no_points(선택 키 · #128 · 불변식 ④): 「값이 있을 때만 보내는」 지표가 기간 전체에 점을 하나도 보내지 않은 창 — 엔진이 0 을 적던 자리다. 그 창은 값(peak·average·sum)을 싣지 않는다(화면 「값 없음」) — 1.12.0 문서는 그대로 유효하다(그때의 0 은 빈 응답과 실제 0 을 가르지 못한 값이다). 1.14.0 = resource_type enum 에 #129 수집 종류 3개(`core_network` · `lattice_service_network` · `lattice_service` · topology 2.11.0 · 관측은 셋 다 부르지 않는다 — 상태 없음 · enum 값 추가 = minor) — 1.13.0 문서는 그대로 유효하다. 1.15.0 = observations[].targets 의 다섯 갈래(#137 · 선택 키): health_check_off · initial · draining · unused · other_unavailable — AWS TargetHealth.State(+ unavailable 은 Reason)로 센 「정상도 비정상도 아닌」 대상 · 판정은 바뀌지 않는다 — 1.14.0 문서는 그대로 유효하다(화면은 다섯이 없으면 옛 「그 밖」 문구를 쓴다). 1.16.0 = resource_type enum 에 WAF 웹 ACL 수집 종류 2개(`waf_web_acl` · `waf_web_acl_global` · topology 2.12.0 · ADR 0014 · 관측은 둘 다 부르지 않는다 — 상태 없음 · enum 값 추가 = minor) — 1.15.0 문서는 그대로 유효하다. format_parquet · reader_pending_tgw 는 엔진이 더 내지 않지만 enum 에 남긴다(지우면 major). 1.17.0: VPN 연결 행 `tunnels`(터널별 상태 — 콘솔 「터널 세부 정보」 · 사용자 결정 2026-10-24 · 선택 키 · 판정은 탐침이 접은 값 그대로). 1.18.0 = 사용률 → 사용량(사용자 결정 2026-10-26 「사용률은 말 그대로 사용량」 · ADR 0011 D3 개정): utilization_window.total(기간 합 · 선택 키) · utilization_measure.total_unit · includes(선택 키) · measure 에 invocations · requests · connections · unit 에 count_per_second(enum 값 추가) — 엔진은 통신량(rate)에 한도를 더 싣지 않고(limit null) ALB capacity 를 더 내지 않는다. 「값이 있을 때만 보내는」 사용량 지표의 빈 창은 no_points 가 아니라 0 이다(결정 ④ · events 는 그대로 no_points) — 1.17.0 문서는 그대로 유효하다(capacity·percent·aws_computed 는 enum 에 남긴다 — 지우면 major).",
+      "type": "string",
+      "const": "1.18.0"
+    },
+    "run": { "$ref": "#/$defs/run" },
+    "scope": { "$ref": "#/$defs/scope" },
+    "layers": { "$ref": "#/$defs/layers" },
+    "sources": {
+      "description": "고객이 켰을 수도 안 켰을 수도 있는 근거 출처의 상태(ADR 0009). 「고객이 안 켰다」는 세 번째 「없음」이며, 「읽었고 0」(evidence.datapoints: 0)·「우리가 못 읽었다」(coverage)와 섞으면 안 된다. kind 오름차순 정렬.",
+      "$comment": "이 배열이 필요한 이유: 흐름 로그가 꺼져 있으면 구간 판정이 C 등급에 머무는데, 그 사실이 산출물에 없으면 화면은 「경로만 확인」만 보여 주고 사람은 「왜 초록이 아닌가」의 답을 얻지 못한다. layers 와 다른 축이다 — layers 는 «우리가» 그 층을 켰나이고 sources 는 «고객이» 그 출처를 켰나다. 빈 배열은 「옵션 출처를 하나도 탐지하지 않았다」이고 「전부 꺼져 있다」가 아니다.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/source" }
+    },
+    "observations": {
+      "description": "구조 스냅샷의 노드·엣지 하나에 대한 상태 판정. target_id 오름차순 정렬.",
+      "$comment": "렌더러가 노드 타입으로 관측 수단을 추론하면 불변식 ③이 흐려진다(docs/contract-seams.md 「이음매 3」). 그래서 판정은 반드시 데이터로 온다 — 화면은 여기 없는 것을 추론하지 않는다.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/observation" }
+    },
+    "coverage": {
+      "description": "불변식 ④의 저장소. (계정, 리전, 층) 단위로 관측이 성공했는지 기록한다. status 가 ok 가 아닌 항목은 렌더러가 '이 영역은 확인하지 못했다'(회색)로 표시해야 한다.",
+      "$comment": "키는 (계정,리전,리소스종류,층) 이다 — topology 의 coverage 에 «층» 을 하나 더한 모양이다. 종류축이 필요한 이유: 1층은 종류마다 다른 API 라서 종류 단위로 실패한다(실측: 같은 자리에서 DescribeVpcs 는 ok · DescribeSubnets 는 denied). 층축이 필요한 이유: 2층은 층 단위로 죽는다(GetMetricData 하나가 거부되면 그 리전 metric 행이 전부 denied). 둘 중 하나를 빼면 「일부만 읽었다」를 적을 수 없다(ADR 0006 O10). (account_id, region, resource_type, layer) 오름차순 정렬.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/coverage_entry" }
+    },
+    "history": { "$ref": "#/$defs/history" },
+    "changes": {
+      "description": "앞 스냅샷과의 차분. 수집기가 계산해서 싣는다 — 렌더러가 스냅샷을 비교하는 것이 아니다(ADR 0004 D4, 불변식 ③). at 오름차순 정렬, 같은 시각이면 target_id.",
+      "$comment": "이 배열이 비어 있는 것은 '변경 없음'이고, 그때 화면은 「기준 스냅샷」 1줄만 보인다(검사 85 ①: 목록 행 수 = changes.length + 1). 비어 있음을 '정상'으로 읽지 마라 — 관측 자체가 실패했는지는 coverage 가 답한다.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/change" }
+    },
+    "utilization": {
+      "description": "노드마다의 사용률(ADR 0011 · 화면 = docs/canvas-principles.md §17.25 · 선택 키). target_id 오름차순 · 유일. 흐름 판정(observations)과 다른 축이다 — 사용률은 status 를 바꾸지 않는다(ADR 0011 · ADR 0008).",
+      "$comment": "🔴 노드에만 붙인다(값을 내는 자원 = 어태치먼트 · DX 가상 인터페이스 · 방화벽 · LB · 서브넷 · VPC · TGW …). 그 노드를 화면의 어느 선·아이콘에 그리는지는 렌더러가 정한다 — 엔진이 「그릴 선」을 고르면 표시용 판단이 엔진에 들어간다(불변식 ③). observations 와 따로 두는 이유: 사용률이 있는 노드가 상태 행을 갖지 않을 수 있고(observe.py NO_STATE_NODES), 사용률 때문에 상태 행을 만들면 status 를 지어내야 한다. 정렬·유일·참조 정합성(그 노드가 구조 문서에 있나)·layers.utilization 과의 짝·기간과 단위(step_seconds)의 짝·covered_seconds ≤ 기간·평균 ≤ 최대·measure 와 노드 종류·단위의 짝(MEASURE_TABLE)·짧은 묶음의 computed_at = observed_at 은 schema/tests 가 강제한다.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/utilization_item" }
+    }
+  },
+  "$defs": {
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observed_at", "tool_version", "topology_collected_at"],
+      "properties": {
+        "observed_at": {
+          "description": "관측 시각(UTC, RFC3339). 이 문서가 말하는 '지금'이다.",
+          "$comment": "불변식 ②의 예외가 아니다. 이 값은 실행 시각이 아니라 «관측 데이터의 좌표»이므로 입력에 속한다 — 같은 스냅샷 쌍과 같은 지표 응답을 주면 이 파일은 바이트 동일해야 한다. wall-clock 을 now() 에서 읽어 채우면 그 순간 결정론이 깨진다(ADR 0006 결정 4).",
+          "type": "string",
+          "format": "date-time"
+        },
+        "tool_version": {
+          "description": "산출물을 만든 nettopo 버전. 산출물만 보고 재현할 수 있어야 한다.",
+          "type": "string",
+          "minLength": 1
+        },
+        "topology_collected_at": {
+          "description": "이 관측이 붙는 구조 스냅샷의 run.collected_at. 짝이 어긋난 두 파일을 겹쳐 그리면 없어진 리소스에 상태가 붙는다.",
+          "$comment": "구조 id 를 참조하는 문서가 어느 구조를 보고 만들어졌는지 말하지 않으면, 매달린 target_id 를 만나도 '오래된 짝'인지 '수집기 버그'인지 구별할 수 없다. 화면은 이 값이 어긋나면 겹쳐 그리기를 거부해야 한다.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "topology_content_digest": {
+          "description": "이 관측이 붙는 구조 스냅샷의 run.content_digest. 있으면 화면은 시각 대신 이 값으로 짝을 맞춘다 — 내용이 같은 재수집은 같은 짝이다.",
+          "$comment": "선택 필드다. 구조 문서에 지문이 없으면(옛 수집기) 키째 없다 — 그때 화면은 topology_collected_at 으로 짝을 맞춘다. 한쪽에만 있으면 '모른다'이므로 시각으로 되돌아간다(같다고 단정하지 않는다).",
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "scope": {
+      "description": "무엇을 관측하라고 요청받았는가. 실제로 무엇을 관측했는지는 coverage 가 답한다 — 요청과 결과를 섞지 마라.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["account_ids", "regions", "resource_types"],
+      "properties": {
+        "account_ids": {
+          "description": "오름차순 정렬. 관측 대상은 구조 대상의 부분집합일 수 있다(스택 B 가 없는 계정은 모니터링 채널에 못 들어온다 — ADR 0005 §모니터링 채널).",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/account_id" }
+        },
+        "regions": {
+          "description": "오름차순 정렬.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/region" }
+        },
+        "resource_types": {
+          "description": "관측이 **다시 부르려 한** 종류. 오름차순 정렬. 구조 scope 의 부분집합이다 — 1층 근거가 없는 종류(security_group·network_acl)는 부를 이유가 0이므로 여기에 없다.",
+          "$comment": "ADR 0006 O10. coverage 는 «결과» 이므로 «요청» 이 없으면 빈칸 검사를 할 수 없다 — 「그 종류가 실패했다」와 「그 종류를 아예 안 불렀다」가 구별되지 않는다. topology.schema.json:57 과 같은 모양이다.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/resource_type" }
+        }
+      }
+    },
+    "layers": {
+      "description": "어느 층으로 관측했는가. 2층(CloudWatch)은 유료이므로 끌 수 있어야 하고, 껐다는 사실이 산출물에 남아야 한다(docs/product-architecture.md 「비용 2층」).",
+      "$comment": "2층을 끄면 live 판정이 원리적으로 불가능해져 상태가 up 으로 내려온다. 그것은 '흐름이 없다'가 아니라 '흐름을 재지 않았다'이므로, 이 플래그가 없으면 화면이 그 둘을 구별할 방법이 없다 — 조용히 up 만 보이면 사람은 '트래픽 없음'으로 오판한다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["describe", "metric"],
+      "properties": {
+        "describe": {
+          "description": "1층(Describe*, $0). 이 층이 없으면 관측 자체가 성립하지 않으므로 항상 true 다.",
+          "type": "boolean",
+          "const": true
+        },
+        "metric": {
+          "description": "2층(cloudwatch:GetMetricData, 유료). false 면 어떤 observation 도 live 일 수 없다.",
+          "type": "boolean"
+        },
+        "flow_log": {
+          "description": "흐름 로그 판독기(ADR 0008 「D4b 개정」 · 선택 · 기본 꺼짐)를 켰다. 끄면 키가 없다 — false 를 쓰지 않는다.",
+          "$comment": "🔴 꺼짐을 적는 방법을 하나로 둔다(키 부재). false 도 허용하면 「껐다」가 두 모양이 되고, 화면이 한쪽만 읽으면 다른 쪽이 조용히 켜짐으로 읽힌다. 켰는데 한 줄도 못 읽었으면 이 값은 true 이고 그 사실은 sources[].resources 가 말한다(켰나 ≠ 읽었나 — metric 과 coverage 의 관계와 같다). 판독기는 2층의 창·클라이언트를 같이 쓰므로(ADR 0008 「D4b 개정」 · 스택 A 는 2층이 켜져 있을 때만 붙인다) metric 이 true 여야 한다 — 그래야 「metric=false 면 live 없음」이 흐름 로그 행에도 그대로 참이다.",
+          "type": "boolean",
+          "const": true
+        },
+        "utilization": {
+          "description": "사용률 층(ADR 0011 · 선택)을 계산했다. 끄면 키가 없다 — false 를 쓰지 않는다(flow_log 와 같은 규율).",
+          "$comment": "🔴 1.5.0 부터 metric 과 **독립**이다(사용자 결정 2026-10-06 「사용률 기능이랑 모니터링 기능은 아예 별개」) — 사용률 계산은 2층 판독(`read_metrics`)과 따로 제 지표·한도를 읽는다(engine/src/nettopo/utilization.py `compute_utilization`). 1.4.0 은 metric: true 를 요구했다. 키가 있으면 최상위 utilization 배열도 있고 없으면 그 배열도 없다(빈 배열 = 「사용률을 낼 대상이 없었다」 — schema/tests 가 짝을 강제한다). 계산했는데 일부를 못 읽었으면 그 사실은 각 measure 의 unread 가 말한다(켰나 ≠ 읽었나).",
+          "type": "boolean",
+          "const": true
+        }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["flow_log"] },
+          "then": { "properties": { "metric": { "const": true } } }
+        }
+      ]
+    },
+    "source": {
+      "description": "옵션형 근거 출처 하나의 상태(ADR 0009 D2). 우리는 어떤 출처도 «켜지 않는다» — 고객이 켜 둔 것을 읽기만 한다(불변식 ①).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "state", "used"],
+      "properties": {
+        "kind": {
+          "description": "출처 종류. 어휘를 늘릴 때는 ADR 0009 D4 의 채택표에 줄을 먼저 추가한다.",
+          "$comment": "🔴 «읽기가 유료인» 출처(X-Ray traces retrieved · Cost Explorer 페이지당 과금)는 이 어휘에 **일부러 넣지 않았다**(ADR 0009 D4 기각표). 어휘에 없으면 엔진이 부를 자리가 없다 — 실수로 과금되는 경로를 계약 단계에서 막는 장치다.",
+          "enum": [
+            "container_insights",
+            "ec2_detailed_monitoring",
+            "eks_network_policy_log",
+            "log_delivery",
+            "resolver_target_ns_metrics",
+            "tgw_flow_log",
+            "vpc_flow_log",
+            "vpn_tunnel_bgp_log"
+          ]
+        },
+        "state": {
+          "description": "고객이 켰나. unknown 은 「탐지하지 못했다」이고 off 와 다르다 — 섞으면 「켜 주세요」라고 잘못 권고한다.",
+          "$comment": "불리언이 아닌 이유(ADR 0009 D2): EKS 네트워크 정책 로그를 Helm 으로 깔면 eks:DescribeAddon 에 안 잡히고, ecs:DescribeClusters 는 클러스터가 0 개일 때 「꺼짐」과 「해당 없음」을 구별하지 못한다. 모른다를 꺼짐으로 적으면 화면이 없는 근거를 켜라고 말한다.",
+          "enum": ["on", "off", "unknown"]
+        },
+        "used": {
+          "description": "그 출처를 실제로 읽어서 판정에 썼나. state 와 «독립»이다 — 켜져 있는데 우리가 못 읽는 경우가 실재한다(버킷 SSE-KMS CMK · 로그 그룹 INFREQUENT_ACCESS · 그 버킷이 우리 정책 밖).",
+          "$comment": "🔴 state=on + used=false 는 coverage 가 아니다(ADR 0009 D2). coverage 는 «계정·리전»을 못 읽은 것이고 이것은 «그 출처만» 못 읽은 것이다 — 화면 문구가 달라진다(전자는 「스택 B 를 배포해야 하나」, 후자는 「버킷 정책을 열어야 하나」를 묻게 만든다). 또 state=off 면 used 는 항상 false 다: 꺼진 것을 썼다고 적을 방법이 없어야 한다.",
+          "type": "boolean"
+        },
+        "scope": {
+          "description": "자원 단위 범위(ADR 0009 D2-2). 흐름 로그는 VPC 마다, Container Insights 는 클러스터마다, 상세 모니터링은 인스턴스마다 따로 켠다 — 계정 단위 불리언으로 접으면 켜진 쪽이 안 보이거나 꺼진 쪽이 근거가 있는 것처럼 보인다.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["unit", "enabled_ids", "total_ids"],
+          "properties": {
+            "unit": { "$ref": "#/$defs/source_scope_unit" },
+            "enabled_ids": { "type": "integer", "minimum": 0 },
+            "total_ids": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "detail": {
+          "description": "사람이 읽는 한 줄. 「logFormat v2 기본 — traffic-path 없음」처럼 «켜져 있어도 무엇을 못 하는지»를 적는 자리다.",
+          "type": ["string", "null"]
+        },
+        "why": {
+          "description": "state 가 unknown 이면 필수. 사유 없는 unknown 은 화면의 `?` 를 장식으로 만든다(observation.why 와 같은 규율).",
+          "type": ["string", "null"]
+        },
+        "resources": {
+          "description": "흐름 로그 출처 전용 · 로그마다 한 줄(ADR 0009 D2-4 · 선택 키). 판독기가 켜져 있을 때만 있다 — 꺼져 있으면 키가 없고 출처 행은 1.0.0 과 같다. id 오름차순 · 유일.",
+          "$comment": "🔴 출처 한 줄의 used·why 로 접으면 「같은 VPC 에 로그가 둘인데 하나는 읽고 하나는 중복으로 덮였다」와 「다른 리전 로그는 형식 때문에 못 읽었다」가 한 문장으로 뭉개진다. 🔴 읽은 흐름은 여기가 아니라 관측 행(라우트 행 by_subnet · 피어링 행 · IGW 카드 행)에 적는다 — 이 줄은 「무엇을 읽었나」만 말한다. 출처의 used 는 이 배열의 used 가 하나라도 true 인가와 같아야 한다(형제 비교라 schema/tests 가 강제한다).",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/flow_log_resource" }
+        }
+      },
+      "allOf": [
+        {
+          "$comment": "로그마다 한 줄은 흐름 로그 출처에만 있다. 켜지 않은 출처에 로그 줄이 있으면 「꺼짐」인데 읽은 로그가 있는 문서가 된다.",
+          "if": { "required": ["resources"] },
+          "then": {
+            "properties": {
+              "kind": { "enum": ["tgw_flow_log", "vpc_flow_log"] },
+              "state": { "const": "on" }
+            }
+          }
+        },
+        {
+          "$comment": "로그를 건 단위는 출처 종류와 맞아야 한다 — VPC 흐름 로그 출처에 TGW 단위 줄이 있으면 알약이 한 로그를 두 출처에서 센다.",
+          "if": { "properties": { "kind": { "const": "vpc_flow_log" } }, "required": ["kind"] },
+          "then": {
+            "properties": {
+              "resources": {
+                "items": { "properties": { "level": { "enum": ["network_interface", "subnet", "vpc"] } } }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "tgw_flow_log" } }, "required": ["kind"] },
+          "then": {
+            "properties": {
+              "resources": {
+                "items": { "properties": { "level": { "enum": ["transit_gateway", "transit_gateway_attachment"] } } }
+              }
+            }
+          }
+        },
+        {
+          "$comment": "탐지 실패와 꺼짐을 합치지 않는다(ADR 0009 D2-1).",
+          "if": { "properties": { "state": { "const": "unknown" } }, "required": ["state"] },
+          "then": {
+            "required": ["why"],
+            "properties": { "why": { "type": "string", "minLength": 1 } }
+          }
+        },
+        {
+          "$comment": "꺼진 출처를 「썼다」고 적을 수 있으면 알약이 거짓말을 한다.",
+          "if": { "properties": { "state": { "const": "off" } }, "required": ["state"] },
+          "then": { "properties": { "used": { "const": false } } }
+        },
+        {
+          "$comment": "켜져 있는데 쓰지 않았으면 «왜» 를 적어야 한다(ADR 0009 D2-1). 사유가 없으면 화면이 「⚠ 근거 못 읽음」을 띄우면서 무엇을 고쳐야 하는지 말할 수 없고, 「버킷이 막혔다」와 「이 버전은 아직 그 출처를 읽지 않는다」가 한 칸으로 뭉개진다 — 전자는 고객이 정책을 열면 되고 후자는 고객이 할 일이 없다.",
+          "if": {
+            "properties": { "state": { "const": "on" }, "used": { "const": false } },
+            "required": ["state", "used"]
+          },
+          "then": {
+            "required": ["why"],
+            "properties": { "why": { "type": "string", "minLength": 1 } }
+          }
+        },
+        {
+          "$comment": "state=on 이면 scope 의 켜진 수는 0 일 수 없다. 🔴 enabled_ids ≤ total_ids 는 JSON Schema 로 표현할 수 없다(형제 값 비교) → schema/tests/test_observation_schema.py 가 강제한다. 넘으면 화면이 「9/7 VPC」를 그린다.",
+          "if": {
+            "properties": { "state": { "const": "on" } },
+            "required": ["state", "scope"]
+          },
+          "then": {
+            "properties": {
+              "scope": { "properties": { "enabled_ids": { "minimum": 1 } } }
+            }
+          }
+        }
+      ]
+    },
+    "source_scope_unit": {
+      "description": "옵션형 근거를 «고객이 켜는 단위». 흐름 로그는 VPC·TGW 마다, Container Insights 는 ECS 클러스터마다, 상세 모니터링은 인스턴스마다 따로 켠다.",
+      "$comment": "🔴 $defs/resource_type 을 재사용하지 않는다 — 그 어휘는 topology.schema.json 의 「토폴로지에 그리는 구조 자원」이고 바이트 동일이 강제된다(schema/tests/test_observation_schema.py::test_resource_type_enum_matches_topology). 여기 필요한 ecs_cluster·resolver_endpoint 는 그 어휘에 없고, 넣으려면 토폴로지 지원 자원 목록을 늘리는 셈이 된다(불변식 ③ 위반: 렌더용 필드를 구조 계약에 밀어넣기). 반대로 ec2_instance·eks_cluster 는 2026-09-26 수집기 추가로 **양쪽에 다 있다** — 같은 축이라서가 아니라 「우리가 그리는 자원」이면서 「고객이 근거를 켜는 단위」이기도 해서 겹친 것이다. 두 어휘는 다른 축이므로 따로 둔다 — 늘릴 때는 ADR 0009 D4 채택표의 kind 와 짝이 맞는지 확인한다.",
+      "enum": [
+        "ec2_instance",
+        "ecs_cluster",
+        "eks_cluster",
+        "resolver_endpoint",
+        "transit_gateway",
+        "vpc",
+        "vpn_connection"
+      ]
+    },
+    "flow_log_resource": {
+      "description": "흐름 로그 하나 — 읽었나와 못 읽은 이유(ADR 0009 D2-4 · D5 추가 표).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "level", "used"],
+      "properties": {
+        "id": {
+          "description": "흐름 로그 id(`fl-…`). 계정ID·ARN 이 아니므로 산출물에 그대로 둔다.",
+          "type": "string",
+          "minLength": 1
+        },
+        "level": {
+          "description": "로그를 건 단위. 🔴 서브넷 단위 로그는 그 VPC 를 켜짐으로 센다 · ENI 단위 로그는 이 줄에만 적고 VPC 를 켜짐으로 만들지 않는다(ENI 하나가 VPC 전체를 덮지 않는다 — ADR 0009 D2-4).",
+          "enum": ["network_interface", "subnet", "transit_gateway", "transit_gateway_attachment", "vpc"]
+        },
+        "attached_to": {
+          "description": "로그를 건 대상의 구조 노드 id(topology.json). 화면이 서브넷 선마다 「읽었다 — 왕복 기록 없음」과 「켜져 있지만 못 읽음」을 가르는 근거다. ENI 단위면 없다(엔진은 ENI 를 구조에 그리지 않는다) · 대상이 이 구조에 없으면(공유 VPC 참가자 로그) 없다.",
+          "$comment": "🔴 이 키가 없으면 화면은 로그 id 만 보고 어느 VPC·서브넷의 로그인지 알 수 없어, 선 하나의 설명을 「이 계정 어딘가에 못 읽은 로그가 있다」로만 쓸 수 있다. 그 노드가 실제로 topology.json 에 있나는 schema/tests 가 교차 문서로 강제한다.",
+          "$ref": "#/$defs/node_id"
+        },
+        "used": {
+          "description": "이 로그를 읽어서 판정에 썼나. 읽었는데 왕복 짝이 0 이어도 true 다(「읽었고 기록 없음」 ≠ 「못 읽음」).",
+          "type": "boolean"
+        },
+        "why_code": { "$ref": "#/$defs/flow_log_why_code" },
+        "why": {
+          "description": "사람이 읽는 한 줄 — AWS 원문이 아니라 무엇이 막혔는지. 계정ID·ARN·버킷 이름·로그 그룹 이름을 넣지 않는다.",
+          "type": "string",
+          "minLength": 1
+        },
+        "detail": {
+          "description": "부가 사실(빠진 필드 이름 · SKIPDATA 수 · 집계 간격 600초 「최근 흐름은 늦게 보인다」 · 경로 번호 모호).",
+          "type": ["string", "null"]
+        }
+      },
+      "allOf": [
+        {
+          "$comment": "못 읽었으면 이유가 있어야 한다(ADR 0009 D2-1 과 같은 규율). 이유 없는 「못 읽음」은 고객이 정책을 열어야 하는지 도구를 기다려야 하는지 말하지 못한다.",
+          "if": { "properties": { "used": { "const": false } }, "required": ["used"] },
+          "then": { "required": ["why_code", "why"] }
+        },
+        {
+          "$comment": "읽었는데 이유 코드가 붙는 경우는 셋뿐이다 — 일부만 읽었다(throttled·capped) · 읽었지만 서브넷을 못 가려 피어링 선만 증명한다(subnet_unattributable). 나머지 코드는 정의상 한 줄도 못 읽은 경우다.",
+          "if": { "properties": { "used": { "const": true } }, "required": ["used", "why_code"] },
+          "then": { "properties": { "why_code": { "enum": ["capped", "subnet_unattributable", "throttled"] } } }
+        },
+        {
+          "if": { "required": ["why_code"] },
+          "then": { "required": ["why"] }
+        },
+        {
+          "$comment": "대상 노드의 종류는 로그를 건 단위와 같다. ENI 단위는 구조 노드가 없으므로 attached_to 를 둘 수 없다.",
+          "if": { "properties": { "level": { "const": "network_interface" } }, "required": ["level"] },
+          "then": { "not": { "required": ["attached_to"] } }
+        },
+        {
+          "if": { "properties": { "level": { "const": "vpc" } }, "required": ["level"] },
+          "then": { "properties": { "attached_to": { "pattern": "^vpc/" } } }
+        },
+        {
+          "if": { "properties": { "level": { "const": "subnet" } }, "required": ["level"] },
+          "then": { "properties": { "attached_to": { "pattern": "^subnet/" } } }
+        },
+        {
+          "if": { "properties": { "level": { "const": "transit_gateway" } }, "required": ["level"] },
+          "then": { "properties": { "attached_to": { "pattern": "^transit_gateway/" } } }
+        },
+        {
+          "if": { "properties": { "level": { "const": "transit_gateway_attachment" } }, "required": ["level"] },
+          "then": { "properties": { "attached_to": { "pattern": "^transit_gateway_attachment/" } } }
+        }
+      ]
+    },
+    "flow_log_why_code": {
+      "description": "흐름 로그를 못 읽은(또는 일부만 읽은) 이유. 정본은 ADR 0009 D5 「추가 2026-09-28」 표이고, 고객 설정 조합표(ADR 0008 「D4b 개정」 ⑥)의 모든 「못 읽음」 칸이 이 중 하나로 끝난다.",
+      "$comment": "🔴 format_parquet · reader_pending_tgw = **옛 문서 전용** — 1.3.0 부터 엔진이 내지 않는다(ADR 0008 「D4c」 ①·③: Parquet 은 스펙 밖이라 탐지하지 않고 TGW 는 읽는다). 지우면 major 라 남긴다. 🔴 「도구가 아직 안 읽는다」(옛 두 코드)와 「고객 설정·권한 문제」를 한 코드로 합치지 마라 — 앞의 것은 고객이 할 일이 없다. 🔴 duplicate_covered 는 경고가 아니다(더 나은 로그를 읽었다) — 화면은 이유 줄을 만들지 않는다. 판독기를 끈 상태를 나타내는 코드는 **없다**: 끄면 resources 자체가 없다(설계 중 정정 2026-09-28 — 「꺼짐」을 줄마다 적으면 끈 문서가 켠 문서의 모양을 갖는다). 닫힌 enum 이다 — 값을 늘리면 minor 를 올리고 화면의 미지 코드 규칙(canvas-principles.md §3k K3)을 확인한다.",
+      "enum": [
+        "access_denied",
+        "capped",
+        "destination_firehose",
+        "duplicate_covered",
+        "fields_missing",
+        "format_mismatch",
+        "format_parquet",
+        "format_v2",
+        "kms",
+        "log_class_infrequent",
+        "not_found",
+        "read_error",
+        "reader_pending_tgw",
+        "shared_participant",
+        "subnet_unattributable",
+        "throttled",
+        "traffic_reject_only"
+      ]
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_id", "target_kind", "status", "error_count", "partial"],
+      "properties": {
+        "target_id": { "$ref": "#/$defs/target_id" },
+        "target_kind": {
+          "description": "노드인가 엣지인가. **문법으로 유도하지 마라** — 이 값이 정본이다.",
+          "$comment": "🔴 예전 주석은 '두 id 형식이 같아서 값만으로는 구별할 수 없다'고 적었는데 그것이 틀렸다(2026-09-23 실측): 엔진의 엣지 id 는 `|` 구분이고 노드 id 는 `/` 구분이라 문법이 다르다. 그래도 이 필드를 남기는 이유는 ① 렌더러가 '노드에서 못 찾았으니 엣지겠지'로 폴백하면 오타 난 id 가 조용히 엣지가 된다 ② 문법 판별은 두 패턴이 앞으로도 겹치지 않는다는 데 기대는데 그 보장은 계약이 아니다. 대신 target_id ↔ target_kind 의 문법 일치는 schema/tests 가 검사한다.",
+          "enum": ["node", "edge"]
+        },
+        "status": { "$ref": "#/$defs/status" },
+        "why": {
+          "description": "사람이 읽는 사유. status 가 none 이면 비어 있을 수 없다 — '왜 모르는지'를 말하지 못하면 화면의 `?` 가 장식이 된다.",
+          "type": ["string", "null"]
+        },
+        "evidence": {
+          "anyOf": [{ "$ref": "#/$defs/evidence" }, { "type": "null" }]
+        },
+        "error_count": {
+          "description": "down 의 `▲n`. 0(에러 없음)·null(세지 못했음)은 서로 다른 사실이다. 생략 금지 — 모르면 null 을 적는다.",
+          "$comment": "topology 의 item_count 와 같은 이유로 required 다(schema/topology.schema.json:200). optional 로 두면 '0 / null / 부재' 세 상태가 되고 렌더러가 부재를 0 으로 읽는다 — 그러면 '못 셌다'가 '에러 없다'로 보인다.",
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "partial": {
+          "description": "이 판정의 근거가 불완전한가. true 면 partial_reasons 가 비어 있을 수 없다. 생략 금지 — false 도 반드시 적는다.",
+          "$comment": "2층만 죽은 경우가 이것이다: describe 로 up 은 말할 수 있지만 live 인지는 모른다. status 를 none 으로 떨어뜨리면 '구조적으로 관측 불가'와 섞이고(세 「없음」을 합치지 마라 — contract-seams.md 「이음매 3」), up 만 적으면 2층 실패가 사라진다. 그래서 status=up + partial=true + 사유가 정답이다.",
+          "type": "boolean"
+        },
+        "partial_reasons": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/reason" }
+        },
+        "path_ok": {
+          "description": "이 구간의 «흐를 수 있음»을 1층 사실로만 증명했다 — ADR 0008 D5 의 필요조건 8개를 전부 읽고 전부 충족(C 등급). true 만 쓴다: 부재는 「못 읽었거나 계산하지 않았다」(E 등급)이고, 위반을 읽었으면 status=down + why 가 말한다.",
+          "$comment": "🔴 **8개는 「흐른다」의 증명이 아니라 「흐를 수 있다」의 증명이다**(ADR 0008 D5 마지막 🔴) — 애플리케이션이 죽어 있어도 8개는 전부 충족된다. 그래서 화면은 이 행을 **초록으로 승격하지 않고** 「경로 성립」 배지로만 말한다(D7 규율 1). 초록으로 칠하면 다음 사람이 「측정됐다」로 읽는다. 엣지 행 전용이다 — 노드에 붙이면 「이 자원은 흐를 수 있다」가 되어 구간 판정이 아니게 된다.",
+          "const": true
+        },
+        "drops": {
+          "description": "판정 창 안에서 관측한 드롭 수 — 이 자원의 드롭 지표 가운데 **창 합계가 가장 큰 지표 하나**의 창 합계다. 지표끼리 더하지 않는다: 같은 자원의 드롭 지표는 이유가 서로 다르고(블랙홀·경로 없음·포트 할당 실패 …), 화면의 숫자가 어느 지표의 것인지 따라갈 수 있어야 한다. 0(읽었고 0 이다)·null·부재(못 읽었거나 그 자원에 드롭 지표가 없다)는 서로 다른 사실이다 — ADR 0007 「없음 vs 못 읽음」.",
+          "$comment": "🔴 **드롭 > 0 은 흐름을 부정하지 않는다**(ADR 0008 D3). 통과와 드롭은 같은 구간에서 동시에 양수일 수 있고, 그때 화면은 **초록 + 「드롭 N」 배지**다. `status: down` 은 통과 = 0 인데 드롭 > 0 이거나 상태 지표가 0 일 때만이다. 이 키가 없으면 그 배지를 그릴 수 없어서 렌더러가 드롭을 말할 방법이 `why` 문장뿐이고, 문장에서 숫자를 뽑는 화면은 계약이 아니다.",
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "by_subnet": {
+          "description": "라우트 행 전용 · 서브넷별 흐름 근거(ADR 0008 「D4b 개정」 ④ · 「D4c」 ④ · ADR 0006 §O7 · 선택 키). 그 라우트 테이블을 쓰는 서브넷 가운데 **왕복 짝을 찾은 서브넷**(live)과 **모든 ENI 가 판정 창 전체를 NODATA 로 덮은 서브넷**(up · datapoints 0 = 「안 흐른다」)만 담는다. 행 자체의 status 는 1층 그대로다. 화면은 선마다 **그 선의 출발 서브넷** 항목만 읽는다. subnet_id 오름차순 · 유일.",
+          "$comment": "🔴 행 status 에 흐름을 쓰지 않는 이유: 라우트 행은 라우트 테이블 단위라, 거기 live 를 쓰면 같은 테이블을 쓰는 서브넷 선이 전부 초록이 된다 — 옆 서브넷의 기록으로 켜진 초록은 거짓이다. 🔴 배열에 없는 서브넷은 「이 창에 왕복 기록 없음」이지 「흐름 없음」이 아니다 — 「흐름 없음」은 up 항목(NODATA 조건 5개 · D4c ④)으로만 말한다. down 을 쓸 자리는 두지 않는다(막힘은 1·2층이 말한다). 대상은 IGW 와 피어링 둘뿐이다 — 흐름 로그의 경로 번호가 그 둘만 구간으로 이름 댄다(NAT·TGW·엔드포인트는 경로 1·7 등으로 무시한다 · 조합표 11.3·11.6·11.11). 정렬·유일·「그 서브넷이 실제로 이 테이블을 쓴다」는 형제·교차 문서 비교라 schema/tests 가 강제한다.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/subnet_flow" }
+        },
+        "targets": {
+          "description": "LB 행 · LB → 대상 선 행 전용 · 대상 수(ADR 0006 「W3② LB 대상 상태」 · 1.8.0 선 행 · 선택 키). LB 행 = 그 LB 의 타깃 그룹 전부의 DescribeTargetHealth 를 합친 것이다 · 선 행(`load_balancer_target|…`) = 그 선으로 묶인 등록들만(그 대상 노드로 간 등록 · total = 구조의 target_count). total = 대상 수 · healthy = AWS 가 healthy 라고 한 수 · unhealthy = AWS 가 unhealthy 라고 한 수(initial·draining·unused·unavailable 은 어느 쪽에도 안 센다). 1.15.0 다섯 갈래(#137 · 선택 · 다섯이 함께 온다 · 0 포함): health_check_off = unavailable + Reason Target.HealthCheckDisabled(헬스 체크를 끈 대상 그룹 — Lambda 의 기본값) · other_unavailable = 그 밖의 Reason 의 unavailable · initial = 등록 중 · draining = 빼는 중 · unused = 사용되지 않음. 표에 없는 상태(unhealthy.draining 등)는 어느 갈래에도 넣지 않는다 — total 과의 차가 남는다. 부재 = 못 읽었다(그 사유는 partial_reasons) — 0 은 「읽었고 대상이 없다」다.",
+          "$comment": "🔴 한 그룹이라도 거부되면 키를 만들지 않는다 — 읽은 그룹만 센 수는 틀린 수다. status 가 down 이 되는 것은 State.Code active · total>0 · healthy=0 · unhealthy>0 일 때뿐이다(엔진 observe.py `_with_targets`) — 다섯 갈래는 판정에 들지 않는다(헬스 체크 꺼짐을 비정상으로 세면 Lambda 대상 LB 가 이상이 된다). healthy + unhealthy + 다섯 갈래 ≤ total 은 JSON Schema 로 못 쓰므로 schema/tests/test_observation_schema.py 가 강제한다. 다섯 키가 함께 오는 것은 dependentRequired 가 강제한다 — 일부만 오면 화면이 빠진 갈래를 0 으로 읽는다.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["total", "healthy", "unhealthy"],
+          "properties": {
+            "total": { "type": "integer", "minimum": 0 },
+            "healthy": { "type": "integer", "minimum": 0 },
+            "unhealthy": { "type": "integer", "minimum": 0 },
+            "health_check_off": { "type": "integer", "minimum": 0 },
+            "initial": { "type": "integer", "minimum": 0 },
+            "draining": { "type": "integer", "minimum": 0 },
+            "unused": { "type": "integer", "minimum": 0 },
+            "other_unavailable": { "type": "integer", "minimum": 0 }
+          },
+          "dependentRequired": {
+            "health_check_off": ["initial", "draining", "unused", "other_unavailable"],
+            "initial": ["health_check_off", "draining", "unused", "other_unavailable"],
+            "draining": ["health_check_off", "initial", "unused", "other_unavailable"],
+            "unused": ["health_check_off", "initial", "draining", "other_unavailable"],
+            "other_unavailable": ["health_check_off", "initial", "draining", "unused"]
+          }
+        },
+        "bgp": {
+          "description": "DX VIF 행 전용 · BGP 피어 수(ADR 0006 §O7 DX 행 · 1.6.0 · 선택 키). DescribeVirtualInterfaces 의 bgpPeers[] 를 센 것이다. total = 피어 수 · up = AWS 가 bgpStatus up 이라고 한 수(down·unknown 은 세지 않는다). 부재 = 상태 단이 아니거나 bgpPeers 를 못 읽었거나 VIF 가 available 이 아니다(판정이 BGP 를 보지 않았다) — 0 은 「읽었고 피어가 없다」다.",
+          "$comment": "🔴 판정은 이 수로 하지 않는다 — status 는 탐침이 접은 값(available · available-some-bgp-down · available-all-bgp-down) 그대로다(엔진 services/direct_connect_virtual_interface.py `state`). 이 칸은 화면이 「BGP 일부 down 1/2」처럼 몇 개 중 몇 개를 말하게 할 뿐이다. 🔴 구조(topology)에는 없다 — bgpStatus 는 시시각각 바뀐다(불변식 ②).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["total", "up"],
+          "properties": {
+            "total": { "type": "integer", "minimum": 0 },
+            "up": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "tunnels": {
+          "description": "VPN 연결 행 전용 · 터널별 상태(1.17.0 · 선택 키 · 사용자 결정 2026-10-24 「콘솔의 터널 세부 정보」). DescribeVpnConnections 의 VgwTelemetry[] 를 바깥 IP 순으로 옮긴 것이다. 부재 = 상태 단이 아니거나 VgwTelemetry 를 못 읽었다(빈 배열을 쓰지 않는다 — 「터널 없음」으로 읽힌다).",
+          "$comment": "🔴 판정은 이 칸으로 하지 않는다 — status 는 탐침이 접은 값(available · available-one-tunnel-down · available-all-tunnels-down) 그대로다(엔진 services/vpn_connection.py `state`). 🔴 구조(topology)에는 없다 — 터널 UP/DOWN 은 시시각각 바뀐다(불변식 ② · contract-seams 「이음매 2」 상태 금지). 설정(내부 CIDR)은 구조의 vpn_connection `tunnel_inside_cidrs` 다.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["outside_ip", "status"],
+            "properties": {
+              "outside_ip": { "type": "string" },
+              "status": { "description": "AWS 원문(UP · DOWN).", "type": "string" },
+              "last_status_change": { "description": "ISO 8601.", "type": "string" },
+              "status_message": { "type": "string" },
+              "accepted_route_count": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "deleting": {
+          "description": "1층 값이 「지우는 중」이었다(1.12.0 · 선택 키 · 사용자 결정 2026-10-21 QA C) — AWS 가 그 자원을 지우고 있다고 보고했다(deleting · shutting-down · delete-in-progress · DELETING · Deleting · ECS draining …, 종류별 목록 = engine/src/nettopo/observe.py NODE_RULES 의 deleting 칸). status 는 none 이다 — 이상(down)도 정상(up)도 아니다. 화면은 판정을 「삭제 중」으로 말한다.",
+          "$comment": "🔴 이력은 이 키로 「삭제가 만든 전이」를 적지 않는다(engine/src/nettopo/history.py) — 일부러 지운 엔드포인트가 「없어짐」 앞에 빨간 「끊김 · 정상 → 이상」을 남겨 고객이 장애로 읽었다(QA C). 자원이 구조에서 빠질 때 resource_removed 한 줄이 남는다. 실패(failed · delete-failed · Delete_Failed …)는 이 키가 없고 down 이다. 다섯 번째 상태 어휘를 만들지 않은 이유: status 어휘 4개가 정본이다(contract-seams.md 「이음매 3」) — 「판정하지 않는다」는 none 이 이미 말하고, 이 키는 그 까닭이 「지우는 중」이라는 사실만 더한다. 거짓은 적지 않는다(부재 = 지우는 중이 아니다 — false 와 부재가 같은 뜻이면 바이트 표현이 둘이 된다).",
+          "const": true
+        }
+      },
+      "allOf": [
+        {
+          "$comment": "지우는 중인 행은 판정하지 않는다(위 deleting) — down 이면 삭제가 다시 「끊김」이 되고, up 이면 지우는 자원을 「살아 있다」로 그린다. 상태 수명주기는 노드만 든다(연관 엣지에는 지우는 중 값이 없다).",
+          "if": { "required": ["deleting"] },
+          "then": { "properties": { "status": { "const": "none" }, "target_kind": { "const": "node" }, "partial": { "const": false } } }
+        },
+        {
+          "$comment": "터널 상태는 VPN 연결 노드 행에만 둔다(위 tunnels 주석 · 1.17.0).",
+          "if": { "required": ["tunnels"] },
+          "then": { "properties": { "target_kind": { "const": "node" }, "target_id": { "pattern": "^vpn_connection/" } } }
+        },
+        {
+          "$comment": "대상 수는 LB 노드 행과 LB → 대상 선 행에만 둔다(위 targets 주석 · 1.8.0).",
+          "if": { "required": ["targets"] },
+          "then": {
+            "anyOf": [
+              { "properties": { "target_kind": { "const": "node" }, "target_id": { "pattern": "^load_balancer/" } } },
+              { "properties": { "target_kind": { "const": "edge" }, "target_id": { "pattern": "^load_balancer_target\\|" } } }
+            ]
+          }
+        },
+        {
+          "$comment": "BGP 피어 수는 DX VIF 노드 행에만 둔다(위 bgp 주석).",
+          "if": { "required": ["bgp"] },
+          "then": {
+            "properties": {
+              "target_kind": { "const": "node" },
+              "target_id": { "pattern": "^direct_connect_virtual_interface/" }
+            }
+          }
+        },
+        {
+          "$comment": "서브넷별 근거는 IGW·피어링으로 가는 라우트 행에만 둔다(위 by_subnet 주석).",
+          "if": { "required": ["by_subnet"] },
+          "then": {
+            "properties": {
+              "target_kind": { "const": "edge" },
+              "target_id": { "pattern": "^route\\|[^|]+\\|(internet_gateway|vpc_peering_connection)/[^|]+$" }
+            }
+          }
+        },
+        {
+          "$comment": "1층이 막힘이면 항상 1층이 이긴다(ADR 0008 「D4b 개정」 ②) — 블랙홀 라우트에 흐름 근거를 붙이면 화면이 빨강과 초록을 한 선에 동시에 받는다.",
+          "if": { "properties": { "status": { "const": "down" } }, "required": ["status"] },
+          "then": { "not": { "required": ["by_subnet"] } }
+        },
+        {
+          "$comment": "등급(ADR 0008 D1): IGW 로 가는 서브넷 선은 **A** — 경로 번호 8 이 그 구간을 이름 대고 한 VPC 의 IGW 는 하나다. 피어링으로 가는 서브넷 선은 **B** — 경로 번호 4·5 는 「피어링」까지만 말하고 어느 pcx- 인지는 라우트 테이블 최장 일치로 가린 것이다. 화면의 등급 판정은 observed_on 의 존재로 가르므로(renderer/flow.js gradeOf) 그 차이를 여기서 데이터로 고정한다. 피어링 쪽 observed_on 은 그 항목의 subnet_id 다(schema/tests).",
+          "if": {
+            "properties": { "target_id": { "pattern": "^route\\|[^|]+\\|internet_gateway/" } },
+            "required": ["target_id", "by_subnet"]
+          },
+          "then": {
+            "properties": {
+              "by_subnet": { "items": { "properties": { "evidence": { "not": { "required": ["observed_on"] } } } } }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "target_id": { "pattern": "^route\\|[^|]+\\|vpc_peering_connection/" } },
+            "required": ["target_id", "by_subnet"]
+          },
+          "then": {
+            "properties": {
+              "by_subnet": { "items": { "properties": { "evidence": { "required": ["observed_on"] } } } }
+            }
+          }
+        },
+        {
+          "$comment": "행 자체의 근거가 흐름 로그인 경우는 IGW 카드와 피어링 선 둘뿐이고, 둘 다 서브넷 선에서 모은 연역(B)이다 — observed_on 필수. observed_on 은 그 짝을 찾은 서브넷이고, 서브넷을 가릴 수 없는 VPC 로그(subnet_unattributable)로 피어링 선만 증명했으면 그 VPC 다(ADR 0008 「D4b 개정」 ⑥ 1.1). IGW 카드는 서브넷 근거로만 만든다 — 어느 쪽이든 「그 대상으로 가는 근거가 실제로 있나」는 schema/tests 가 교차 대조한다. 흐름 로그로는 live 만 만든다(1단계 · 같은 절 ②).",
+          "if": {
+            "properties": { "evidence": { "type": "object", "properties": { "metric": { "const": "flow_log" } }, "required": ["metric"] } },
+            "required": ["evidence"]
+          },
+          "then": {
+            "properties": {
+              "status": { "const": "live" },
+              "target_id": { "pattern": "^(internet_gateway/|peering\\||attachment\\|)" },
+              "evidence": { "$ref": "#/$defs/flow_log_evidence", "properties": { "datapoints": { "minimum": 1 } } }
+            },
+            "allOf": [
+              {
+                "if": { "properties": { "target_id": { "pattern": "^(internet_gateway/|peering\\|)" } }, "required": ["target_id"] },
+                "then": { "properties": { "evidence": { "required": ["observed_on"], "properties": { "observed_on": { "type": "string", "pattern": "^(subnet|vpc)/" } } } } }
+              },
+              {
+                "$comment": "어태치먼트 선(ADR 0008 「D4c」 ③): TGW 흐름 로그의 왕복 기록. → TGW 선은 A(본 곳 = 그 선) · → VPC 등은 B(본 곳 = 어태치먼트 노드).",
+                "if": { "properties": { "target_id": { "pattern": "^attachment\\|" } }, "required": ["target_id"] },
+                "then": { "properties": { "evidence": { "properties": { "observed_on": { "type": "string", "pattern": "^transit_gateway_attachment/" } } } } }
+              }
+            ]
+          }
+        },
+        {
+          "$comment": "🔴 피어링은 「흐름 로그 전용」이다(ADR 0006 §O7 개정 2026-09-28): 1층은 노드가 들고 2층 지표는 없다. 그래서 피어링 행은 흐름 로그 근거로만 존재한다 — 다른 근거로 행을 만들면 폐기된 종단 추론(양쪽 VPC 가 살아 있으니 사이도 흐른다)이 돌아온다.",
+          "if": {
+            "properties": { "target_id": { "pattern": "^peering\\|" } },
+            "required": ["target_id"]
+          },
+          "then": {
+            "required": ["evidence"],
+            "properties": { "evidence": { "type": "object", "required": ["metric"], "properties": { "metric": { "const": "flow_log" } } } }
+          }
+        },
+        {
+          "$comment": "path_ok 는 «구간» 판정이라 엣지 행에만 붙는다(ADR 0008 D8-3).",
+          "if": { "required": ["path_ok"] },
+          "then": { "properties": { "target_kind": { "const": "edge" } } }
+        },
+        {
+          "$comment": "관측 불가에는 반드시 사유가 붙는다. 사유 없는 `?` 는 사람이 '스택 B 를 배포하면 보이나?'를 판단할 근거를 주지 않는다(회색과 `?` 의 차이가 여기서 드러난다).",
+          "if": { "properties": { "status": { "const": "none" } }, "required": ["status"] },
+          "then": {
+            "required": ["why"],
+            "properties": { "why": { "type": "string", "minLength": 1 } }
+          }
+        },
+        {
+          "$comment": "live 는 2층 근거가 있어야 성립한다(contract-seams.md 「이음매 3」: 구간 CloudWatch dp > 0). 근거 없는 live 는 이동하는 점을 그리게 만들고, 그 점은 거짓이다.",
+          "if": { "properties": { "status": { "const": "live" } }, "required": ["status"] },
+          "then": {
+            "required": ["evidence"],
+            "properties": {
+              "evidence": {
+                "type": "object",
+                "required": ["api", "metric", "datapoints"],
+                "properties": { "datapoints": { "type": "integer", "minimum": 1 } }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "partial": { "const": true } }, "required": ["partial"] },
+          "then": { "required": ["partial_reasons"], "properties": { "partial_reasons": { "minItems": 1 } } }
+        }
+      ]
+    },
+    "status": {
+      "description": "선의 어휘 4개. 정본은 docs/contract-seams.md 「이음매 3」 이다 — 새 서비스를 붙일 때 다섯 번째 어휘를 만들지 마라.",
+      "$comment": "판정 순서는 고정이다: 「모름」 → 「고장」. 못 읽은 리전에 대해 down 을 주장하면 거짓이다(contract-seams.md 「이음매 3」). 스키마는 평가 순서를 표현할 수 없으므로, 'coverage 가 ok 가 아닌 (계정,리전)에는 down 이 없다'를 테스트가 강제한다. 또한 '이번엔 못 읽었다'는 여기 없다 — 그것은 coverage 의 일이고 화면에서는 회색이다. none 은 «영원히 불가»만 뜻한다(canvas-principles.md §3h H1).",
+      "enum": ["live", "up", "down", "none"]
+    },
+    "evidence": {
+      "description": "판정의 근거. 사람이 '왜 이렇게 판정했나'를 따라갈 수 있어야 한다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["api"],
+      "properties": {
+        "api": {
+          "description": "판정에 쓴 API. `cloudwatch:GetMetricData`·`ec2:DescribeNatGateways` 형식. reason.api 와 같은 표기를 쓴다.",
+          "type": "string",
+          "minLength": 1
+        },
+        "metric": {
+          "description": "2층 지표 이름(`BytesOutToDestination` 등). 1층 판정이면 null.",
+          "type": ["string", "null"]
+        },
+        "datapoints": {
+          "description": "구간 안에서 0 이 아닌 데이터포인트 수. 1층 판정이면 null. 0(구간에 흐름 없음)·null(안 쟀음)은 다른 사실이다.",
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "window_seconds": {
+          "description": "판정에 쓴 구간 길이(초). live 는 시점이 아니라 구간 판정이므로 구간 길이가 없으면 재현할 수 없다.",
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
+        "observed_on": {
+          "description": "지표를 실제로 잰 대상의 id. target_id 와 다르면 그 판정은 «연역»이고(ADR 0008 D1 의 B 등급) 화면은 배지로 그렇게 말한다. 같은 대상을 쟀으면 생략한다(모든 행에 자기 id 를 적으면 배지가 의미를 잃는다).",
+          "$comment": "🔴 이 키가 추론을 «데이터에» 적는 수단이다(불변식 ③ — 렌더러가 사실을 발명하지 않는다). 이 키가 없던 동안 렌더러는 양단 자원이 살아 있으면 그 사이를 초록으로 그렸고, 그 추론은 어디에도 기록되지 않아 사람이 「측정됐다」로 읽었다(ADR 0008 맥락, 사용자 판정 2026-09-24). 허용되는 연역 목록은 ADR 0008 D4 의 표가 정본이다 — 늘리려면 표에 줄을 추가한다.",
+          "type": ["string", "null"]
+        },
+        "first_flow_at": {
+          "description": "창 안에서 `metric` 이 처음으로 0 이 아니었던 지점의 시각(UTC, RFC3339 · 그 지점 구간의 시작 — 1분, EC2 기본 모니터링은 5분). live 에서만 적고, 모르면 생략한다. 이력이 「실제로 시작한 분」을 여기서 읽는다(ADR 0008 D6 보강).",
+          "type": "string",
+          "format": "date-time"
+        },
+        "last_flow_at": {
+          "description": "창 안에서 `metric` 이 마지막으로 0 이 아니었던 지점의 시각. 규칙은 first_flow_at 과 같다. 이력이 「실제로 멈춘 분」을 **이전 문서의** 이 값에서 읽는다.",
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "flow_log_evidence": {
+      "description": "흐름 로그 왕복 짝 근거 — evidence 의 한 모양(ADR 0008 「D4b 개정」 ③ · 「D4c」). metric 은 지표 이름이 아니라 표지 `flow_log` 이고, datapoints 는 창 안의 **왕복 짝 수**(나간 ACCEPT 기록 + 같은 ENI 로 5-튜플이 뒤집혀 돌아온 ACCEPT 기록 = 1)다. TGW 어태치먼트 선은 **답이 있는 기록 수**다. 0 은 by_subnet 의 up 항목(「안 흐른다」)에서만 — 그 밖의 자리는 1 이상을 따로 요구한다.",
+      "$comment": "🔴 나간 기록 하나는 근거가 아니다 — 상대가 답했다는 사실만이 패킷이 그 구간을 지나 상대에 닿았다는 뜻이다(정정 2: ACCEPT ≠ 도달). 그래서 datapoints ≥ 1 은 「짝 1개 이상」이고, 창 길이 없이는 「몇 분 안에 몇 쌍」을 재현할 수 없으므로 window_seconds 가 필수다. api 는 실제로 기록을 받은 호출이다 — DescribeFlowLogs 를 적으면 「설정을 읽었다」가 「흐름을 쟀다」로 읽힌다.",
+      "$ref": "#/$defs/evidence",
+      "required": ["api", "metric", "datapoints", "window_seconds"],
+      "properties": {
+        "api": { "enum": ["logs:GetLogEvents", "s3:GetObject"] },
+        "metric": { "const": "flow_log" },
+        "datapoints": { "type": "integer", "minimum": 0 },
+        "window_seconds": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "subnet_flow": {
+      "description": "by_subnet 항목 — 서브넷 하나에서 찾은 왕복 짝(live) 또는 「안 흐른다」(up · datapoints 0).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["subnet_id", "status", "evidence"],
+      "properties": {
+        "subnet_id": {
+          "description": "짝을 찾은 서브넷의 구조 노드 id. 그 서브넷이 이 라우트 테이블을 실제로 쓰는지(명시 연관 · 또는 같은 VPC 의 메인 테이블이고 명시 연관이 없음)는 schema/tests 가 topology.json 과 대조한다.",
+          "$ref": "#/$defs/node_id",
+          "pattern": "^subnet/"
+        },
+        "status": {
+          "description": "live = 짝을 찾았다 · up = 그 서브넷의 모든 ENI 가 판정 창 전체를 NODATA 로 덮었다(「안 흐른다」 · ADR 0008 「D4c」 ④). down 은 없다 — 막힘은 1·2층이 말한다.",
+          "enum": ["live", "up"]
+        },
+        "evidence": { "$ref": "#/$defs/flow_log_evidence" }
+      },
+      "if": { "properties": { "status": { "const": "live" } } },
+      "then": { "properties": { "evidence": { "properties": { "datapoints": { "minimum": 1 } } } } },
+      "else": { "properties": { "evidence": { "properties": { "datapoints": { "const": 0 } } } } }
+    },
+    "history": {
+      "description": "changes 를 읽는 데 필요한 전제. ADR 0004 D4 가 「화면이 직접 말해야 한다」고 정한 차분의 한계 3개 중 둘이 여기 데이터로 온다.",
+      "$comment": "세 한계 중 ①「누가 바꿨는지 모른다」는 이 방법의 항상 참인 성질이라 데이터로 두지 않는다(CloudTrail 을 읽지 않는 것은 설계다 — ADR 0003). 화면은 그 문장을 무조건 말한다. ②「해상도 = 수집 주기」는 resolution_seconds, ③「기준 시각 앞은 소급 불가」는 baseline_at 이 각각 근거다. 이 값이 없으면 화면은 한계를 «말할 수 있지만 숫자를 못 댄다».",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "baseline_at",
+        "resolution_seconds",
+        "retention_seconds",
+        "truncated",
+        "flap_collapse_threshold",
+        "max_changes"
+      ],
+      "properties": {
+        "baseline_at": {
+          "description": "기준 스냅샷 시각. 이 앞의 변경은 존재하지 않는 것이 아니라 «소급 불가»다.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "resolution_seconds": {
+          "description": "수집 주기(초). 같은 주기 안에서 생겼다 사라진 것은 영원히 안 보인다 — 화면이 이 숫자로 그 한계를 말한다.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "retention_seconds": {
+          "description": "목록의 시간 범위 상한(ADR 0004 「보존 창」). 넘은 변경점은 산출물에서 떨어진다(S3 스냅샷은 남는다).",
+          "type": "integer",
+          "minimum": 1
+        },
+        "truncated": {
+          "description": "보존 창 또는 항목 수 상한(max_changes) 때문에 버린 변경점이 있는가. true 면 화면이 '이 앞은 더 있다'를 말해야 한다.",
+          "$comment": "잘림을 말하지 않으면 사용자는 목록의 첫 줄을 «처음»으로 읽는다. baseline_at 과 다른 사실이다 — 하나는 '기록이 시작된 시각', 다른 하나는 '기록을 버린 사실'이다. 생략 금지. 함수 관계(ADR 0006 O4): truncated == (baseline_at < observed_at − retention_seconds) OR (상한으로 버림) — 상한으로 버렸으면 len(changes) == max_changes 다.",
+          "type": "boolean"
+        },
+        "flap_collapse_threshold": {
+          "description": "같은 대상의 상태 변화가 이 횟수 이상 반복되면 1줄로 접는다(ADR 0004 「플래핑 중복 제거」).",
+          "type": "integer",
+          "minimum": 2
+        },
+        "max_changes": {
+          "description": "changes 목록의 줄 수 상한(ADR 0006 O4 · 대장 19 · 승인 2026-10-02 = 5000). 넘으면 오래된 줄부터 버리고 truncated 를 true 로 둔다.",
+          "$comment": "시간 창(retention_seconds)과 둘 다 걸린다 — 창 밖을 먼저 버리고, 남은 줄이 넘치면 (at, kind, target_id) 정렬의 앞쪽부터 버린다. 접힌 플래핑 1줄 = 1줄.",
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "kind", "target_id", "target_kind", "repeat_count"],
+      "properties": {
+        "at": {
+          "description": "변경이 관측된 시각(UTC, RFC3339). 화면은 이것을 한국 시각 `HH:MM KST` 로 찍는다(검사 85 ② · 112 — 값은 UTC 그대로, 바꾸는 것은 표기뿐).",
+          "$comment": "'변경이 일어난 시각'이 아니라 '변경을 본 시각'이다. 우리는 앞뒤 스냅샷의 차분만 가지고 있고, 실제 변경 시점은 두 스냅샷 사이 어딘가다 — 해상도가 resolution_seconds 인 이유가 이것이다. 흐름의 live↔up 만은 지표가 분 단위 시각을 주므로 occurred_at 에 따로 적는다(이 값은 그대로 둔다 — 정렬 키·화면 행의 정체다).",
+          "type": "string",
+          "format": "date-time"
+        },
+        "occurred_at": {
+          "description": "흐름이 실제로 멈춘(live→up)·시작한(up→live) 분(UTC, RFC3339). at(변경을 본 시각)과 별개다. 멈춤 = 이전 문서의 evidence.last_flow_at, 시작 = 이번 문서의 evidence.first_flow_at. 앞뒤 관측 간격이 이번 창을 다 덮지 못하면 생략한다(그 사이에 아무도 보지 못한 구간이 있다).",
+          "$comment": "사용자 결정 2026-09-27(ADR 0008 D6 보강): 화면의 흐름 표시는 늦게 바뀌는 것을 사양으로 두고, 이력은 실제 분을 남긴다. optional 인 이유 — 옛 문서의 변경점과 다른 전이에는 이 사실이 없고, 부재 = 「본 시각만 안다」다(null 을 두지 않는다 — 같은 사실에 두 바이트 표현이 생긴다).",
+          "type": "string",
+          "format": "date-time"
+        },
+        "kind": {
+          "description": "무엇이 바뀌었는가. 변경은 두 종류뿐이다(ADR 0004 D4): 구성(resource_added·resource_removed) / 상태(status_changed).",
+          "enum": ["resource_added", "resource_removed", "status_changed"]
+        },
+        "target_id": { "$ref": "#/$defs/target_id" },
+        "target_kind": { "enum": ["node", "edge"] },
+        "from": {
+          "description": "이전 상태. status_changed 에서만 의미가 있다.",
+          "anyOf": [{ "$ref": "#/$defs/status" }, { "type": "null" }]
+        },
+        "to": {
+          "description": "이후 상태. status_changed 에서만 의미가 있다.",
+          "anyOf": [{ "$ref": "#/$defs/status" }, { "type": "null" }]
+        },
+        "repeat_count": {
+          "description": "접힌 변경점 수. 1 은 접지 않은 한 건이다. flap_collapse_threshold 이상이면 화면이 「N회 반복」으로 1줄에 보인다.",
+          "$comment": "생략 금지. optional 로 두면 부재를 1 로 읽어야 하는데, 그러면 '접은 사실'과 '접을 게 없던 사실'이 같은 바이트가 된다.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "first_at": {
+          "description": "접힌 반복(repeat_count > 1)의 첫 변화를 본 시각(UTC, RFC3339) — 접은 줄 중 가장 이른 at. 화면은 이 시각보다 앞의 상태를 first_from 으로 되짚고, 이 시각부터 at 사이는 「그때 상태를 모른다」로 말한다.",
+          "$comment": "사용자 시나리오(2026-10-15 고객 데모 생성 중 발견): 접힌 줄은 마지막 from/to 만 남겨서, 화면이 반복 전 시각의 상태를 마지막 from 으로 되짚었다 — 짝수 번 뒤집힌 VPN 이 그 전에 「이상」으로 그려졌다(실제 정상). optional 인 이유 — 1.6.0 전에 접힌 줄과, 그런 줄과 다시 합쳐진 줄은 시작을 모른다(부재 = 「모른다」, null 을 두지 않는다). first_at ≤ at 은 JSON Schema 가 못 잰다 → schema/tests 의 순수 함수(fold_start_after_last).",
+          "type": "string",
+          "format": "date-time"
+        },
+        "first_from": {
+          "description": "접힌 반복이 시작되기 전 상태 — first_at 줄의 from. first_at 과 함께만 있다.",
+          "$ref": "#/$defs/status"
+        },
+        "was": {
+          "description": "없어지기 직전의 모습 — resource_removed 에서만. 직전 관측이 그려진 구조 문서에서 그 카드 객체와 붙어 있던 연결 객체를 구조 스키마 모양 그대로 옮긴다(연결이 대상이면 nodes 는 비고 edges 에 그 연결 하나). 화면은 이것으로 「그때 모습」을 다시 그린다.",
+          "$comment": "사용자 피드백 2026-09-27: 이력 줄을 누르면 그때 그림을 보여 줘야 하는데 없어진 것은 지금 구조에 없다. optional 인 이유 — 옛 줄과, 직전 관측의 구조를 못 찾은 줄에는 이 사실이 없다(부재 = 「모습을 모른다」, null 을 두지 않는다). 항목의 전체 모양은 topology.schema.json 의 node·edge 다(교차 파일 $ref 를 쓰지 않으려고 여기서는 화면이 기대는 키만 요구한다 — 전체 모양은 schema/tests 가 topology 정의로 검사한다). 부모 카드는 넣지 않는다: 부모도 없어졌으면 부모의 줄이 자기 모습을 남긴다.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["nodes", "edges"],
+          "properties": {
+            "nodes": {
+              "type": "array",
+              "maxItems": 1,
+              "items": { "type": "object", "required": ["id", "type"] }
+            },
+            "edges": {
+              "type": "array",
+              "items": { "type": "object", "required": ["id", "type", "source", "target"] }
+            }
+          }
+        }
+      },
+      "dependentRequired": { "first_at": ["first_from"], "first_from": ["first_at"] },
+      "allOf": [
+        {
+          "$comment": "반복의 시작은 접힌 상태 줄에만 있다. 한 건짜리 줄(repeat_count 1)은 at·from 이 곧 시작이라 옮겨 적으면 같은 사실에 바이트 표현이 둘 생긴다 · 구성 변경은 접지 않는다.",
+          "if": {
+            "anyOf": [
+              { "properties": { "repeat_count": { "const": 1 } }, "required": ["repeat_count"] },
+              { "properties": { "kind": { "enum": ["resource_added", "resource_removed"] } }, "required": ["kind"] }
+            ]
+          },
+          "then": { "properties": { "first_at": false, "first_from": false } }
+        },
+        {
+          "$comment": "상태 변화에는 앞뒤가 있어야 한다. 없으면 목록이 '무언가 바뀌었다'만 말하고, 그것으로는 끊김인지 복구인지 모른다.",
+          "if": { "properties": { "kind": { "const": "status_changed" } }, "required": ["kind"] },
+          "then": {
+            "required": ["from", "to"],
+            "properties": {
+              "from": { "$ref": "#/$defs/status" },
+              "to": { "$ref": "#/$defs/status" }
+            }
+          }
+        },
+        {
+          "$comment": "구성 변경에 상태 앞뒤를 적으면 두 종류가 섞인다. 리소스가 생기거나 사라진 것은 상태 전이가 아니다.",
+          "if": {
+            "properties": { "kind": { "enum": ["resource_added", "resource_removed"] } },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": {
+              "from": { "type": "null" },
+              "to": { "type": "null" },
+              "occurred_at": false
+            }
+          }
+        },
+        {
+          "$comment": "모습은 없어진 것에만 있다. 생긴 것·상태가 바뀐 것은 지금 구조에 그대로 있으므로 옮겨 적으면 같은 사실이 두 곳에 생기고 둘이 어긋날 수 있다.",
+          "if": {
+            "properties": { "kind": { "enum": ["resource_added", "status_changed"] } },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": { "was": false }
+          }
+        }
+      ]
+    },
+    "coverage_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["account_id", "region", "resource_type", "layer", "status", "item_count"],
+      "properties": {
+        "account_id": { "$ref": "#/$defs/account_id" },
+        "region": { "$ref": "#/$defs/region" },
+        "resource_type": {
+          "description": "어느 종류의 관측인가. 1층은 종류마다 다른 API 라서 종류 단위로 실패한다 — 같은 자리에 ok 행과 denied 행이 함께 있는 것이 「일부만 읽었다」의 표현이다.",
+          "$comment": "ADR 0006 O10(승인 2026-09-23, 결정 3 의 정정). 실측: 대상 계정 역할이 14개 중 4개 액션만 허용해 DescribeVpcs 는 ok · DescribeSubnets 는 denied 였다. 종류축이 없으면 그 자리를 「읽었다」도 「못 읽었다」도 정직하게 적을 수 없다. status 어휘에 partial 을 만들지 않는 이유도 같다 — 무엇을 읽었는지를 여전히 말하지 못한다.",
+          "$ref": "#/$defs/resource_type"
+        },
+        "layer": {
+          "description": "어느 층의 관측인가. describe 는 $0, metric 은 유료다. 2층은 여전히 층 단위로 죽는다(cloudwatch:GetMetricData 하나가 거부되면 그 리전의 metric 행이 전부 denied 가 된다).",
+          "enum": ["describe", "metric"]
+        },
+        "status": {
+          "description": "ok 이외의 값은 모두 '이 영역은 확인하지 못했다'로 렌더링 대상이다(회색). skipped 는 사용자가 2층을 끈 경우에만 쓴다 — 실패를 skipped 로 감추지 마라.",
+          "$comment": "topology 의 coverage status 와 같은 6어휘를 쓴다(schema/topology.schema.json:194). 관측 전용 어휘를 새로 만들면 렌더러가 두 표를 다르게 읽어야 하고, 그것은 같은 사실에 두 표현을 만드는 일이다.",
+          "enum": ["ok", "denied", "throttled", "unsupported", "error", "skipped"]
+        },
+        "reason": {
+          "anyOf": [{ "$ref": "#/$defs/reason" }, { "type": "null" }]
+        },
+        "item_count": {
+          "description": "이 (계정,리전,종류,층)에서 판정한 대상 수. 0(대상 없음)·null(세지 못했음)·status 는 서로 다른 사실이다. 생략 금지.",
+          "type": ["integer", "null"],
+          "minimum": 0
+        }
+      },
+      "allOf": [
+        {
+          "$comment": "실패에는 반드시 사유가 붙는다. 사유 없는 실패는 사람이 권한을 고칠 단서를 주지 않는다.",
+          "if": {
+            "properties": { "status": { "enum": ["denied", "throttled", "unsupported", "error"] } },
+            "required": ["status"]
+          },
+          "then": { "required": ["reason"], "properties": { "reason": { "$ref": "#/$defs/reason" } } }
+        }
+      ]
+    },
+    "resource_type": {
+      "$comment": "🔴 topology.schema.json:280 의 열거와 **바이트 동일**해야 한다. JSON Schema 에 다른 파일의 $defs 를 안전하게 끌어오는 방법이 없어 반복한다 — 한쪽만 고치면 두 문서의 coverage 가 다른 종류 집합을 말하게 되고, test_resource_type_enum_matches_topology 가 어긋남을 잡는다.",
+      "enum": [
+        "vpc",
+        "subnet",
+        "route_table",
+        "internet_gateway",
+        "nat_gateway",
+        "transit_gateway",
+        "transit_gateway_attachment",
+        "vpc_peering_connection",
+        "vpc_endpoint",
+        "security_group",
+        "network_acl",
+        "load_balancer",
+        "direct_connect_connection",
+        "direct_connect_virtual_interface",
+        "direct_connect_gateway",
+        "ec2_instance",
+        "auto_scaling_group",
+        "eks_cluster",
+        "network_firewall",
+        "cloudfront",
+        "transit_gateway_route_table",
+        "rds_db_instance",
+        "ecs_service",
+        "sagemaker_notebook_instance",
+        "sagemaker_domain",
+        "sagemaker_endpoint",
+        "ec2_instance_connect_endpoint",
+        "vpn_gateway",
+        "customer_gateway",
+        "vpn_connection",
+        "lambda_function",
+        "route53_hosted_zone",
+        "elasticache_cluster",
+        "rds_db_cluster",
+        "opensearch_domain",
+        "msk_cluster",
+        "elastic_ip",
+        "api_gateway",
+        "api_gateway_v2",
+        "rds_db_proxy",
+        "global_accelerator",
+        "core_network",
+        "lattice_service_network",
+        "lattice_service",
+        "waf_web_acl",
+        "waf_web_acl_global"
+      ]
+    },
+    "reason": {
+      "$comment": "topology.schema.json 의 reason 과 같은 shape·같은 code 열거를 쓴다. JSON Schema 에 다른 파일의 $defs 를 안전하게 끌어오는 방법이 없어 열거를 반복한다 — 둘 중 하나만 고치면 안 된다(schema/tests/test_observation_schema.py 의 test_reason_code_enum_matches_topology 가 어긋남을 잡는다).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code"],
+      "properties": {
+        "code": {
+          "enum": [
+            "access_denied",
+            "throttled",
+            "unsupported_region",
+            "api_error",
+            "timeout",
+            "pagination_truncated",
+            "credentials_unavailable"
+          ]
+        },
+        "api": {
+          "description": "실패한 API. `cloudwatch:GetMetricData` 형식. 사람이 권한을 고칠 수 있게 하는 유일한 단서다.",
+          "type": ["string", "null"]
+        },
+        "message": {
+          "description": "원문 메시지. 계정ID·ARN 이 들어올 수 있으므로 fixture 로 승격할 때 스크럽한다.",
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "account_id": {
+      "description": "12자리 계정ID. 코드·테스트에 실계정 값을 박지 마라 — fixture 는 111122223333 계열을 쓰고 pre-commit 훅이 이를 강제한다(불변식 ⑤).",
+      "type": "string",
+      "pattern": "^[0-9]{12}$"
+    },
+    "region": {
+      "description": "AWS 리전 코드. 기본값을 두지 않는다.",
+      "type": "string",
+      "pattern": "^[a-z]{2}(-[a-z]+)+-[0-9]$"
+    },
+    "target_id": {
+      "description": "topology.json 의 노드 **또는** 엣지 id. 참조 정합성(그 id 가 실제로 그 문서에 있나)은 테스트가 검사한다 — JSON Schema 는 다른 문서를 볼 수 없다.",
+      "$comment": "🔴 이 필드가 node_id 패턴만 강제하던 동안 **엣지 관측은 하나도 검증을 통과할 수 없었다**(2026-09-23 실측, engine/tests/test_observe.py 가 잡았다). 그때 fixtures/observation/*.json 이 그린이었던 이유는 엔진이 만들지 않는 슬래시 꼴 엣지 id 를 적어 뒀기 때문이고, 즉 그 187 그린은 이 결함에 대해 **미측정**이었다. anyOf 로 두 문법을 다 받되, 둘 중 어느 쪽인지는 target_kind 가 말한다.",
+      "anyOf": [{ "$ref": "#/$defs/node_id" }, { "$ref": "#/$defs/edge_id" }]
+    },
+    "node_id": {
+      "$comment": "🔴 topology.schema.json 의 같은 이름 정의와 **바이트 동일**해야 한다. JSON Schema 는 파일 경계를 넘는 $ref 를 resolver 없이 못 쓰므로 사본이고, schema/tests 의 test_id_patterns_match_the_topology_contract 가 어긋남을 잡는다 — 한쪽만 고치면 안 된다.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9_]+/[^/|\\s]+(/[^/|\\s]+)*$"
+    },
+    "edge_id": {
+      "$comment": "위와 같다 — topology.schema.json 의 edge_id 사본이다. 정본은 engine/src/nettopo/collect.py:246 `_edge_id()` 다.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9_]+\\|[a-z0-9_]+/[^/|\\s]+(/[^/|\\s]+)*\\|[a-z0-9_]+/[^/|\\s]+(/[^/|\\s]+)*(\\|[^|\\s]+)?$"
+    },
+    "utilization_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_id", "measures"],
+      "properties": {
+        "target_id": { "$ref": "#/$defs/node_id" },
+        "measures": {
+          "description": "measure 오름차순 · 유일.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/utilization_measure" }
+        }
+      }
+    },
+    "utilization_measure": {
+      "description": "재는 것 하나. kind 가 모양을 정한다 — rate = 기간마다 가장 바빴던 단위 + 평균(windows) · events = 기간마다 합(windows · 한도 없음 · 화면 「연결 거부 12」) · count = 지금 개수(now · 기간 없음).",
+      "$comment": "값(peak · average · now.used)은 unit 단위의 **원래 값**이고 %가 아니다 — 렌더러가 limit 으로 나눈다. 그래야 배지의 「84 Gbps / 100 Gbps」와 「84%」가 한 쌍의 숫자에서 나온다. limit=null 은 「한도 ?」(값만)이고 0 이 아니다. 무엇을 무엇으로 나누는지의 정본은 ADR 0011 D3 이다.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["measure", "kind", "unit", "limit", "limit_source"],
+      "properties": {
+        "measure": {
+          "enum": [
+            "bandwidth",
+            "packet_rate",
+            "capacity",
+            "rejected_connections",
+            "port_allocation_errors",
+            "packets_dropped",
+            "ip_addresses",
+            "security_group_rules",
+            "network_acl_entries",
+            "routes_ipv4",
+            "routes_ipv6",
+            "routes_propagated",
+            "vpc_ipv4_cidrs",
+            "vpc_ipv6_cidrs",
+            "vpc_subnets",
+            "vpc_network_acls",
+            "vpc_route_tables",
+            "vpc_interface_endpoints",
+            "vpc_active_peerings",
+            "tgw_attachments",
+            "tgw_route_tables",
+            "tgw_peering_attachments",
+            "tgw_routes",
+            "dxgw_virtual_interfaces",
+            "dxgw_virtual_private_gateways",
+            "dxgw_transit_gateways",
+            "invocations",
+            "requests",
+            "connections"
+          ]
+        },
+        "kind": {
+          "description": "모양. measure 에서 유도하지 마라 — 이 값이 정본이다(target_kind 와 같은 이유).",
+          "enum": ["rate", "events", "count"]
+        },
+        "unit": { "enum": ["bit_per_second", "packet_per_second", "percent", "count", "count_per_second"] },
+        "total_unit": {
+          "description": "1.18.0 · rate 전용 · 창의 total(기간 합)의 단위 — byte = 바이트(통신량) · packet = 패킷 · count = 횟수(요청·호출). 없으면 합이 뜻이 없는 측정(연결 수처럼 이미 개수인 것).",
+          "enum": ["byte", "packet", "count"]
+        },
+        "includes": {
+          "description": "1.18.0 · 이 값에 섞인 것 — tunnel_health_checks = VPN 터널 점검·ARP·BGP 바이트(AWS 문서 「can report network usage even when the tunnel is down」 · 화면이 「점검 바이트 포함」을 붙인다).",
+          "enum": ["tunnel_health_checks"]
+        },
+        "limit": {
+          "description": "분모(unit 단위). null = 한도를 모른다(값만 · 화면 「한도 ?」).",
+          "type": ["number", "null"],
+          "exclusiveMinimum": 0
+        },
+        "limit_source": {
+          "description": "분모가 어디서 왔나(화면 「한도 출처」 칸). account_quota = 그 계정에 적용된 서비스 한도를 읽음 · default_quota = AWS 기본값(계정 값을 못 읽었거나 Service Quotas 가 값을 주지 않음) · fixed = 늘릴 수 없는 한도 · resource_attribute = 자원 속성(DX 대역폭) · aws_computed = AWS 가 %로 줌 · arithmetic = 계산(서브넷 CIDR).",
+          "enum": [
+            "account_quota",
+            "default_quota",
+            "fixed",
+            "resource_attribute",
+            "aws_computed",
+            "arithmetic",
+            null
+          ]
+        },
+        "quota_code": {
+          "description": "Service Quotas 한도 코드 — account_quota·default_quota 일 때만.",
+          "type": "string",
+          "pattern": "^L-[0-9A-F]{8}$"
+        },
+        "limit_reason": {
+          "description": "default_quota 인 이유 — 계정 한도 읽기가 실패했다. Service Quotas 가 값을 안 줘서 기본값으로 간 경우에는 없다.",
+          "$ref": "#/$defs/reason"
+        },
+        "limit_scope": {
+          "description": "한도가 걸리는 단위. per_az_per_direction = AZ 마다 · 방향마다(TGW VPC 어태치먼트) · per_az = AZ 마다(방화벽) · per_direction = 방향마다(DX) · resource = 자원 하나.",
+          "enum": ["per_az_per_direction", "per_az", "per_direction", "resource"]
+        },
+        "part": {
+          "description": "count 전용 · used 를 낸 칸(가장 찬 칸). 보안 그룹 = 방향 × 주소 계열 · NACL = 방향.",
+          "enum": ["ingress_ipv4", "ingress_ipv6", "egress_ipv4", "egress_ipv6", "ingress", "egress"]
+        },
+        "now": {
+          "description": "count 전용 · 지금 개수.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["used"],
+          "properties": { "used": { "type": "integer", "minimum": 0 } }
+        },
+        "windows": {
+          "description": "rate·events 전용 · minutes 오름차순 · 유일. 긴 묶음(10080 이상)은 1시간마다 다시 계산하므로 computed_at 이 짧은 묶음보다 오래될 수 있다.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/utilization_window" }
+        },
+        "unread": {
+          "description": "이 measure 를 못 읽었다(화면 「사용률 ?」). 있으면 windows·now 가 없다.",
+          "$ref": "#/$defs/reason"
+        }
+      },
+      "allOf": [
+        {
+          "$comment": "한도를 모르면 출처도 없다 — 둘은 함께 null 이다.",
+          "if": { "properties": { "limit": { "type": "null" } } },
+          "then": { "properties": { "limit_source": { "const": null } } },
+          "else": { "properties": { "limit_source": { "type": "string" } } }
+        },
+        {
+          "if": { "required": ["limit_reason"] },
+          "then": { "properties": { "limit_source": { "const": "default_quota" } } }
+        },
+        {
+          "if": { "required": ["quota_code"] },
+          "then": { "properties": { "limit_source": { "enum": ["account_quota", "default_quota"] } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "rate" } } },
+          "then": {
+            "properties": {
+              "measure": { "enum": ["bandwidth", "packet_rate", "capacity", "invocations", "requests", "connections"] },
+              "unit": { "enum": ["bit_per_second", "packet_per_second", "percent", "count_per_second", "count"] }
+            },
+            "not": { "anyOf": [{ "required": ["now"] }, { "required": ["part"] }] }
+          }
+        },
+        {
+          "$comment": "사실(거부·드롭 수)은 %가 아니다 — 한도를 두지 않는다(ADR 0011 D1).",
+          "if": { "properties": { "kind": { "const": "events" } } },
+          "then": {
+            "properties": {
+              "measure": { "enum": ["rejected_connections", "port_allocation_errors", "packets_dropped"] },
+              "unit": { "const": "count" },
+              "limit": { "const": null }
+            },
+            "not": {
+              "anyOf": [{ "required": ["now"] }, { "required": ["part"] }, { "required": ["limit_scope"] }]
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "count" } } },
+          "then": {
+            "properties": {
+              "measure": {
+                "enum": [
+                  "ip_addresses",
+                  "security_group_rules",
+                  "network_acl_entries",
+                  "routes_ipv4",
+                  "routes_ipv6",
+                  "routes_propagated",
+                  "vpc_ipv4_cidrs",
+                  "vpc_ipv6_cidrs",
+                  "vpc_subnets",
+                  "vpc_network_acls",
+                  "vpc_route_tables",
+                  "vpc_interface_endpoints",
+                  "vpc_active_peerings",
+                  "tgw_attachments",
+                  "tgw_route_tables",
+                  "tgw_peering_attachments",
+                  "tgw_routes",
+                  "dxgw_virtual_interfaces",
+                  "dxgw_virtual_private_gateways",
+                  "dxgw_transit_gateways"
+                ]
+              },
+              "unit": { "const": "count" }
+            },
+            "not": { "required": ["windows"] }
+          }
+        },
+        {
+          "$comment": "못 읽었으면 값이 없고, 읽었으면 값이 있다.",
+          "if": { "required": ["unread"] },
+          "then": { "not": { "anyOf": [{ "required": ["windows"] }, { "required": ["now"] }] } },
+          "else": {
+            "if": { "properties": { "kind": { "const": "count" } } },
+            "then": { "required": ["now"] },
+            "else": { "required": ["windows"] }
+          }
+        }
+      ]
+    },
+    "utilization_window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minutes", "step_seconds", "covered_seconds", "computed_at"],
+      "if": { "required": ["no_points"] },
+      "then": {
+        "$comment": "값 없음(#128) — 값을 싣지 않는다 · 덮은 시간 0. 0 을 실으면 화면이 「정말 0」과 가르지 못한다.",
+        "properties": { "peak": { "const": null }, "average": { "const": null }, "covered_seconds": { "const": 0 } },
+        "not": { "anyOf": [{ "required": ["sum"] }, { "required": ["total"] }, { "required": ["peak_at"] }, { "required": ["peak_direction"] }, { "required": ["peak_az"] }] }
+      },
+      "properties": {
+        "minutes": {
+          "description": "기간(화면 「기간」 메뉴) — 15분 · 1시간 · 24시간 · 1주 · 1달(30일) · 3달(90일).",
+          "enum": [15, 60, 1440, 10080, 43200, 129600]
+        },
+        "step_seconds": {
+          "description": "가장 바빴던 때를 재는 단위 = CloudWatch 보관 해상도(1분 15일 · 5분 63일 · 1시간 455일) → 1주까지 60 · 1달 300 · 3달 3600. 🔴 예외 하나: EC2(ec2_instance)는 기본 모니터링이 5분 점이라 1주까지도 300(60 으로 접으면 5분 합을 60초로 나눠 5배로 말한다 — 실측 2026-10-04). 창의 끝 = computed_at 을 단위로 내린 시각 · 시작 = 끝 − 기간.",
+          "enum": [60, 300, 3600]
+        },
+        "peak": {
+          "description": "rate 전용 · 단위마다의 값 중 최대(unit 단위). null = 기간 안에 점이 하나도 없었다 — 「항상 보내는」 지표는 화면 「사용률 ?」 · 단 스냅샷 상태가 stopped 인 EC2 는 「멈춤」(canvas-principles §17.25 「멈춘 EC2」) · 「트래픽이 있을 때만 보내는」 지표는 no_points 가 함께 온다(화면 「값 없음」 · 1.13.0 — 그 전에는 엔진이 0 을 적었다).",
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "peak_at": { "description": "peak 를 낸 단위의 시작 시각.", "type": ["string", "null"], "format": "date-time" },
+        "peak_direction": {
+          "description": "peak 가 나온 방향(두 방향을 재는 지표만). in = 그 자원으로 들어옴 · out = 나감 — 지표 이름(BytesIn · Egress …)이 말하는 그대로. 화면의 세모는 이 방향으로 움직인다.",
+          "enum": ["in", "out"]
+        },
+        "peak_az": {
+          "description": "peak 가 나온 AZ(AZ 별 한도만). TGW = AZ ID · 방화벽 = AZ 이름 — 지표가 주는 그대로.",
+          "type": "string",
+          "minLength": 1
+        },
+        "average": {
+          "description": "rate 전용 · 기간 동안의 합 ÷ covered_seconds(unit 단위). 두 방향·AZ 별이면 peak 를 낸 칸의 평균.",
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "total": {
+          "description": "1.18.0 · rate 전용 · 기간 동안의 사용량 합(measure 의 total_unit 단위 · 모든 칸 = 방향 × AZ 를 더한 값 · 가장 바빴던 칸 하나가 아니다). null = 점이 없었다(「항상 보내는」 지표의 빈 창). 화면 배지·목록의 첫 숫자(사용자 결정 2026-10-26).",
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "sum": { "description": "events 전용 · 기간 동안의 합. no_points 인 창에는 없다(0 이 아니다).", "type": "integer", "minimum": 0 },
+        "no_points": {
+          "description": "1.13.0 · #128 · 불변식 ④ — 읽었고(호출 성공) 「값이 있을 때만 보내는」 지표가 이 기간에 점을 하나도 보내지 않았다. 트래픽이 정말 없었을 수도, 새 자원이거나 그 지표가 발행되지 않는 경우일 수도 있다 — 엔진은 셋을 가르지 못하므로 0 으로 적지 않는다. 화면 「값 없음」(정렬·세모 = 모름 · §17.25). 점이 하나라도 있으면 이 키는 없고 그 사이 빈 단위는 0 이다. 못 읽음(measure 의 unread)과 다르다.",
+          "const": true
+        },
+        "covered_seconds": {
+          "description": "평균의 분모. 기간보다 짧으면 「그 자원이 기간 중간에 생겼다」이고 화면이 「N일치만」을 붙인다(ADR 0011 D2 · 「항상 보낸다」 지표에서만 짧아진다).",
+          "type": "integer",
+          "minimum": 0
+        },
+        "computed_at": {
+          "description": "이 칸을 계산한 시각(= 그때 관측의 observed_at). 창의 끝이다.",
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

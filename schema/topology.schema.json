@@ -1,0 +1,683 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sample-network-topology-visualizer:schema:topology",
+  "title": "NetworkTopology snapshot",
+  "description": "engine 과 renderer 의 유일한 계약(불변식 ③). 이 파일이 바뀌면 양쪽을 같은 PR 에서 고치고 승인 2명을 받는다. 렌더러가 필요하다는 이유로 표시용 필드를 여기에 몰래 넣지 마라 — 스키마를 먼저 바꾼다.",
+  "$comment": "설계 판단의 근거는 docs/adr/0001-topology-schema.md 에 있다. 키는 snake_case 로 통일한다(결정론의 유일한 예외 필드를 `run.collected_at` 으로 적어 온 표기에 맞춘다). JSON Schema 는 배열 순서를 강제할 수 없으므로 정렬 규칙은 schema/tests/test_schema.py 가 강제한다 — 불변식 ②(결정론)의 실제 게이트는 그 테스트다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run", "scope", "nodes", "edges", "coverage"],
+  "properties": {
+    "schema_version": {
+      "description": "이 문서가 준수하는 스키마 버전. 호환 불가 변경이면 major 를 올리고 fixtures 를 마이그레이션한다.",
+      "$comment": "2.0.0: partial·directed·item_count 를 required 로 올렸다. 1.0.0 에서 유효했던 문서(해당 필드 생략)가 무효가 되므로 major 다 — 이 규칙을 이 필드 자신의 description 이 정하고 있다. 근거는 ADR 0001 '개정' 절. 2.1.0: 2차 Direct Connect 3종을 node_type·resource_type 에 더했다(ADR 0010). 2.0.0 문서는 그대로 유효하므로 minor 다 — 단 const 이므로 생산자·fixture 는 같은 PR 에서 2.1.0 으로 올린다. 2.2.0: EC2·Auto Scaling·EKS·Network Firewall 4종을 같은 두 enum 에 더했다(리뷰 결정 2026-09-30). 2.3.0: CloudFront 를 더했다(글로벌 2번째). 2.4.0: W2 7종(TGW 라우트 테이블·RDS 인스턴스·ECS 서비스·SageMaker 노트북·도메인·엔드포인트·EC2 Instance Connect 엔드포인트)을 더했다. 2.5.0: edge_type 에 `origin`(CloudFront 배포 → 원본 로드밸런서 · #43)을 더했다 — 선 종류를 더해도 같다. 2.6.0: 2차 Site-to-Site VPN 3종(VPN 게이트웨이(VGW)·고객 게이트웨이(CGW)·VPN 연결)을 node_type·resource_type 에 더했다(사용자 결정 2026-10-06 「vpn 도 우리의 수집 대상 리소스」). 2.7.0: edge_type 에 `load_balancer_target`(LB → 등록 대상 노드 · 대상 노드마다 하나)을, node_type 에 엔진이 대상 해소로 짓는 최소 노드 2종(`lambda_function` · `external_ip`)을 더했다(사용자 결정 2026-10-20 「LB 대상은 대상 종류마다 전부 선으로」 · ADR 0002 §8 · ADR 0007 결정 6 개정). 두 노드는 목록 API 가 없는 **파생 노드**라 resource_type 에는 없다(수집 요청·coverage 의 단위가 아니다 — `$defs.node_type` 주석). 2.13.0: 정보창 개편(사용자 결정 2026-10-24 「고객은 AWS 콘솔에 익숙하다 — 콘솔이 보여 주는 값은 우리도 보여 준다」) — 콘솔 탭 그대로의 **선택 속성**만 더한다(종류·선 추가 없음 = minor). ① 라우팅 갈래: route_table `routes`(경로 한 줄 · **VPC 내부 경로 local 포함**) · `edge_association_gateway_ids` · `propagating_vgw_ids` · route 엣지 `blackhole_destinations`(그 선에서 실제로 죽은 목적지만 — `blackhole` 은 대상 묶음 OR 그대로) · transit_gateway_route_table `associations`·`propagations`·`routes`·`prefix_list_references`(새 후속 호출 ec2:GetTransitGatewayPrefixListReferences) · transit_gateway_attachment `resource_owner_id`·`association_route_table_id`·`association_state` · VPC 어태치먼트 `subnet_ids`·`dns_support`·`ipv6_support`·`appliance_mode_support`·`security_group_referencing_support`(새 후속 호출 ec2:DescribeTransitGatewayVpcAttachments) · transit_gateway `Options` 칸(기본 연결·전파 라우팅 테이블 id · 자동 수락 · VPN ECMP · DNS · SG 참조 · 멀티캐스트 · CIDR 블록 · 암호화 · 설명) · vpc_peering_connection 양쪽 `*_ipv6_cidr_blocks`·`*_allow_dns_resolution_from_remote_vpc` · `expiration_time` · vpc `ipv6_cidr_blocks`·`instance_tenancy`·`dhcp_options_id`·`dhcp_options`(새 후속 호출 ec2:DescribeDhcpOptions)·`enable_dns_support`·`enable_dns_hostnames`(새 후속 호출 ec2:DescribeVpcAttribute · VPC 마다 2번) · `cidr_blocks` 는 연결된 CIDR 만. 🔴 새 후속 호출이 거부되면 그 키가 없고 노드가 partial 이다(「꺼짐」·「없음」으로 적지 않는다 · 불변식 ④). 줄 문자열의 빈 칸은 `-`. 같은 판에 다른 엔진 갈래(LB·VPN·SG/NACL·DX·CloudFront·WAF·엔드포인트·NAT)가 선택 속성을 더한다 — 버전은 이 판 그대로다. 2.12.0: WAF 웹 ACL(사용자 결정 2026-10-23 「캔버스만 보면 WAF 가 없는 것처럼 보인다」 · ADR 0014) — node `waf_web_acl`(속성 `scope` = regional·cloudfront · cloudfront 범위 = 글로벌 여섯째 · id 리전 자리 `global` · region null · 부모 = 계정 · regional = 부모 리전) · resource `waf_web_acl`(Scope=REGIONAL · 수집 리전) · `waf_web_acl_global`(Scope=CLOUDFRONT · wafv2 = us-east-1 고정 — 목록 API 가 같고 인자·리전이 달라 수집 종류는 둘) · edge `waf_protection`(web ACL → ALB·CloudFront 배포·API Gateway REST API · ALB·CloudFront 선은 대상 쪽 `web_acl_arn`·`web_acl_id` 를 3패스가 잇는다 · API Gateway 선은 ListResourcesForWebACL 스테이지 · `stages`). load_balancer `web_acl_arn` · cloudfront `web_acl_id` 속성은 그대로 둔다. 2.11.0 문서는 그대로 유효하다(종류·선·선택 속성 추가 = minor). 2.11.0: #129(target-gap §C 15·16 · ADR 0002 §13) — 오버레이·서비스 네트워크 셋. TGW Connect = edge `connect_transport`(Connect 어태치먼트 → 그 전송 어태치먼트 · VPC·DX) + transit_gateway_attachment 속성 `connect_protocol`·`transport_attachment_id`·`connect_peers`(GRE 피어 · BGP) · Cloud WAN = node·resource `core_network`(글로벌 다섯째 · API = networkmanager us-west-2)과 edge `core_network_attachment`(코어 네트워크 ↔ VPC) · 라우트 `CoreNetworkArn` 대상이 코어 네트워크로 풀린다 · VPC Lattice = node·resource `lattice_service_network`·`lattice_service`(부모 = 리전)와 edge `lattice_vpc_association`(서비스 네트워크 ↔ VPC) · `lattice_service_association`(서비스 네트워크 ↔ 서비스) · `lattice_target`(서비스 → EC2·LB·Lambda). 2.10.0 문서는 그대로 유효하다(종류·선·선택 속성 추가 = minor). 2.10.0: 배치 D(사용자 결정 2026-10-20 · ADR 0002 §12) — 「가리킨다/넘긴다」 관계 넓히기. route_table 속성 `prefix_lists`·`prefix_list_entries`·`prefix_list_entries_unread`(라우트 목적지 `pl-…` 의 이름 · 고객 관리형 목록의 CIDR — §12-1). 같은 미발행 판에서 종류·선을 더한다(아래 「같은 판」 절이 커밋마다 는다). 같은 판에서 node·resource `elastic_ip`(탄력적 IP · 부모 = 리전)과 edge `eip_association`(EIP → 주인 · §12-2) · node `api_gateway`(REST·HTTP·WebSocket · resource `api_gateway`·`api_gateway_v2` — 목록 API 가 달라 수집 종류는 둘)과 edge `vpc_link`(API → LB · §12-3) · node·resource `rds_db_proxy`(부모 = VPC · 걸친 서브넷)과 edge `proxy_target`(프록시 → DB 인스턴스·클러스터 · §12-4) · node·resource `global_accelerator`(글로벌 네 번째 · API = us-west-2)와 edge `accelerator_endpoint`(가속기 → LB·EC2·EIP 의 주인 · §12-5)를 더했다. 2.9.0 문서는 그대로 유효하다(선택 속성 추가 = minor). 2.9.0: VPC 안 IP 를 쓰는 서비스 카드 4종(`elasticache_cluster` · `rds_db_cluster` · `opensearch_domain` · `msk_cluster`)을 node_type·resource_type 에 더했다(#114 · 사용자 승인 2026-10-20 배치 B · ADR 0013). 🔵 2.8.x 는 같은 날 병행한 배치 A(VPC Lambda) 몫으로 비워 둔다 — 두 브랜치를 합칠 때 enum 은 합집합 · 버전은 큰 쪽이다. 2.8.0: LB → 대상 선을 **그 대상 그룹을 자기 것으로 든 자원**(ECS 서비스 `target_group_arns`)에도 등록 수와 무관하게 잇는다 — 대상이 컨테이너 인스턴스(`instance`)여도 그 서비스로 가고, 등록이 0 이어도 선이 있다(`target_count` 0 은 그 대상이 ECS 서비스·EKS 클러스터일 때만 · 사용자 결정 2026-10-20 P1-1 · EKS = 대상 그룹 태그 `elbv2.k8s.aws/cluster` · P2-5). 같은 판에서 resource_type 에 `lambda_function`(P2-6 · `lambda:ListFunctions` — VPC 에 붙은 함수의 서브넷 · 2.7.0 의 파생 노드와 같은 id · 수집하지 않으면 LB 대상 해소가 예전처럼 짓는다 → 파생 노드는 `external_ip` 하나)을, Auto Scaling 그룹 속성 `target_group_arns`(구성) · EC2 속성 `auto_scaling_group_id`(그 인스턴스를 지금 가진 ASG 노드 id — 화면이 LB → 인스턴스 선을 LB → ASG 선 하나로 접는 재료 · P1-2 · 엔진 선은 인스턴스 그대로)를 더했다. 같은 판에서 edge_type 에 `endpoint_provider`(GWLB 엔드포인트 → 그 서비스를 제공하는 GWLB · Network Firewall 엔드포인트 → 그 방화벽 · 인터페이스 엔드포인트 → 남의 PrivateLink NLB · ADR 0002 §9 · P1-3·P1-4·P2-1)를, vpc_endpoint 속성 `service_owner`(그 엔드포인트 서비스의 주인 계정 · P2-1)를, LB 속성 `endpoint_service_names`(그 LB 를 뒤에 둔 엔드포인트 서비스 이름 · 제공자 계정의 `DescribeVpcEndpointServiceConfigurations`)를 더했다(한 PR 의 같은 미발행 판 — 선 종류를 더해도 minor 다). 같은 판에서 라우트의 `eni-` 대상을 ENI 주인으로 잇는다(P2-2 · route `via_eni` · route_table `unresolved_route_targets`). 같은 판에서 CloudFront 원본을 넓혔다(P2-3 — `origin` 대상 += EC2(VPC 원본) · 파생 노드 `s3_bucket`(S3 원본) · Route 53 별칭을 거친 사용자 도메인 → LB · 속성 `via`). 같은 판에서 **Route 53 호스팅 영역**(node·resource `route53_hosted_zone` · 글로벌 세 번째 · P2-4)과 edge `dns_alias`(영역 → LB·CloudFront) · `zone_association`(사설 영역 ↔ VPC)을 더했다. 2.7.0 문서는 그대로 유효하다. 같은 규칙 — **카드 종류를 더하면 버전을 올린다.** 같은 규칙으로 minor 이고, 같은 PR 에서 생산자(model.SCHEMA_VERSION)·fixture 5장·engine/prove-breaks.sh 의 `구버전선언` 앵커를 같이 올린다 — 🔴 그 앵커는 버전 «글자»를 앵커로 쓰므로 CI 가 못 잡는다(CI 는 pytest·화면 검사만 돈다). `engine/check-break-anchors.py` 로 확인한다.",
+      "type": "string",
+      "const": "2.13.0"
+    },
+    "run": { "$ref": "#/$defs/run" },
+    "scope": { "$ref": "#/$defs/scope" },
+    "nodes": {
+      "description": "토폴로지의 정점. 포함 관계는 엣지가 아니라 parent_id 로 표현한다(elk.js 중첩 서브그래프에 그대로 대응). id 오름차순 정렬.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/node" }
+    },
+    "edges": {
+      "description": "정점 사이의 관계. id 오름차순 정렬.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/edge" }
+    },
+    "coverage": {
+      "description": "불변식 ④의 저장소. (계정, 리전, 리소스종류) 단위로 수집이 성공했는지 기록한다. status 가 ok 가 아닌 항목은 렌더러가 '이 영역은 확인하지 못했다'로 눈에 보이게 표시해야 한다 — 조용히 빈 그래프를 그리는 것이 최악이다. (account_id, region, resource_type) 오름차순 정렬.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/coverage_entry" }
+    }
+  },
+  "$defs": {
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["collected_at", "tool_version"],
+      "properties": {
+        "collected_at": {
+          "description": "수집 시각(UTC, RFC3339). 불변식 ②의 유일한 wall-clock 예외 — 결정론 테스트는 이 필드를 제외하고 비교한다.",
+          "type": "string",
+          "format": "date-time"
+        },
+        "tool_version": {
+          "description": "산출물을 만든 nettopo 버전. 산출물만 보고 재현할 수 있어야 한다.",
+          "type": "string",
+          "minLength": 1
+        },
+        "content_digest": {
+          "description": "구조 내용의 지문. schema_version · run.tool_version · nodes · edges 넷만의 정규형(sort_keys·구분자 최소) sha256 — coverage·scope·수집 시각은 넣지 않는다(못 읽은 종류가 있어도 카드·선이 같으면 같은 구조다). 관측 문서의 run.topology_content_digest 가 이 값을 가리키면 수집 시각이 달라도 같은 구조다.",
+          "$comment": "선택 필드다(2.0.0 문서의 유효성을 바꾸지 않으므로 major 가 아니다). 시각만으로 짝을 맞추면 내용이 같은 매시 재수집마다 화면이 겹쳐 그리기를 거부한다(실측 2026-09-27). tool_version 은 지문에 들어간다.",
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "scope": {
+      "description": "무엇을 수집하라고 요청받았는가(입력의 반영). 실제로 무엇을 수집했는지는 coverage 가 답한다 — 요청과 결과를 섞지 마라.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["account_ids", "regions", "resource_types"],
+      "properties": {
+        "account_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/account_id" }
+        },
+        "regions": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/region" }
+        },
+        "resource_types": {
+          "$comment": "node_type 이 아니라 resource_type 을 참조한다. account·region 은 수집 대상이 아니라 엔진이 합성하는 컨테이너이므로, 그것을 '수집하라'고 요청할 수도 없고 coverage 에 성공/실패를 기록할 수도 없다.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/resource_type" }
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "account_id", "partial"],
+      "properties": {
+        "id": {
+          "description": "전역 유일하고 재현 가능한 식별자. 형식은 `<type>/<account_id>[/<region>[/<native_id>]]`. 글로벌 리소스(direct_connect_gateway)는 리전 자리에 리터럴 `global` 을 쓴다 — 어느 리전에서 조회해도 같은 id 가 나와야 노드가 하나로 합쳐진다(ADR 0010). ARN 을 그대로 쓰지 않는 이유는 ADR 0001 참조.",
+          "$ref": "#/$defs/node_id"
+        },
+        "type": { "$ref": "#/$defs/node_type" },
+        "account_id": { "$ref": "#/$defs/account_id" },
+        "region": {
+          "description": "리전. account 컨테이너 노드와 글로벌 리소스(direct_connect_gateway)는 null.",
+          "anyOf": [{ "$ref": "#/$defs/region" }, { "type": "null" }]
+        },
+        "native_id": {
+          "description": "AWS 원본 ID(vpc-…, subnet-… 등). 컨테이너 노드는 null.",
+          "type": ["string", "null"]
+        },
+        "arn": { "type": ["string", "null"] },
+        "name": {
+          "description": "표시용 이름(보통 Name 태그). 없으면 null — 렌더러가 native_id 로 폴백한다.",
+          "type": ["string", "null"]
+        },
+        "parent_id": {
+          "description": "포함하는 노드. account → region → vpc → subnet 체인. 최상위는 null. 참조 정합성은 테스트가 검사한다.",
+          "anyOf": [{ "$ref": "#/$defs/node_id" }, { "type": "null" }]
+        },
+        "attributes": { "$ref": "#/$defs/attributes" },
+        "tags": {
+          "description": "리소스 태그. 실계정 태그는 민감 자료다 — fixture 로 승격할 때 스크럽한다(불변식 ⑤).",
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "partial": {
+          "description": "이 노드의 데이터가 불완전한가. true 면 partial_reasons 가 비어 있을 수 없다. 생략 금지 — false 도 반드시 적는다.",
+          "$comment": "required 이고 default 가 없다. JSON Schema 의 default 는 주석(annotation)일 뿐 검증기가 값을 채워 주지 않으므로, optional 로 두면 엔진과 렌더러가 각자 false 를 하드코딩해야 한다. 그러면 (a) 계약 밖 지식이 양쪽에 새고(불변식 ③) (b) 같은 사실에 두 가지 바이트 표현이 생긴다(불변식 ②). 불변식 ④의 핵심 플래그를 '없으면 알아서 false' 로 두는 것 자체가 조용한 실패의 입구다.",
+          "type": "boolean"
+        },
+        "partial_reasons": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/reason" }
+        }
+      },
+      "allOf": [
+        {
+          "$comment": "partial 을 세웠으면 사유를 남겨야 한다. 사유 없는 partial 은 '확인하지 못했다'를 표시할 수 없게 만든다.",
+          "if": { "properties": { "partial": { "const": true } }, "required": ["partial"] },
+          "then": { "required": ["partial_reasons"], "properties": { "partial_reasons": { "minItems": 1 } } }
+        },
+        {
+          "$comment": "렌더러가 VPC 를 그리려면 CIDR 이 반드시 필요하다.",
+          "if": { "properties": { "type": { "const": "vpc" } }, "required": ["type"] },
+          "then": {
+            "required": ["attributes"],
+            "properties": { "attributes": { "required": ["cidr_blocks"] } }
+          }
+        },
+        {
+          "$comment": "서브넷은 CIDR 과 AZ 없이는 배치할 수 없다. AZ 는 노드가 아니라 속성이다(부모는 VPC 하나뿐).",
+          "if": { "properties": { "type": { "const": "subnet" } }, "required": ["type"] },
+          "then": {
+            "required": ["attributes"],
+            "properties": { "attributes": { "required": ["cidr_block", "availability_zone"] } }
+          }
+        },
+        {
+          "$comment": "ASG 로 접는 재료(2.8.0 · P1-2 · ADR 0002 §8-8) — 인스턴스의 `auto_scaling_group_id` 는 ASG 노드 id 다(렌더러가 그 노드를 찾는다 — 이름·ARN 이면 계정·리전을 다시 맞춰야 한다).",
+          "if": { "properties": { "type": { "const": "ec2_instance" } }, "required": ["type"] },
+          "then": { "properties": { "attributes": { "properties": { "auto_scaling_group_id": { "type": "string", "pattern": "^auto_scaling_group/" } } } } }
+        },
+        {
+          "$comment": "엔드포인트 서비스의 주인 계정(2.8.0 · P2-1) — 소비자 쪽 DescribeVpcEndpointServices 의 `Owner`(12자리 계정 · AWS 서비스면 `amazon` 같은 이름). 고객·파트너 서비스(`…vpce-svc-…`)를 쓰는 엔드포인트만 · 키 없음 = 묻지 않았다(AWS 서비스) · 못 읽었다(그때 `partial`) · 서비스가 더는 없다.",
+          "if": { "properties": { "type": { "const": "vpc_endpoint" } }, "required": ["type"] },
+          "then": { "properties": { "attributes": { "properties": { "service_owner": { "type": "string", "minLength": 1 } } } } }
+        },
+        {
+          "$comment": "LB 를 뒤에 둔 엔드포인트 서비스(2.8.0 · P1-3) — GWLB·NLB 만 · 키 없음 = 묻지 않는 종류(ALB)이거나 못 읽었다(그때 LB 에 사유) · [] = 읽었고 없다.",
+          "if": { "properties": { "type": { "const": "load_balancer" } }, "required": ["type"] },
+          "then": { "properties": { "attributes": { "properties": { "endpoint_service_names": { "type": "array", "items": { "type": "string" } } } } } }
+        },
+        {
+          "$comment": "ASG 의 대상 그룹(2.8.0 · P1-2) — 구성 · 대상 그룹 ARN(렌더러는 이름만 쓴다).",
+          "if": { "properties": { "type": { "const": "auto_scaling_group" } }, "required": ["type"] },
+          "then": { "properties": { "attributes": { "properties": { "target_group_arns": { "type": "array", "items": { "type": "string", "pattern": ":targetgroup/" } } } } } }
+        },
+        {
+          "$comment": "콘솔식 정보창의 재료(사용자 결정 2026-10-24 「AWS 콘솔의 정보 표현을 따르자 · 콘솔이 보여 주는 값이면 우리도 보여 준다」 · 2.13.0 · 라우팅 갈래와 같은 판). 속성은 스칼라·스칼라 배열뿐이라(중첩 객체 금지) 표 한 줄 = 탭 구분 문자열이다 — 칸 순서는 엔진 파일의 함수 주석이 정본. security_group `ingress_rules`·`egress_rules`(「IP 버전 \t 프로토콜 \t 포트 범위 \t 소스 \t 설명」 · 소스 하나 = 한 줄 = 콘솔 셈법) · `ingress_rule_entry_count`·`egress_rule_entry_count`. network_acl `ingress_entries`·`egress_entries`(「규칙 번호 \t 프로토콜 \t 포트 \t CIDR \t allow|deny」 · 기본 32767 포함). vpn_connection `tunnel_inside_cidrs`(「바깥 IP \t 내부 IPv4 \t 내부 IPv6」 · 설정 — 🔴 터널 UP/DOWN 은 구조에 없다: 관측 `tunnels` · observation 1.17.0). direct_connect_virtual_interface `bgp_peer_details`(「주소 체계 \t ASN \t Amazon 주소 \t 고객 주소 \t 피어 id」) · `amazon_address` · `customer_address`(인증 키는 여전히 없다). direct_connect_gateway `gateway_associations`(「연결 id \t 게이트웨이 id \t 유형 \t 리전 \t 계정 \t 상태 \t 허용 접두사(쉼표)」). cloudfront `comment` · `origins`(「Id \t 도메인 \t 유형 vpc|s3|custom \t 원본 경로 \t OAC id \t OAC 이름」) · `behaviors`(「우선순위 \t 경로 패턴(기본 = 빈 칸) \t 원본 \t 뷰어 프로토콜 \t 캐시 정책 id \t 이름」). waf_web_acl `rules`(「우선순위 \t 이름 \t 작업」). vpc_endpoint `security_groups`(「id \t 이름」) · `network_interface_ids` · `ip_address_type` · `subnet_addresses`(「서브넷 \t AZ \t IPv4 \t ENI」 · ENI 를 못 읽었으면 키 없음 + partial). nat_gateway `addresses`(「퍼블릭 \t 프라이빗 \t ENI \t 할당 id \t 기본 true|false」). load_balancer `listener_details`(「프로토콜 \t 포트 \t 기본 작업 \t 규칙 수(못 읽으면 빈 칸) \t SSL 정책 \t 인증서(쉼표)」) · `target_group_details`(「이름 \t 프로토콜 \t 포트 \t 대상 유형 \t 상태 검사 프로토콜 \t 포트 \t 경로 \t 정상 임계 \t 비정상 임계 \t 간격 \t 제한 시간 \t 성공 코드 \t 켜짐」)."
+        },
+        {
+          "$comment": "Cloud WAN 코어 네트워크(2.11.0 · #129) — 글로벌(id 리전 자리 `global` · region null · 부모 = 계정 · Global Accelerator 와 같은 규약).",
+          "if": { "properties": { "type": { "const": "core_network" } }, "required": ["type"] },
+          "then": { "properties": { "region": { "const": null } } }
+        },
+        {
+          "$comment": "VPC 라우팅 테이블 경로 표(2.13.0 · 콘솔 「라우팅」 탭) — 한 줄 = 「<목적지> <대상> <상태> <라우팅 오리진>」(빈 칸 `-` · VPC 내부 경로 local 포함 · `route_count` 와 줄 수가 같다).",
+          "if": { "properties": { "type": { "const": "route_table" } }, "required": ["type"] },
+          "then": { "properties": { "attributes": { "properties": { "routes": { "type": "array", "items": { "type": "string", "pattern": "^\\S+ \\S+ \\S+ \\S+$" } } } } } }
+        },
+        {
+          "$comment": "TGW 라우팅 테이블 콘솔 탭 줄(2.13.0 · 빈 칸 `-`) — 연결·전파 = 「<어태치먼트 id> <리소스 종류> <리소스 id> <상태>」 · 경로 = 「<CIDR|pl-id> <어태치먼트 id> <리소스 종류> <리소스 id> <경로 유형> <경로 상태>」 · 접두사 목록 참조 = 「<pl-id> <소유자 id> <어태치먼트 id> <리소스 종류> <리소스 id> <상태> <블랙홀 yes|no>」.",
+          "if": { "properties": { "type": { "const": "transit_gateway_route_table" } }, "required": ["type"] },
+          "then": {
+            "properties": {
+              "attributes": {
+                "properties": {
+                  "associations": { "type": "array", "items": { "type": "string", "pattern": "^\\S+ \\S+ \\S+ \\S+$" } },
+                  "propagations": { "type": "array", "items": { "type": "string", "pattern": "^\\S+ \\S+ \\S+ \\S+$" } },
+                  "routes": { "type": "array", "items": { "type": "string", "pattern": "^\\S+ \\S+ \\S+ \\S+ \\S+ \\S+$" } },
+                  "prefix_list_references": { "type": "array", "items": { "type": "string", "pattern": "^\\S+ \\S+ \\S+ \\S+ \\S+ \\S+ (yes|no)$" } }
+                }
+              }
+            }
+          }
+        },
+        {
+          "$comment": "WAF 웹 ACL(2.12.0 · ADR 0014) — `scope` = regional(부모 = 리전 · id 리전 자리 = 그 리전) · cloudfront(글로벌 — id 리전 자리 `global` · region null · 부모 = 계정). GetWebACL 을 못 읽었으면 `scope` 말고는 키가 없다(노드는 partial). `rule_names` = 우선순위 순(AWS 가 평가하는 순서 — 이름 정렬 아님). `managed_rule_groups` = 「<공급자>/<이름>」 정렬. `unresolved_protected` = 「<API id> not_collected」(이 스냅샷에 없는 REST API).",
+          "if": { "properties": { "type": { "const": "waf_web_acl" } }, "required": ["type"] },
+          "then": {
+            "required": ["attributes"],
+            "properties": {
+              "attributes": {
+                "required": ["scope"],
+                "properties": {
+                  "scope": { "enum": ["regional", "cloudfront"] },
+                  "default_action": { "enum": ["allow", "block"] },
+                  "rule_count": { "type": "integer", "minimum": 0 },
+                  "rule_names": { "type": "array", "items": { "type": "string" } },
+                  "managed_rule_groups": { "type": "array", "items": { "type": "string", "pattern": "^[^/]+/[^/]+$" } },
+                  "firewall_manager": { "type": "boolean" },
+                  "capacity": { "type": "integer", "minimum": 0 },
+                  "unresolved_protected": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            },
+            "if": { "properties": { "attributes": { "properties": { "scope": { "const": "cloudfront" } } } } },
+            "then": { "properties": { "region": { "const": null }, "id": { "pattern": "^waf_web_acl/[^/]+/global/" } } },
+            "else": { "properties": { "region": { "type": "string" } } }
+          }
+        },
+        {
+          "$comment": "파생 노드(2.7.0) — LB 대상 해소가 짓는다(`engine/src/nettopo/lb_targets.py`). 외부 IP = 수집한 어느 VPC 에도 안 드는 AZ `all` 대상 IP 하나(그 LB 의 계정·리전마다) · `route_exits` = 그 IP 를 보내는 LB VPC 라우트 대상(못 모았으면 키 없음). Lambda = 대상 그룹이 가리키는 함수 하나(ARN 에서 이름·계정·리전 · 그 밖은 모르므로 짓지 않는다).",
+          "if": { "properties": { "type": { "const": "external_ip" } }, "required": ["type"] },
+          "then": { "required": ["attributes"], "properties": { "attributes": { "required": ["ip"] } } }
+        },
+        {
+          "if": { "properties": { "type": { "const": "lambda_function" } }, "required": ["type"] },
+          "then": { "required": ["attributes"], "properties": { "attributes": { "required": ["function_name"] } } }
+        },
+        {
+          "$comment": "LB 등록 대상 수(사용자 결정 2026-10-16 · ADR 0006 「W3② LB 대상 상태」 개정) — 구조는 «개수»만 싣는다: `registered_target_count` = 그 LB 의 대상 그룹 전부에 등록된 대상 수의 합(한 그룹이라도 못 읽었으면 키가 없다 = 「모른다」 · 0 = 「없다」) · `target_group_registered_target_counts` = `target_groups`(이름 오름차순)와 같은 자리의 그룹별 수(못 읽은 그룹 = null). 속성이 스칼라 배열뿐이라(중첩 객체 금지) 이름 → 수 사전 대신 나란한 배열이다. 자리 수·합 일치는 JSON Schema 로 못 쓰므로 schema/tests/test_schema.py 가 강제한다. 🔴 헬스 «상태» 수(`target_count`·`healthy_target_count`·`unhealthy_target_count`)는 여기서 막지 않는다 — 상태 단 스냅샷(`collect(with_state=True)`)도 이 스키마로 검증된다. 구조에 새지 않는다는 사실은 엔진 테스트(`test_w3_targets_eni.py` ⓪)가 잰다.",
+          "if": { "properties": { "type": { "const": "load_balancer" } }, "required": ["type"] },
+          "then": {
+            "properties": {
+              "attributes": {
+                "properties": {
+                  "registered_target_count": { "type": "integer", "minimum": 0 },
+                  "target_group_registered_target_counts": {
+                    "type": "array",
+                    "items": { "type": ["integer", "null"], "minimum": 0 }
+                  }
+                },
+                "dependentRequired": {
+                  "registered_target_count": ["target_group_registered_target_counts"],
+                  "target_group_registered_target_counts": ["target_groups"]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "source", "target", "directed", "partial"],
+      "properties": {
+        "id": {
+          "description": "재현 가능한 식별자. 같은 입력에서 같은 값이 나와야 한다(불변식 ②).",
+          "$ref": "#/$defs/edge_id"
+        },
+        "type": { "$ref": "#/$defs/edge_type" },
+        "source": { "$ref": "#/$defs/node_id" },
+        "target": { "$ref": "#/$defs/node_id" },
+        "directed": {
+          "description": "방향이 의미를 갖는가. route 는 true, peering 은 false. 생략 금지.",
+          "$comment": "화살표를 그리느냐 마느냐가 여기서 결정된다. default 는 검증기가 채워 주지 않으므로 생략을 허용하면 엔진·렌더러가 각자 true 를 가정해야 한다 — 한쪽이 어긋나면 peering 이 단방향으로 그려진다.",
+          "type": "boolean"
+        },
+        "attributes": { "$ref": "#/$defs/attributes" },
+        "partial": {
+          "description": "이 엣지의 데이터가 불완전한가. true 면 partial_reasons 가 비어 있을 수 없다. 생략 금지.",
+          "type": "boolean"
+        },
+        "partial_reasons": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/reason" }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "partial": { "const": true } }, "required": ["partial"] },
+          "then": { "required": ["partial_reasons"], "properties": { "partial_reasons": { "minItems": 1 } } }
+        },
+        {
+          "$comment": "CloudFront 원본(#43 · 2.8.0 확장 · P2-3 · ADR 0002 §7-1) — 대상 = LB(주소 꼴 · VPC 원본 · Route 53 별칭) · EC2(VPC 원본) · S3 버킷(파생 노드). `via` = 이은 길(없음 = LB 주소 꼴 · `vpc_origin` · `dns_alias`(+ `alias` = 그 레코드 이름) · `s3`).",
+          "if": { "properties": { "type": { "const": "origin" } }, "required": ["type"] },
+          "then": { "properties": { "source": { "pattern": "^cloudfront/" }, "target": { "pattern": "^(load_balancer|ec2_instance|s3_bucket)/" }, "attributes": { "properties": { "via": { "enum": ["vpc_origin", "dns_alias", "s3"] } } } } }
+        },
+        {
+          "$comment": "파생 노드 S3 버킷(2.8.0 · P2-3) — CloudFront S3 원본 도메인에서 짓는다(S3 는 수집하지 않는다 · 주인 계정·정책은 모른다 · 부모 = 그 배포의 계정 · 글로벌).",
+          "if": { "properties": { "type": { "const": "s3_bucket" } }, "required": ["type"] },
+          "then": { "required": ["attributes"], "properties": { "region": { "const": null }, "attributes": { "required": ["bucket_name", "website"] } } }
+        },
+        {
+          "$comment": "Route 53 별칭(2.8.0 · P2-4 · ADR 0002 §11) — 호스팅 영역 → 별칭 레코드가 가리키는 수집한 LB·CloudFront(DNS 이름 색인 · 대상마다 하나 · `record_names` = 그 대상을 가리키는 레코드 이름들 · 정렬).",
+          "if": { "properties": { "type": { "const": "dns_alias" } }, "required": ["type"] },
+          "then": {
+            "required": ["attributes"],
+            "properties": {
+              "directed": { "const": true },
+              "source": { "pattern": "^route53_hosted_zone/" },
+              "target": { "pattern": "^(load_balancer|cloudfront)/" },
+              "attributes": { "required": ["record_names"], "properties": { "record_names": { "type": "array", "items": { "type": "string" }, "minItems": 1 } } }
+            }
+          }
+        },
+        {
+          "$comment": "탄력적 IP → 그 주인(2.10.0 · 배치 D · ADR 0002 §12-2) — 인스턴스 연결이면 EC2 · ENI 연결이면 그 ENI 의 주인(NAT · LB · RDS …). 화면은 선이 아니라 주인의 정보창 줄이다(§17.34).",
+          "if": { "properties": { "type": { "const": "eip_association" } }, "required": ["type"] },
+          "then": { "properties": { "directed": { "const": true }, "source": { "pattern": "^elastic_ip/" } } }
+        },
+        {
+          "$comment": "API Gateway VPC 링크 → LB(2.10.0 · 배치 D · ADR 0002 §12-3) — REST = 링크의 NLB ARN · HTTP = 통합의 ALB·NLB 리스너 ARN. 같은 LB 는 선 하나(`vpc_link_ids`).",
+          "if": { "properties": { "type": { "const": "vpc_link" } }, "required": ["type"] },
+          "then": {
+            "required": ["attributes"],
+            "properties": {
+              "directed": { "const": true },
+              "source": { "pattern": "^api_gateway/" },
+              "target": { "pattern": "^load_balancer/" },
+              "attributes": { "required": ["vpc_link_ids"], "properties": { "vpc_link_ids": { "type": "array", "items": { "type": "string" }, "minItems": 1 } } }
+            }
+          }
+        },
+        {
+          "$comment": "RDS 프록시 → DB(2.10.0 · 배치 D · ADR 0002 §12-4) — 클러스터를 대상으로 두면 클러스터 선 하나(멤버는 `target_instance_ids`).",
+          "if": { "properties": { "type": { "const": "proxy_target" } }, "required": ["type"] },
+          "then": { "properties": { "directed": { "const": true }, "source": { "pattern": "^rds_db_proxy/" }, "target": { "pattern": "^rds_db_(instance|cluster)/" } } }
+        },
+        {
+          "$comment": "Global Accelerator → 엔드포인트(2.10.0 · 배치 D · ADR 0002 §12-5) — ALB·NLB · EC2 · EIP 엔드포인트는 그 EIP 의 주인(`via_eip`).",
+          "if": { "properties": { "type": { "const": "accelerator_endpoint" } }, "required": ["type"] },
+          "then": { "required": ["attributes"], "properties": { "directed": { "const": true }, "source": { "pattern": "^global_accelerator/" }, "attributes": { "required": ["endpoint_region"] } } }
+        },
+        {
+          "$comment": "TGW Connect(2.11.0 · #129 · ADR 0002 §13-1) — Connect 어태치먼트(GRE 오버레이) → 그것이 올라탄 전송 어태치먼트(VPC·DX). 방향 = 「이 위에 올라탄다」.",
+          "if": { "properties": { "type": { "const": "connect_transport" } }, "required": ["type"] },
+          "then": { "properties": { "directed": { "const": true }, "source": { "pattern": "^transit_gateway_attachment/" }, "target": { "pattern": "^transit_gateway_attachment/" } } }
+        },
+        {
+          "$comment": "Cloud WAN 연결(2.11.0 · #129 · ADR 0002 §13-2) — 코어 네트워크 ↔ VPC(ListAttachments 의 VPC 연결 · 같은 VPC 는 선 하나 · `attachment_ids`·`segments`·`edge_locations` 정렬).",
+          "if": { "properties": { "type": { "const": "core_network_attachment" } }, "required": ["type"] },
+          "then": {
+            "required": ["attributes"],
+            "properties": {
+              "directed": { "const": false },
+              "source": { "pattern": "^core_network/" },
+              "target": { "pattern": "^vpc/" },
+              "attributes": { "required": ["attachment_ids"], "properties": { "attachment_ids": { "type": "array", "items": { "type": "string" }, "minItems": 1 } } }
+            }
+          }
+        },
+        {
+          "$comment": "VPC Lattice 서비스 네트워크 ↔ VPC(2.11.0 · #129 · ADR 0002 §13-3) — ListServiceNetworkVpcAssociations.",
+          "if": { "properties": { "type": { "const": "lattice_vpc_association" } }, "required": ["type"] },
+          "then": { "properties": { "directed": { "const": false }, "source": { "pattern": "^lattice_service_network/" }, "target": { "pattern": "^vpc/" } } }
+        },
+        {
+          "$comment": "VPC Lattice 서비스 네트워크 ↔ 서비스(2.11.0) — ListServiceNetworkServiceAssociations. 화면은 선이 아니라 두 정보창이다(§17.40).",
+          "if": { "properties": { "type": { "const": "lattice_service_association" } }, "required": ["type"] },
+          "then": { "properties": { "directed": { "const": false }, "source": { "pattern": "^lattice_service_network/" }, "target": { "pattern": "^lattice_service/" } } }
+        },
+        {
+          "$comment": "VPC Lattice 서비스 → 대상(2.11.0) — 그 서비스를 가리키는 대상 그룹(ListTargetGroups `serviceArns`)의 등록 대상(ListTargets) · (서비스, 대상 노드)마다 하나 · `target_groups`·`ports` 정렬 · `target_type` = INSTANCE·ALB·LAMBDA(소문자).",
+          "if": { "properties": { "type": { "const": "lattice_target" } }, "required": ["type"] },
+          "then": {
+            "required": ["attributes"],
+            "properties": {
+              "directed": { "const": true },
+              "source": { "pattern": "^lattice_service/" },
+              "target": { "pattern": "^(ec2_instance|load_balancer|lambda_function)/" },
+              "attributes": { "required": ["target_groups", "target_type"], "properties": { "target_type": { "enum": ["instance", "alb", "lambda"] } } }
+            }
+          }
+        },
+        {
+          "$comment": "WAF 웹 ACL → 보호 대상(2.12.0 · ADR 0014) — ALB·CloudFront 배포(대상 쪽 속성을 3패스가 잇는다 · 속성 없음) · API Gateway REST API(ListResourcesForWebACL · `stages` = 그 API 의 보호받는 스테이지 정렬). 방향 = 「이 자원 앞에서 거른다」.",
+          "if": { "properties": { "type": { "const": "waf_protection" } }, "required": ["type"] },
+          "then": {
+            "properties": {
+              "directed": { "const": true },
+              "source": { "pattern": "^waf_web_acl/" },
+              "target": { "pattern": "^(load_balancer|cloudfront|api_gateway)/" },
+              "attributes": { "properties": { "stages": { "type": "array", "items": { "type": "string" }, "minItems": 1 } } }
+            }
+          }
+        },
+        {
+          "$comment": "사설 호스팅 영역 ↔ VPC(2.8.0 · P2-4) — GetHostedZone 의 VPCs. 방향 없음(그 VPC 안에서 이 영역의 이름이 풀린다).",
+          "if": { "properties": { "type": { "const": "zone_association" } }, "required": ["type"] },
+          "then": { "properties": { "directed": { "const": false }, "source": { "pattern": "^route53_hosted_zone/" }, "target": { "pattern": "^vpc/" } } }
+        },
+        {
+          "$comment": "라우트 → ENI 주인(2.8.0 · P2-2 · ADR 0002 §10) — `eni-` 대상(NAT 인스턴스 · 어플라이언스 · NVA)을 그 ENI 의 주인 노드로 이은 라우트는 `via_eni` 를 들고 엣지 id 끝에 그 ENI 를 단다(같은 주인의 두 ENI 가 한 엣지로 겹쳐 목적지를 잃지 않게).",
+          "if": { "properties": { "type": { "const": "route" } }, "required": ["type"] },
+          "then": { "properties": { "attributes": { "properties": { "via_eni": { "type": "string", "pattern": "^eni-" } } } } }
+        },
+        {
+          "$comment": "못 이은 라우트 ENI(2.8.0 · P2-2) — 라우트 테이블의 `unresolved_route_targets` = 「<eni id> <까닭> <목적지>…」(정렬 · 까닭 = no_eni · eni_unread · not_collected · ambiguous · 수집하지 않는 서비스 코드). `unresolved_refs` 에도 그 ENI 가 남는다.",
+          "if": { "properties": { "type": { "const": "route_table" } }, "required": ["type"] },
+          "then": { "properties": { "attributes": { "properties": { "unresolved_route_targets": { "type": "array", "items": { "type": "string", "pattern": "^eni-[^ ]+ [a-z_]+( [^ ]+)*$" } } } } } }
+        },
+        {
+          "$comment": "엔드포인트 → 제공자(2.8.0 · ADR 0002 §9 · `engine/src/nettopo/endpoint_providers.py`). GWLB 엔드포인트(`vpc_endpoint`)에서 그 서비스를 제공하는 GWLB 로 — 서비스 이름으로 잇는다(`resolved_by` = `endpoint_service`: 제공자 LB 의 `endpoint_service_names`) · Network Firewall 엔드포인트(AWS 관리 GWLB 엔드포인트)에서 그 방화벽으로 — 방화벽의 `firewall_endpoint_ids` 로(`resolved_by` = `firewall_endpoint` · P1-4). 상태가 없다(ADR 0006 §O7 — 엔드포인트 자신의 상태는 노드가 든다).",
+          "if": { "properties": { "type": { "const": "endpoint_provider" } }, "required": ["type"] },
+          "then": {
+            "required": ["attributes"],
+            "properties": {
+              "directed": { "const": true },
+              "source": { "pattern": "^vpc_endpoint/" },
+              "target": { "pattern": "^(load_balancer|network_firewall)/" },
+              "attributes": {
+                "required": ["service_name", "resolved_by"],
+                "properties": { "resolved_by": { "enum": ["endpoint_service", "firewall_endpoint"] } }
+              }
+            }
+          }
+        },
+        {
+          "$comment": "등록 0 인 LB → 대상 선(2.8.0) — 그 대상 그룹을 **자기 것으로 든 자원**(ECS 서비스 · EKS 클러스터 = LB Controller 태그 · P2-5)으로 가는 선만 0 일 수 있다(서비스가 0 으로 줄어도 「이 LB 뒤의 서비스」는 구성이다 · `engine/src/nettopo/lb_targets.py` `_Index.claimer`). 그 밖의 대상 노드(EC2·RDS·Lambda·외부 IP …)는 등록이 있어야 생긴다 — 0 이면 엔진 결함이다.",
+          "if": {
+            "properties": { "type": { "const": "load_balancer_target" }, "target": { "not": { "pattern": "^(ecs_service|eks_cluster)/" } } },
+            "required": ["type", "target"]
+          },
+          "then": { "properties": { "attributes": { "properties": { "target_count": { "minimum": 1 } } } } }
+        },
+        {
+          "$comment": "LB → 등록 대상(2.7.0 · ADR 0002 §8). (LB, 대상 노드) 마다 하나 — 그 대상 노드로 묶인 등록들을 합친다: `target_groups` = 대상 그룹 이름(정렬) · `ports` = 대상 포트(정렬 · 중복 없음 · Lambda 는 비었다) · `target_types` = AWS TargetType(instance·ip·lambda·alb · 정렬) · `target_count` = 묶인 등록 수(대상 그룹 × 대상 × 포트). 외부 IP 선만 `route_exits`(LB 서브넷 라우트 테이블이 그 IP 를 보내는 대상 native id · 정렬 · 라우트 테이블을 못 모았으면 키가 없다). 🔴 헬스 수(`healthy_target_count`·`unhealthy_target_count`)는 상태 단 스냅샷에만 있다 — 구조 수집에는 없다(불변식 ② · 엔진 테스트가 잰다).",
+          "if": { "properties": { "type": { "const": "load_balancer_target" } }, "required": ["type"] },
+          "then": {
+            "required": ["attributes"],
+            "properties": {
+              "directed": { "const": true },
+              "source": { "pattern": "^load_balancer/" },
+              "attributes": {
+                "required": ["target_groups", "ports", "target_types", "target_count"],
+                "properties": {
+                  "target_count": { "type": "integer", "minimum": 0 },
+                  "ports": { "type": "array", "items": { "type": "integer" } },
+                  "target_types": { "type": "array", "items": { "enum": ["instance", "ip", "lambda", "alb"] } }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "coverage_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["account_id", "region", "resource_type", "status", "item_count"],
+      "properties": {
+        "account_id": { "$ref": "#/$defs/account_id" },
+        "region": {
+          "description": "리전. 글로벌 리소스는 null 이 될 수 있다.",
+          "$comment": "1차 지원 14종은 모두 리전 리소스이므로 현재 fixture 에 null 은 없다. 2차의 CloudFront·Global Accelerator 를 위해 null 을 남겨 두되, null 이 정렬 키에 들어가면 파이썬에서 None < str 비교가 TypeError 로 터진다 — 정렬 검사는 반드시 정규화한 키를 쓴다(schema/tests/test_schema.py 의 coverage_sort_key).",
+          "anyOf": [{ "$ref": "#/$defs/region" }, { "type": "null" }]
+        },
+        "resource_type": { "$ref": "#/$defs/resource_type" },
+        "status": {
+          "description": "ok 이외의 값은 모두 '이 영역은 확인하지 못했다'로 렌더링 대상이다. skipped 는 사용자가 명시적으로 제외한 경우에만 쓴다 — 실패를 skipped 로 감추지 마라.",
+          "enum": ["ok", "denied", "throttled", "unsupported", "error", "skipped"]
+        },
+        "reason": {
+          "anyOf": [{ "$ref": "#/$defs/reason" }, { "type": "null" }]
+        },
+        "item_count": {
+          "description": "수집된 항목 수. 0(없음)·null(세지 못했음)·status 는 서로 다른 사실이며 함께 봐야 한다. 생략 금지 — 모르면 null 을 적는다.",
+          "$comment": "required 로 올렸다. optional 로 두면 '0 / null / 부재' 세 상태가 되고, ADR 0001 이 정의한 것은 앞의 둘뿐이라 부재는 계약에 없는 상태다. 렌더러가 부재를 0 으로 읽으면 '실패했는데 0개'가 '정상인데 0개'로 보인다(불변식 ④ 위반).",
+          "type": ["integer", "null"],
+          "minimum": 0
+        }
+      },
+      "allOf": [
+        {
+          "$comment": "실패에는 반드시 사유가 붙는다. 사유 없는 실패는 사람이 판단할 근거를 주지 않는다.",
+          "if": {
+            "properties": { "status": { "enum": ["denied", "throttled", "unsupported", "error"] } },
+            "required": ["status"]
+          },
+          "then": { "required": ["reason"], "properties": { "reason": { "$ref": "#/$defs/reason" } } }
+        }
+      ]
+    },
+    "reason": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code"],
+      "properties": {
+        "code": {
+          "enum": [
+            "access_denied",
+            "throttled",
+            "unsupported_region",
+            "api_error",
+            "timeout",
+            "pagination_truncated",
+            "credentials_unavailable"
+          ]
+        },
+        "api": {
+          "description": "실패한 API. `ec2:DescribeTransitGateways` 형식. 사람이 권한을 고칠 수 있게 하는 유일한 단서다.",
+          "type": ["string", "null"]
+        },
+        "message": {
+          "description": "원문 메시지. 계정ID·ARN 이 들어올 수 있으므로 fixture 로 승격할 때 스크럽한다.",
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "attributes": {
+      "description": "타입별 속성. 값은 스칼라 또는 스칼라 배열로 제한한다 — 중첩 객체를 허용하면 계약이 사실상 사라지고 렌더러가 임의 구조에 의존하게 된다(불변식 ③). 새 속성이 필요하면 이 스키마를 먼저 바꾼다.",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/attribute_value" }
+    },
+    "attribute_value": {
+      "anyOf": [
+        { "type": ["string", "number", "boolean", "null"] },
+        {
+          "type": "array",
+          "items": { "type": ["string", "number", "boolean", "null"] }
+        }
+      ]
+    },
+    "node_id": {
+      "description": "`<type>/<account>/<region>/<native>`. 컨테이너 노드는 구획이 더 적다(`account/<id>`).",
+      "$comment": "`|` 를 금지하는 것이 edge_id 의 전제다 — engine/src/nettopo/collect.py:247 이 '노드 id 는 | 를 쓰지 않으니 구분자로 쓰면 파싱 없이도 유일하다'고 적어 두고 그 사실을 여기서 강제하지 않고 있었다. 강제되지 않는 전제는 전제가 아니다.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9_]+/[^/|\\s]+(/[^/|\\s]+)*$"
+    },
+    "edge_id": {
+      "description": "`<edge_type>|<node_id>|<node_id>` + 같은 쌍이 여러 선을 만들 때만 `|<qualifier>`(peering 의 requester·accepter, SG 참조의 ingress·egress).",
+      "$comment": "🔴 노드 id 와 **문법이 다르다**(`/` 가 아니라 `|`). 이 정의가 없던 동안 observation.schema.json 의 target_id 가 node_id 패턴을 강제해 **엣지 관측이 하나도 검증을 통과할 수 없었고**, fixtures 가 엔진이 만들지 않는 `association/rtb-…/subnet-…` 꼴을 써서 그 사실이 미측정으로 남았다(2026-09-23). 정본은 engine/src/nettopo/collect.py:246 `_edge_id()` 이고 schema/tests 가 fixture 를 이 패턴으로 검사한다.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9_]+\\|[a-z0-9_]+/[^/|\\s]+(/[^/|\\s]+)*\\|[a-z0-9_]+/[^/|\\s]+(/[^/|\\s]+)*(\\|[^|\\s]+)?$"
+    },
+    "account_id": {
+      "description": "12자리 계정ID. 코드·테스트에 실계정 값을 박지 마라 — fixture 는 111122223333 계열을 쓰고 pre-commit 훅이 이를 강제한다(불변식 ⑤).",
+      "type": "string",
+      "pattern": "^[0-9]{12}$"
+    },
+    "region": {
+      "description": "AWS 리전 코드. 기본값을 두지 않는다 — 셸 기본 리전에 의존하는 산출물은 재현되지 않는다.",
+      "type": "string",
+      "pattern": "^[a-z]{2}(-[a-z]+)+-[0-9]$"
+    },
+    "resource_type": {
+      "$comment": "AWS 에서 실제로 수집하는 종류. node_type 에서 컨테이너 2종(account·region)을 뺀 집합이다. JSON Schema 에 집합 차집합이 없어 열거를 반복한다 — 둘 중 하나만 고치면 안 된다(schema/tests/test_schema.py 의 test_resource_type_is_node_type_minus_containers 가 어긋남을 잡는다). 2차 리소스 추가는 스키마 PR 이다. direct_connect_gateway 는 글로벌 리소스지만 리전 엔드포인트로만 조회되므로 coverage 의 region 은 조회한 리전이다(ADR 0010).",
+      "enum": [
+        "vpc",
+        "subnet",
+        "route_table",
+        "internet_gateway",
+        "nat_gateway",
+        "transit_gateway",
+        "transit_gateway_attachment",
+        "vpc_peering_connection",
+        "vpc_endpoint",
+        "security_group",
+        "network_acl",
+        "load_balancer",
+        "direct_connect_connection",
+        "direct_connect_virtual_interface",
+        "direct_connect_gateway",
+        "ec2_instance",
+        "auto_scaling_group",
+        "eks_cluster",
+        "network_firewall",
+        "cloudfront",
+        "transit_gateway_route_table",
+        "rds_db_instance",
+        "ecs_service",
+        "sagemaker_notebook_instance",
+        "sagemaker_domain",
+        "sagemaker_endpoint",
+        "ec2_instance_connect_endpoint",
+        "vpn_gateway",
+        "customer_gateway",
+        "vpn_connection",
+        "lambda_function",
+        "route53_hosted_zone",
+        "elasticache_cluster",
+        "rds_db_cluster",
+        "opensearch_domain",
+        "msk_cluster",
+        "elastic_ip",
+        "api_gateway",
+        "api_gateway_v2",
+        "rds_db_proxy",
+        "global_accelerator",
+        "core_network",
+        "lattice_service_network",
+        "lattice_service",
+        "waf_web_acl",
+        "waf_web_acl_global"
+      ]
+    },
+    "node_type": {
+      "$comment": "1차 지원 범위 + 컨테이너 2종 + 2차 Direct Connect 3종(2.1.0, ADR 0010) + EC2·Auto Scaling·EKS·Network Firewall 4종(2.2.0) + CloudFront(2.3.0 · 글로벌 2번째 — DXGW 와 같은 규약) + W2 7종(2.4.0 — TGW 라우트 테이블·RDS·ECS 서비스·SageMaker 3종·EIC) + Site-to-Site VPN 3종(2.6.0 — VGW·CGW·VPN 연결) + VPC 안 IP 를 쓰는 서비스 4종(2.9.0 · #114 — ElastiCache 캐시 클러스터·Aurora/RDS DB 클러스터·OpenSearch 도메인·MSK 클러스터 · 목록 API 가 있는 수집 종류라 resource_type 에도 있다) + **파생 노드 2종**(2.7.0 — `lambda_function` · `external_ip`: LB 대상 해소가 짓는 최소 노드. 목록 API 를 부르지 않고 LB 의 등록 대상에서만 생긴다 → resource_type 에는 없다. 그래서 resource_type = node_type − 컨테이너 2종 − 파생 2종이다). 수집 요청(scope)과 수집 결과(coverage)에는 컨테이너를 쓸 수 없으므로 그쪽은 resource_type 을 쓴다. RAM·Route53 Resolver·Global Accelerator 는 아직 없다 — 추가는 스키마 PR 이다. 렌더러가 규칙을 모르는 타입은 그리지 않고 잔차로 신고한다(docs/contract-seams.md 이음매 1). 🔵 카드 종류를 더하면 버전을 올린다 — 「버전 = 들어 있을 수 있는 카드 종류」가 개발자 간 약속이기 때문이다(리뷰 결정 2026-09-30).",
+      "enum": [
+        "account",
+        "region",
+        "vpc",
+        "subnet",
+        "route_table",
+        "internet_gateway",
+        "nat_gateway",
+        "transit_gateway",
+        "transit_gateway_attachment",
+        "vpc_peering_connection",
+        "vpc_endpoint",
+        "security_group",
+        "network_acl",
+        "load_balancer",
+        "direct_connect_connection",
+        "direct_connect_virtual_interface",
+        "direct_connect_gateway",
+        "ec2_instance",
+        "auto_scaling_group",
+        "eks_cluster",
+        "network_firewall",
+        "cloudfront",
+        "transit_gateway_route_table",
+        "rds_db_instance",
+        "ecs_service",
+        "sagemaker_notebook_instance",
+        "sagemaker_domain",
+        "sagemaker_endpoint",
+        "ec2_instance_connect_endpoint",
+        "vpn_gateway",
+        "customer_gateway",
+        "vpn_connection",
+        "elasticache_cluster",
+        "rds_db_cluster",
+        "opensearch_domain",
+        "msk_cluster",
+        "lambda_function",
+        "external_ip",
+        "route53_hosted_zone",
+        "s3_bucket",
+        "elastic_ip",
+        "api_gateway",
+        "rds_db_proxy",
+        "global_accelerator",
+        "core_network",
+        "lattice_service_network",
+        "lattice_service",
+        "waf_web_acl"
+      ]
+    },
+    "edge_type": {
+      "enum": [
+        "route",
+        "association",
+        "attachment",
+        "peering",
+        "endpoint_connection",
+        "security_group_reference",
+        "load_balancer_placement",
+        "origin",
+        "load_balancer_target",
+        "endpoint_provider",
+        "dns_alias",
+        "zone_association",
+        "eip_association",
+        "vpc_link",
+        "proxy_target",
+        "accelerator_endpoint",
+        "connect_transport",
+        "core_network_attachment",
+        "lattice_vpc_association",
+        "lattice_service_association",
+        "lattice_target",
+        "waf_protection"
+      ]
+    }
+  }
+}

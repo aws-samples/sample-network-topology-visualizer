@@ -1,0 +1,401 @@
+{
+  "schema_version": "1.18.0",
+  "run": {
+    "observed_at": "2026-01-02T03:09:05Z",
+    "tool_version": "0.0.0+fixture",
+    "topology_collected_at": "2026-01-02T03:04:05Z"
+  },
+  "scope": {
+    "account_ids": ["111122223333", "444455556666"],
+    "regions": ["eu-west-1", "us-east-1"],
+    "resource_types": ["transit_gateway", "transit_gateway_attachment", "vpc"]
+  },
+  "layers": {
+    "describe": true,
+    "metric": true
+  },
+  "sources": [
+    {
+      "kind": "container_insights",
+      "state": "unknown",
+      "used": false,
+      "why": "ecs:DescribeClusters 를 부르지 않았다 — 이 런은 2층이 거부됐다"
+    },
+    {
+      "kind": "vpc_flow_log",
+      "state": "on",
+      "used": false,
+      "scope": { "unit": "vpc", "enabled_ids": 2, "total_ids": 3 },
+      "detail": "3개 VPC 중 2개만 켜져 있다",
+      "why": "로그 버킷이 우리 정책 밖 — s3:ListObjectsV2 AccessDenied"
+    }
+  ],
+  "observations": [
+    {
+      "target_id": "security_group/111122223333/us-east-1/sg-0aaa1111bbbb1010",
+      "target_kind": "node",
+      "status": "none",
+      "why": "보안 그룹은 규칙의 묶음이며 AWS 가 「상태」를 제공하지 않습니다 — 트래픽을 막고 있는지는 규칙과 트래픽을 함께 봐야 알 수 있고, 이를 관측할 수단이 없습니다",
+      "evidence": null,
+      "error_count": null,
+      "partial": false
+    },
+    {
+      "target_id": "security_group/111122223333/us-east-1/sg-0aaa1111bbbb9999",
+      "target_kind": "node",
+      "status": "none",
+      "why": "보안 그룹은 규칙의 묶음이며 AWS 가 「상태」를 제공하지 않습니다 — 트래픽을 막고 있는지는 규칙과 트래픽을 함께 봐야 알 수 있고, 이를 관측할 수단이 없습니다",
+      "evidence": null,
+      "error_count": null,
+      "partial": false
+    },
+    {
+      "target_id": "security_group_reference|security_group/111122223333/us-east-1/sg-0aaa1111bbbb9999|security_group/111122223333/us-east-1/sg-0aaa1111bbbb1010|ingress",
+      "target_kind": "edge",
+      "status": "none",
+      "why": "보안 그룹 참조는 규칙이 만든 관계입니다 — AWS 가 이 관계의 상태를 보고하지 않습니다",
+      "evidence": null,
+      "error_count": null,
+      "partial": false
+    },
+    {
+      "target_id": "transit_gateway/111122223333/us-east-1/tgw-0aaa1111bbbb7777",
+      "target_kind": "node",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeTransitGateways",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": true,
+      "partial_reasons": [
+        {
+          "code": "access_denied",
+          "api": "cloudwatch:GetMetricData",
+          "message": "User is not authorized to perform: cloudwatch:GetMetricData"
+        },
+        {
+          "code": "throttled",
+          "api": "ec2:DescribeTransitGatewayAttachments",
+          "message": "Rate exceeded"
+        }
+      ]
+    },
+    {
+      "target_id": "vpc/111122223333/us-east-1/vpc-0aaa1111bbbb2222",
+      "target_kind": "node",
+      "status": "up",
+      "why": null,
+      "evidence": {
+        "api": "ec2:DescribeVpcs",
+        "metric": null,
+        "datapoints": null,
+        "window_seconds": null
+      },
+      "error_count": 0,
+      "partial": false
+    }
+  ],
+  "coverage": [
+    {
+      "account_id": "111122223333",
+      "region": "eu-west-1",
+      "resource_type": "transit_gateway",
+      "layer": "describe",
+      "status": "ok",
+      "reason": null,
+      "item_count": 0
+    },
+    {
+      "account_id": "111122223333",
+      "region": "eu-west-1",
+      "resource_type": "transit_gateway",
+      "layer": "metric",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "cloudwatch:GetMetricData",
+        "message": "User is not authorized to perform: cloudwatch:GetMetricData"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "111122223333",
+      "region": "eu-west-1",
+      "resource_type": "transit_gateway_attachment",
+      "layer": "describe",
+      "status": "ok",
+      "reason": null,
+      "item_count": 0
+    },
+    {
+      "account_id": "111122223333",
+      "region": "eu-west-1",
+      "resource_type": "transit_gateway_attachment",
+      "layer": "metric",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "cloudwatch:GetMetricData",
+        "message": "User is not authorized to perform: cloudwatch:GetMetricData"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "111122223333",
+      "region": "eu-west-1",
+      "resource_type": "vpc",
+      "layer": "describe",
+      "status": "ok",
+      "reason": null,
+      "item_count": 0
+    },
+    {
+      "account_id": "111122223333",
+      "region": "eu-west-1",
+      "resource_type": "vpc",
+      "layer": "metric",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "cloudwatch:GetMetricData",
+        "message": "User is not authorized to perform: cloudwatch:GetMetricData"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "transit_gateway",
+      "layer": "describe",
+      "status": "ok",
+      "reason": null,
+      "item_count": 1
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "transit_gateway",
+      "layer": "metric",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "cloudwatch:GetMetricData",
+        "message": "User is not authorized to perform: cloudwatch:GetMetricData"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "transit_gateway_attachment",
+      "layer": "describe",
+      "status": "ok",
+      "reason": null,
+      "item_count": 0
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "transit_gateway_attachment",
+      "layer": "metric",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "cloudwatch:GetMetricData",
+        "message": "User is not authorized to perform: cloudwatch:GetMetricData"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "vpc",
+      "layer": "describe",
+      "status": "ok",
+      "reason": null,
+      "item_count": 1
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "vpc",
+      "layer": "metric",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "cloudwatch:GetMetricData",
+        "message": "User is not authorized to perform: cloudwatch:GetMetricData"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "eu-west-1",
+      "resource_type": "transit_gateway",
+      "layer": "describe",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "NetworkReadOnlyRole 이 이 계정에 없다"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "eu-west-1",
+      "resource_type": "transit_gateway",
+      "layer": "metric",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "NetworkReadOnlyRole 이 이 계정에 없다"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "eu-west-1",
+      "resource_type": "transit_gateway_attachment",
+      "layer": "describe",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "NetworkReadOnlyRole 이 이 계정에 없다"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "eu-west-1",
+      "resource_type": "transit_gateway_attachment",
+      "layer": "metric",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "NetworkReadOnlyRole 이 이 계정에 없다"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "eu-west-1",
+      "resource_type": "vpc",
+      "layer": "describe",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "NetworkReadOnlyRole 이 이 계정에 없다"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "eu-west-1",
+      "resource_type": "vpc",
+      "layer": "metric",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "NetworkReadOnlyRole 이 이 계정에 없다"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "us-east-1",
+      "resource_type": "transit_gateway",
+      "layer": "describe",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "NetworkReadOnlyRole 이 이 계정에 없다"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "us-east-1",
+      "resource_type": "transit_gateway",
+      "layer": "metric",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "NetworkReadOnlyRole 이 이 계정에 없다"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "us-east-1",
+      "resource_type": "transit_gateway_attachment",
+      "layer": "describe",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "NetworkReadOnlyRole 이 이 계정에 없다"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "us-east-1",
+      "resource_type": "transit_gateway_attachment",
+      "layer": "metric",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "NetworkReadOnlyRole 이 이 계정에 없다"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "us-east-1",
+      "resource_type": "vpc",
+      "layer": "describe",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "NetworkReadOnlyRole 이 이 계정에 없다"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "us-east-1",
+      "resource_type": "vpc",
+      "layer": "metric",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "NetworkReadOnlyRole 이 이 계정에 없다"
+      },
+      "item_count": null
+    }
+  ],
+  "history": {
+    "baseline_at": "2026-01-02T03:04:05Z",
+    "resolution_seconds": 300,
+    "retention_seconds": 604800,
+    "truncated": false,
+    "flap_collapse_threshold": 4,
+    "max_changes": 5000
+  },
+  "changes": []
+}

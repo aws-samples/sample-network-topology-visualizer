@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>nettopo — flow canvas (원칙 v3)</title>
+<link rel="stylesheet" href="flow.css">
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <div class="brand">nettopo <small>flow canvas</small></div>
+    <!-- 🔴 계정↔색 대응표를 여기 두지 마라(대장 75 · 검사 68).
+         상단바는 «기능 버튼»만 담는다 — 같은 사실이 두 곳에 있으면 어긋날 때 정답을 알 수 없고,
+         30계정에서 상단바 315 px 를 먹어 1440 px 에서 버튼이 화면 밖으로 밀린다. -->
+    <div class="spacer"></div>
+    <input id="search" placeholder="검색: VPC · 서브넷 · 10.1. · tgw · vpce" autocomplete="off">
+    <div class="btn" id="btn-filter" title="검색어에 맞지 않는 리소스를 화면에서 제거합니다(확인 후)">필터 적용</div>
+    <!-- §17 새 도식의 보기 선택(AZ·서브넷)·범례·데이터 한계. 🔴 상단바에는 «항상 보고 있어야 하는 것»만
+         둔다 — 햄버거(☰)는 없다(사용자 결정 2026-10-20 · 대장 130 — 「전체 보기」는 오른쪽 아래 버튼 줄). 토글이 상단에 늘어나면 «무엇이 지금 켜져 있나»를
+         사람이 못 읽고, 30계정 1440px 에서 버튼이 화면 밖으로 밀린다(검사 68). 범례·ⓘ 의 내용은
+         `#stage` 안 팝오버다(`#awsleg`·`#awsnote` — `#svg` 밖이라 내보내기에 섞이지 않는다). -->
+    <div id="awsbar">
+      <label class="ck"><input type="checkbox" id="aws-az" checked>AZ</label>
+      <label class="ck"><input type="checkbox" id="aws-sn" checked>서브넷</label>
+      <button class="btn" id="aws-legb" type="button">범례</button>
+      <button class="btn" id="aws-info" type="button" title="이 도구가 수집하지 않는 정보">ⓘ</button>
+    </div>
+    <!-- §3g 범위 축(대장 93·134). 🔴 상단바에는 **이 버튼 1개**만 둔다 — 계정 체크박스 목록은 `#top` **밖**
+         `#scopes` 팝오버다(아래). 검사 68 이 `#top.textContent` 의 마스킹 계정ID 출현 수를 세므로
+         목록을 여기 두면 `display:none` 이어도 FAIL 한다. 버튼 라벨에도 계정 이름을 쓰지 않는다 —
+         고른 계정은 **캔버스 배너**가 말한다. 인라인 세그먼트로 두면 30계정에서 상단바가 터진다(§3g G1). -->
+    <div class="btn" id="ax-scope" title="계정 — 그릴 계정을 고릅니다(여러 개 선택 가능). 화면만 좁히고 수집 범위는 그대로입니다">계정: 전체</div>
+    <!-- 모니터링(ADR 0006). 🔴 뒤의 `#modechip`+`#btn-live`(편집↔라이브 게이트)는 **다른 축**이다.
+         🔴 라벨에 «라이브» 를 쓰지 마라 — 그 말은 이미 편집 게이트가 쓴다.
+         🔴 대장 102 의 갱신주기 선택기는 **이 버튼에 붙는다**(상단바 버튼을 새로 만들지 마라).
+            아직 `observations[].refresh_seconds` 가 스키마에 없어 표시할 값이 없다 → 미구현. -->
+    <!-- 🔴 「모니터링」·「사용률」·「이력」 셋은 상태를 얻을 길이 있는 화면에만 보인다(대장 128 · flow.js `STATE_WAY` — 실시간 칸 · 서명 전 원본 ·
+         구운 상태 문서). 상태 함수 없이 올린 스택 A 의 화면에서는 `hidden` 이다(DOM 은 남는다 — 검사 84). -->
+    <div class="btn" id="btn-mon" title="모니터링 — 아이콘에 현재 상태를 표시합니다(기본 꺼짐). 구성도는 그대로입니다">모니터링</div>
+    <!-- 사용률(§17.25 · 대장 127 · 사용자 결정 2026-10-06 「모니터링 오른쪽에 사용률 버튼」 · 같은 날 「사용률 기능이랑 모니터링 기능은
+         아예 별개」). 모니터링과 **따로 선 스위치**다 — 모니터링을 켜지 않아도 누르면 바로 사용률이 얹힌다. 실시간 주소가 있는 화면이면
+         누르는 것이 곧 실시간 켜기(사용률만 · 지표 층 없이 · ADR 0005 제어 키 `utilization`)다. 흐려지는 때(`.dis`) = 켤 수 없을 때뿐
+         (구운 사용률 값도 살아 있는 실시간 주소도 없음 · 비교 칸). 기간·목록은 왼쪽 위 막대 그대로. -->
+    <div class="btn dis" id="btn-util" title="사용률 — 눌러서 사용률을 켭니다(모니터링과 별개)">사용률</div>
+    <!-- §3k K4: 편집이 없으면 둘 다 숨는다(`hidden`) — DOM 은 남긴다(검사 84 순서·id 집합). -->
+    <div class="chip live" id="modechip" title="이 그림은 편집됐다 — 원본 스냅샷과 다르다" hidden>편집한 그림 0건</div>
+    <div class="btn" id="btn-live" title="편집을 취소하고 원본 수집 결과로 돌아갑니다" hidden>원래대로</div>
+    <!-- 대장 101: 독(오른쪽 패널)의 **진입점**이다. 상태 토글이 아니라 여는 버튼이므로 대장 93
+         「3축+실시간+필터만」과 충돌하지 않는다(그 줄을 101 이 개정했다). 햄버거 안에 넣으면
+         발견성이 없어 「과거를 볼 수 있다」를 아무도 모른다. -->
+    <div class="btn" id="btn-hist" title="변경 이력·특이사항 (오른쪽 패널)">이력</div>
+    <!-- 🔴 햄버거(☰ · `#btn-menu`·`#menu`)는 **지웠다**(사용자 결정 2026-10-20 · 대장 130 · QA A-06). 들어 있던 「흐름 애니메이션」은
+         기능째로 뺐고(움직임 = OS 「동작 줄이기」만 따른다) 「전체 보기」는 오른쪽 아래 버튼 줄로 옮겼다. 되살리면 검사 84 가 FAIL 한다. -->
+  </div>
+  <!-- §3g 범위 축 팝오버(G1). 🔴 `#top` **밖**이고(검사 68) `#svg` **밖**이다(검사 60 내보내기).
+       내용은 `flow.js` 가 모델의 계정 목록에서 만든다 — 계정 이름을 HTML 에 적지 마라(불변식 ③·⑤). -->
+  <div id="scopes"></div>
+  <!-- 실시간 켜기 팝오버(ADR 0005 D5). 🔴 `#top`·`#svg` **밖**이다(검사 68·60 — 위 두 팝오버와 같은 이유).
+       주소 칸(`#nettopo-live`)이 비어 있으면 열리지 않는다 — 그때 «모니터링» 은 구운 문서만 얹는다.
+       맨 윗줄(`.phead`)은 `flow.js` 가 열 때마다 「언제까지 켜지는가」로 채운다. -->
+  <div id="monpop">
+    <div class="phead"></div>
+    <!-- 🆕 켜 둘 시간(사용자 결정 2026-10-28 · ADR 0005 D4) — 고른 칸은 `.on`. 누르면 팝오버는 열린 채 머리줄의 「까지」만 바뀐다.
+         🔴 8시간이 끝이다(서버 천장 = 마지막 쓰기 + 8시간). 값(밀리초)은 `flow.js` `LIVE_DURS` 와 같아야 한다. -->
+    <div class="mdur"><span class="mdl">켜 둘 시간</span><span class="mdc" data-dur="1800000">30분</span><span class="mdc" data-dur="3600000">1시간</span><span class="mdc" data-dur="7200000">2시간</span><span class="mdc on" data-dur="14400000">4시간</span><span class="mdc" data-dur="28800000">8시간</span></div>
+    <div class="mitem" data-live="1">지표까지 — 흐르는 선이 보인다(호출당 과금)</div>
+    <div class="mitem" data-live="0">구조 조회만 — 지표 요금 없음(흐름은 안 보인다)</div>
+  </div>
+  <div id="fbar"></div>
+  <!-- §13-54 수집 실패·캡·모드 배너. 캔버스 밖이다(내보내기에 섞이지 않는다). -->
+  <div id="bans"></div>
+  <div id="main">
+    <div id="stage">
+      <svg id="svg"></svg>
+      <!-- 사용률 세모만 그리는 겹친 층(§17.25 「성능」) — 그림과 같은 이동·배율 · 누르기는 아래 그림으로 지나간다 -->
+      <svg id="awsutl" aria-hidden="true"></svg>
+      <!-- §17 새 도식의 정보창·범례·데이터 한계. 🔴 전부 `#svg` **밖**이다 — 내보내기(검사 60·124)에 섞이지 않는다. -->
+      <div id="awscard"></div>
+      <div id="awsleg"></div>
+      <!-- 사용률 막대(§17.25) — 그리기 영역 왼쪽 위 · 모니터링 켬 + 사용률 행이 있을 때만. 🔴 `#top` 밖이다(검사 84·68) -->
+      <div id="awsut"></div>
+      <div id="awsnote"><b>이 도구가 수집하지 않는 정보</b><br>
+        · 보안 그룹 규칙의 내용(출처·포트)은 수집하지 않습니다 — 규칙 개수와, 다른 보안 그룹을 가리키는 규칙만 수집합니다.<br>
+        · 네트워크 ACL 규칙의 내용은 수집하지 않습니다 — 규칙 개수와 연결된 서브넷만 수집합니다.<br>
+        · 로드밸런서 대상의 정상·비정상은 실시간 모니터링을 켰을 때만 정보창 「상태」 칸에 표시됩니다.<br>
+        · Direct Connect 는 연결과 DX 게이트웨이만 그립니다 — VIF 는 연결 정보창에서 볼 수 있습니다.</div>
+      <!-- §13-56 빈 상태: 그려진 카드가 0일 때만 뜬다 -->
+      <div id="empty"></div>
+      <!-- §13-59 크롬 표준 세트. **SVG 밖**이라 내보내기(60)에 들어가지 않는다. -->
+      <div id="chrome">
+        <div class="cbtn" data-act="zin" title="확대">＋</div>
+        <div class="cbtn" data-act="zout" title="축소">−</div>
+        <div class="cbtn" data-act="fit" title="화면 맞춤 (키보드 F) — 글자를 읽을 수 있는 크기로 맞춥니다">⤢</div>
+        <!-- 대장 130: ☰ 에서 옮겨 온 「전체 보기」 — 키 A 와 같은 함수(`fitAll`) · 하한 없음(⤢ 는 읽히는 하한 0.35) -->
+        <div class="cbtn" data-act="fitall" title="전체 보기 (키보드 A) — 구성도 전체를 한 화면에 표시합니다. 계정이 많으면 글자가 보이지 않을 만큼 작아집니다(읽을 수 있는 크기는 ⤢ 화면 맞춤)">전체 보기</div>
+        <div class="cbtn" data-act="reset" title="처음 본 그림으로">리셋</div>
+        <div class="cbtn" data-act="refresh" title="같은 수집 결과로 다시 배치(다시 수집하지는 않습니다)">↻</div>
+        <div class="cbtn" data-act="export" title="SVG 내보내기 — 캔버스만">SVG</div>
+        <div class="cbtn" data-act="png" title="PNG 내보내기 — 폭 3840">PNG</div>
+        <!-- 「목록」 버튼은 없다 — 그 표는 왼쪽 아래 「!」 상자의 「캔버스에 없는 리소스」 절이다(사용자 결정 2026-10-20 · 대장 129) -->
+        <div class="cbtn" data-act="full" title="전체화면">⛶</div>
+        <!-- §4c 대장 80: 배율 표시. 조작이 먹었는지 알 수 있는 유일한 피드백이다 -->
+        <div class="czoom" id="czoom" title="현재 배율 — ＋/− · 휠 · 키보드 +/-/0">100%</div>
+      </div>
+      <!-- §15 검증 오버레이는 **고객 화면에 없다**(사용자 결정 2026-10-20 · 대장 82 개정). 하네스가 `verify-overlay.js` 를
+           주입하면 그 파일이 `#vfy`·`#vfypanel` 을 스스로 만든다 — 여기에 자리를 두지 마라(검사 77 이 0 을 잰다). -->
+      <!-- 대장 129(§17.26 C-3·C-7 · 사용자 결정 2026-10-20): 왼쪽 아래 빨간 「!」 — **진짜 문제가 있을 때만** 선다(수집 실패 · 권한 없어 못 읽은
+           계정 · 그림에 넣지 못한 리소스·관계). 누르면 바로 위에 상자가 붙어 열린다. 🔴 `#svg` **밖**이다(내보내기 · 검사 60). 글은 `flow.js` 가 만든다. -->
+      <div id="probs" role="button" tabindex="0" hidden>!</div>
+      <div id="probpop"></div>
+      <!-- 대장 81: 「클릭하면 상세가 열린다」는 상시 보여야 한다 — 기능이 있어도 찾지 못하면
+           없는 것과 같다(사용자 신고 2026-09-14 "컴포넌트들 정보들도 따로 안보인다"). -->
+      <div id="help">
+        <kbd>아이콘 / 서브넷 / 선 클릭</kbd> → 정보창 + 이어진 길만 표시 · <kbd>VPC 이름 ▸</kbd> VPC 정보 ·
+        <kbd>빈 곳 / Esc</kbd> 닫기 · <kbd>드래그</kbd> 화면 이동 · <kbd>휠 / + −</kbd> 확대·축소 · <kbd>0</kbd> 처음 화면 ·
+        <kbd>F</kbd> 화면 맞춤 · <kbd>A</kbd> 전체 보기
+      </div>
+      <div id="modal">
+        <div class="mcard">
+          <div class="mtitle">필터를 적용할까요?</div>
+          <div class="mmsg" data-msg></div>
+          <div class="mnote">검색은 회색으로 표시만 하고 그대로 남깁니다. 필터는 제거입니다 —
+            제거된 것은 선·집계·경로에서도 사라집니다.</div>
+          <div class="mnote">쿼리: <code>type=ec2_instance</code> · <code>tag:environment=prod</code> ·
+            <code>*egress*</code> · <code>-stage</code> · <code>NOT</code> / <code>AND</code> / <code>OR</code></div>
+          <!-- §13-62 태그 버킷: Custom → AWS → Terraform → K8s, Untagged 는 항상 맨 아래 -->
+          <div class="mbuckets" data-buckets></div>
+          <div class="mrow">
+            <div class="btn" data-cancel>취소</div>
+            <div class="btn warn" data-ok>제거하고 다시 그리기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="side"></div>
+  </div>
+  <!-- 🔴 하단 계측 줄(`#status`)은 2026-09-21 에 **요소째로 제거했다**(사용자 결정, 대장 참조).
+       계측값(리전/VPC/계정/상자/선/스파인/캔버스/배치ms)은 개발 계측이고 제품 화면이 아니다.
+       같은 값은 `__flowApi.dump()` 에 전부 있어 하네스 손실이 0이다(실측: 하네스 4종 중
+       `#status` 를 읽는 곳 0곳). 되살리지 마라 — 되살리면 검사 84 가 FAIL 한다. -->
+</div>
+<!-- 실시간 주소 칸(ADR 0003 D2 · 결정 2026-09-27). 값이 null 이면 이 화면은 구워진 문서만 보여 준다.
+     🔴 배포된 `index.html` 에서는 **서명 전용 함수**(`infra/state-lambda/signer.py`)가 5분마다 이 칸의
+     JSON 만 새 서명으로 바꾼다. 칸이 정확히 1개가 아니면 그 함수는 아무것도 쓰지 않는다 — 이 태그의
+     id·type·속성 순서를 바꾸면 `signer.SLOT` 과 `build-standalone.mjs` 의 칸 검사를 같이 고쳐라. -->
+<script id="nettopo-live" type="application/json">{"v":1,"state_url":null,"control_url":null,"signed_at":null,"expires_at":null}</script>
+<script src="icons.js"></script>
+<script src="fixture-flow.js"></script>
+<!-- 엔진 문서 → 캔버스 입력 변환(`NT_ADAPT`). 이력 비교 화면(§3j J2)이 「그때」 구조를 이 함수로 바꾼다 —
+     `adapt-engine-snapshot.mjs` 와 **같은 파일**이다(규칙이 두 벌이 되면 두 칸이 다른 규칙을 말한다). -->
+<script src="adapt-core.js"></script>
+<!-- §17 새 도식: 공식 아이콘 모양(2023 덱) → 배치·그림. flow.js 보다 **앞**이다(flow.js 가 `NT_AWS` 를 부른다). -->
+<script src="aws-icons.js"></script>
+<script src="aws-canvas.js"></script>
+<script src="flow.js"></script>
+</body>
+</html>

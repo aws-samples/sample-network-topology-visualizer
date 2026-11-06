@@ -1,0 +1,328 @@
+{
+  "schema_version": "2.13.0",
+  "run": {
+    "collected_at": "2026-01-02T03:04:05Z",
+    "tool_version": "0.0.0+fixture"
+  },
+  "scope": {
+    "account_ids": ["111122223333", "444455556666"],
+    "regions": ["us-east-1", "eu-west-1"],
+    "resource_types": [
+      "vpc",
+      "transit_gateway",
+      "transit_gateway_attachment",
+      "security_group"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "account/111122223333",
+      "type": "account",
+      "account_id": "111122223333",
+      "region": null,
+      "native_id": null,
+      "arn": null,
+      "name": "example-dev",
+      "parent_id": null,
+      "partial": false,
+      "attributes": {}
+    },
+    {
+      "id": "account/444455556666",
+      "type": "account",
+      "account_id": "444455556666",
+      "region": null,
+      "native_id": null,
+      "arn": null,
+      "name": null,
+      "parent_id": null,
+      "attributes": {},
+      "partial": true,
+      "partial_reasons": [
+        {
+          "code": "access_denied",
+          "api": "sts:AssumeRole",
+          "message": "not authorized to perform: sts:AssumeRole on resource: <scrubbed>"
+        }
+      ]
+    },
+    {
+      "id": "region/111122223333/us-east-1",
+      "type": "region",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": null,
+      "arn": null,
+      "name": "us-east-1",
+      "parent_id": "account/111122223333",
+      "partial": false,
+      "attributes": {}
+    },
+    {
+      "id": "security_group/111122223333/us-east-1/sg-0aaa1111bbbb1010",
+      "type": "security_group",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "sg-0aaa1111bbbb1010",
+      "arn": null,
+      "name": "example-lb-sg",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0aaa1111bbbb2222",
+      "partial": false,
+      "attributes": {
+        "group_name": "example-lb-sg",
+        "description": "lb tier",
+        "ingress_rule_count": 1,
+        "egress_rule_count": 1,
+        "self_referencing": false
+      }
+    },
+    {
+      "id": "security_group/111122223333/us-east-1/sg-0aaa1111bbbb9999",
+      "type": "security_group",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "sg-0aaa1111bbbb9999",
+      "arn": null,
+      "name": "example-app-sg",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0aaa1111bbbb2222",
+      "partial": false,
+      "attributes": {
+        "group_name": "example-app-sg",
+        "description": "app tier",
+        "ingress_rule_count": 2,
+        "egress_rule_count": 1,
+        "self_referencing": false
+      }
+    },
+    {
+      "id": "transit_gateway/111122223333/us-east-1/tgw-0aaa1111bbbb7777",
+      "type": "transit_gateway",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "tgw-0aaa1111bbbb7777",
+      "arn": null,
+      "name": "example-tgw",
+      "parent_id": "region/111122223333/us-east-1",
+      "attributes": { "state": "available" },
+      "partial": true,
+      "partial_reasons": [
+        {
+          "code": "pagination_truncated",
+          "api": "ec2:DescribeTransitGatewayAttachments",
+          "message": "throttled after 2 pages; attachment list is incomplete"
+        }
+      ]
+    },
+    {
+      "id": "vpc/111122223333/us-east-1/vpc-0aaa1111bbbb2222",
+      "type": "vpc",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "vpc-0aaa1111bbbb2222",
+      "arn": null,
+      "name": "example-vpc",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "attributes": {
+        "cidr_blocks": ["10.0.0.0/16"],
+        "is_default": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "attachment|transit_gateway/111122223333/us-east-1/tgw-0aaa1111bbbb7777|vpc/111122223333/us-east-1/vpc-0aaa1111bbbb2222",
+      "type": "attachment",
+      "source": "transit_gateway/111122223333/us-east-1/tgw-0aaa1111bbbb7777",
+      "target": "vpc/111122223333/us-east-1/vpc-0aaa1111bbbb2222",
+      "directed": true,
+      "attributes": { "state": "available" },
+      "partial": true,
+      "partial_reasons": [
+        {
+          "code": "pagination_truncated",
+          "api": "ec2:DescribeTransitGatewayAttachments",
+          "message": "attachment set may be missing entries"
+        }
+      ]
+    },
+    {
+      "id": "security_group_reference|security_group/111122223333/us-east-1/sg-0aaa1111bbbb9999|security_group/111122223333/us-east-1/sg-0aaa1111bbbb1010|ingress",
+      "type": "security_group_reference",
+      "source": "security_group/111122223333/us-east-1/sg-0aaa1111bbbb9999",
+      "target": "security_group/111122223333/us-east-1/sg-0aaa1111bbbb1010",
+      "directed": true,
+      "attributes": {
+        "direction": "ingress",
+        "rules": ["tcp/8080"]
+      },
+      "partial": false
+    }
+  ],
+  "coverage": [
+    {
+      "account_id": "111122223333",
+      "region": "eu-west-1",
+      "resource_type": "security_group",
+      "status": "ok",
+      "reason": null,
+      "item_count": 0
+    },
+    {
+      "account_id": "111122223333",
+      "region": "eu-west-1",
+      "resource_type": "transit_gateway",
+      "status": "ok",
+      "reason": null,
+      "item_count": 0
+    },
+    {
+      "account_id": "111122223333",
+      "region": "eu-west-1",
+      "resource_type": "transit_gateway_attachment",
+      "status": "ok",
+      "reason": null,
+      "item_count": 0
+    },
+    {
+      "account_id": "111122223333",
+      "region": "eu-west-1",
+      "resource_type": "vpc",
+      "status": "ok",
+      "reason": null,
+      "item_count": 0
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "security_group",
+      "status": "ok",
+      "reason": null,
+      "item_count": 2
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "transit_gateway",
+      "status": "ok",
+      "reason": null,
+      "item_count": 1
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "transit_gateway_attachment",
+      "status": "throttled",
+      "reason": {
+        "code": "pagination_truncated",
+        "api": "ec2:DescribeTransitGatewayAttachments",
+        "message": "throttled after 2 pages"
+      },
+      "item_count": 1
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "vpc",
+      "status": "ok",
+      "reason": null,
+      "item_count": 1
+    },
+    {
+      "account_id": "444455556666",
+      "region": "eu-west-1",
+      "resource_type": "security_group",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "role NetworkReadOnlyRole is not deployed in this account"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "eu-west-1",
+      "resource_type": "transit_gateway",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "role NetworkReadOnlyRole is not deployed in this account"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "eu-west-1",
+      "resource_type": "transit_gateway_attachment",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "role NetworkReadOnlyRole is not deployed in this account"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "eu-west-1",
+      "resource_type": "vpc",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "role NetworkReadOnlyRole is not deployed in this account"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "us-east-1",
+      "resource_type": "security_group",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "role NetworkReadOnlyRole is not deployed in this account"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "us-east-1",
+      "resource_type": "transit_gateway",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "role NetworkReadOnlyRole is not deployed in this account"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "us-east-1",
+      "resource_type": "transit_gateway_attachment",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "role NetworkReadOnlyRole is not deployed in this account"
+      },
+      "item_count": null
+    },
+    {
+      "account_id": "444455556666",
+      "region": "us-east-1",
+      "resource_type": "vpc",
+      "status": "denied",
+      "reason": {
+        "code": "access_denied",
+        "api": "sts:AssumeRole",
+        "message": "role NetworkReadOnlyRole is not deployed in this account"
+      },
+      "item_count": null
+    }
+  ]
+}

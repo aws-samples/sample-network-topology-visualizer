@@ -1,0 +1,274 @@
+{
+  "schema_version": "2.13.0",
+  "run": {
+    "collected_at": "2026-01-02T03:04:05Z",
+    "tool_version": "0.0.0+fixture"
+  },
+  "scope": {
+    "account_ids": ["111122223333"],
+    "regions": ["us-east-1"],
+    "resource_types": [
+      "vpc",
+      "subnet",
+      "route_table",
+      "internet_gateway",
+      "network_acl",
+      "load_balancer"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "account/111122223333",
+      "type": "account",
+      "account_id": "111122223333",
+      "region": null,
+      "native_id": null,
+      "arn": null,
+      "name": "example-dev",
+      "parent_id": null,
+      "partial": false,
+      "attributes": {}
+    },
+    {
+      "id": "internet_gateway/111122223333/us-east-1/igw-0aaa1111bbbb5555",
+      "type": "internet_gateway",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "igw-0aaa1111bbbb5555",
+      "arn": null,
+      "name": "example-igw",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0aaa1111bbbb2222",
+      "partial": false,
+      "attributes": { "state": "available" }
+    },
+    {
+      "id": "load_balancer/111122223333/us-east-1/example-alb",
+      "type": "load_balancer",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "example-alb",
+      "arn": "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/example-alb/50dc6c495c0c9188",
+      "name": "example-alb",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0aaa1111bbbb2222",
+      "partial": false,
+      "attributes": {
+        "state": "active",
+        "scheme": "internet-facing",
+        "load_balancer_type": "application",
+        "dns_name": "example-alb-1234567890.us-east-1.elb.amazonaws.com",
+        "availability_zones": ["us-east-1a", "us-east-1b"],
+        "subnet_ids": ["subnet-0aaa1111bbbb3333", "subnet-0aaa1111bbbb4444"],
+        "security_group_ids": ["sg-0aaa1111bbbb8888"],
+        "listeners": ["HTTP:80", "HTTPS:443"],
+        "target_groups": ["example-tg-blue", "example-tg-green"],
+        "target_group_registered_target_counts": [0, 2],
+        "registered_target_count": 2
+      }
+    },
+    {
+      "id": "network_acl/111122223333/us-east-1/acl-0aaa1111bbbb7777",
+      "type": "network_acl",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "acl-0aaa1111bbbb7777",
+      "arn": null,
+      "name": "example-default-acl",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0aaa1111bbbb2222",
+      "partial": false,
+      "attributes": {
+        "is_default": true,
+        "entry_count": 4,
+        "association_count": 2
+      }
+    },
+    {
+      "id": "region/111122223333/us-east-1",
+      "type": "region",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": null,
+      "arn": null,
+      "name": "us-east-1",
+      "parent_id": "account/111122223333",
+      "partial": false,
+      "attributes": {}
+    },
+    {
+      "id": "route_table/111122223333/us-east-1/rtb-0aaa1111bbbb6666",
+      "type": "route_table",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "rtb-0aaa1111bbbb6666",
+      "arn": null,
+      "name": "example-public-rtb",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0aaa1111bbbb2222",
+      "partial": false,
+      "attributes": { "is_main": false }
+    },
+    {
+      "id": "subnet/111122223333/us-east-1/subnet-0aaa1111bbbb3333",
+      "type": "subnet",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "subnet-0aaa1111bbbb3333",
+      "arn": null,
+      "name": "example-public-a",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0aaa1111bbbb2222",
+      "partial": false,
+      "attributes": {
+        "cidr_block": "10.0.0.0/24",
+        "availability_zone": "us-east-1a",
+        "map_public_ip_on_launch": true
+      }
+    },
+    {
+      "id": "subnet/111122223333/us-east-1/subnet-0aaa1111bbbb4444",
+      "type": "subnet",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "subnet-0aaa1111bbbb4444",
+      "arn": null,
+      "name": "example-public-b",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0aaa1111bbbb2222",
+      "partial": false,
+      "attributes": {
+        "cidr_block": "10.0.1.0/24",
+        "availability_zone": "us-east-1b",
+        "map_public_ip_on_launch": true
+      }
+    },
+    {
+      "id": "vpc/111122223333/us-east-1/vpc-0aaa1111bbbb2222",
+      "type": "vpc",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "vpc-0aaa1111bbbb2222",
+      "arn": null,
+      "name": "example-vpc",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "attributes": {
+        "cidr_blocks": ["10.0.0.0/16"],
+        "is_default": false
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "association|network_acl/111122223333/us-east-1/acl-0aaa1111bbbb7777|subnet/111122223333/us-east-1/subnet-0aaa1111bbbb3333",
+      "type": "association",
+      "source": "network_acl/111122223333/us-east-1/acl-0aaa1111bbbb7777",
+      "target": "subnet/111122223333/us-east-1/subnet-0aaa1111bbbb3333",
+      "directed": false,
+      "partial": false,
+      "attributes": { "state": "associated" }
+    },
+    {
+      "id": "association|network_acl/111122223333/us-east-1/acl-0aaa1111bbbb7777|subnet/111122223333/us-east-1/subnet-0aaa1111bbbb4444",
+      "type": "association",
+      "source": "network_acl/111122223333/us-east-1/acl-0aaa1111bbbb7777",
+      "target": "subnet/111122223333/us-east-1/subnet-0aaa1111bbbb4444",
+      "directed": false,
+      "partial": false,
+      "attributes": { "state": "associated" }
+    },
+    {
+      "id": "association|route_table/111122223333/us-east-1/rtb-0aaa1111bbbb6666|subnet/111122223333/us-east-1/subnet-0aaa1111bbbb3333",
+      "type": "association",
+      "source": "route_table/111122223333/us-east-1/rtb-0aaa1111bbbb6666",
+      "target": "subnet/111122223333/us-east-1/subnet-0aaa1111bbbb3333",
+      "directed": false,
+      "partial": false,
+      "attributes": {}
+    },
+    {
+      "id": "association|route_table/111122223333/us-east-1/rtb-0aaa1111bbbb6666|subnet/111122223333/us-east-1/subnet-0aaa1111bbbb4444",
+      "type": "association",
+      "source": "route_table/111122223333/us-east-1/rtb-0aaa1111bbbb6666",
+      "target": "subnet/111122223333/us-east-1/subnet-0aaa1111bbbb4444",
+      "directed": false,
+      "partial": false,
+      "attributes": {}
+    },
+    {
+      "id": "load_balancer_placement|load_balancer/111122223333/us-east-1/example-alb|subnet/111122223333/us-east-1/subnet-0aaa1111bbbb3333",
+      "type": "load_balancer_placement",
+      "source": "load_balancer/111122223333/us-east-1/example-alb",
+      "target": "subnet/111122223333/us-east-1/subnet-0aaa1111bbbb3333",
+      "directed": false,
+      "partial": false,
+      "attributes": { "state": "active" }
+    },
+    {
+      "id": "load_balancer_placement|load_balancer/111122223333/us-east-1/example-alb|subnet/111122223333/us-east-1/subnet-0aaa1111bbbb4444",
+      "type": "load_balancer_placement",
+      "source": "load_balancer/111122223333/us-east-1/example-alb",
+      "target": "subnet/111122223333/us-east-1/subnet-0aaa1111bbbb4444",
+      "directed": false,
+      "partial": false,
+      "attributes": { "state": "active" }
+    },
+    {
+      "id": "route|route_table/111122223333/us-east-1/rtb-0aaa1111bbbb6666|internet_gateway/111122223333/us-east-1/igw-0aaa1111bbbb5555",
+      "type": "route",
+      "source": "route_table/111122223333/us-east-1/rtb-0aaa1111bbbb6666",
+      "target": "internet_gateway/111122223333/us-east-1/igw-0aaa1111bbbb5555",
+      "directed": true,
+      "partial": false,
+      "attributes": {
+        "destination_cidr_block": "0.0.0.0/0",
+        "state": "active"
+      }
+    }
+  ],
+  "coverage": [
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "internet_gateway",
+      "status": "ok",
+      "reason": null,
+      "item_count": 1
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "load_balancer",
+      "status": "ok",
+      "reason": null,
+      "item_count": 1
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "network_acl",
+      "status": "ok",
+      "reason": null,
+      "item_count": 1
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "route_table",
+      "status": "ok",
+      "reason": null,
+      "item_count": 1
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "subnet",
+      "status": "ok",
+      "reason": null,
+      "item_count": 2
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "vpc",
+      "status": "ok",
+      "reason": null,
+      "item_count": 1
+    }
+  ]
+}

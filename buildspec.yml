@@ -1,0 +1,98 @@
+# 수집기 CodeBuild 의 빌드 명세 — 배포 패키지(nettopo-source.zip) 루트에 실린다. 스택 A 의 CollectorProject 가
+# `BuildSpec: buildspec.yml` 로 이 파일을 읽는다(템플릿 본문 한도 51,200 B 밖으로 뺐다 · 2026-10-27).
+# 환경변수(ARTIFACT_BUCKET · TARGET_ACCOUNTS · TARGET_REGIONS · MEMBER_ROLE_NAME · LIVE_CHANNEL)는 템플릿이 준다.
+version: 0.2
+env:
+  variables:
+    # 빌드 안에서 새로 만드는 가상환경 — 이미지에 깔린 패키지와 섞이지 않는다(옛 판 설치 정보가 남지 않는다 · 2026-10-27).
+    # 🔴 이후 명령은 셸이 달라도 같은 환경을 쓰도록 전부 이 절대 경로로 부른다(`$VENV/bin/python` · `$VENV/bin/nettopo`).
+    VENV: /tmp/nettopo-venv
+phases:
+  install:
+    runtime-versions:
+      python: 3.12
+      nodejs: 20
+    commands:
+      - python -m venv "$VENV"
+      - $VENV/bin/python -m pip install --require-hashes -r engine/requirements.lock -r engine/build-requirements.lock
+      - $VENV/bin/python -m pip install --no-build-isolation --no-deps ./engine
+      - |
+        $VENV/bin/python -c 'import sys, boto3, botocore; print("nettopo venv:", sys.prefix, "boto3", boto3.__version__, "botocore", botocore.__version__)'
+  pre_build:
+    commands:
+      - |
+        set -eu
+        ACCOUNTS="${TARGET_ACCOUNTS:-}"
+        if [ -n "$ACCOUNTS" ]; then
+          printf '%s' "--accounts $ACCOUNTS" > /tmp/accounts-arg
+        else
+          : > /tmp/accounts-arg
+        fi
+        REGIONS="${TARGET_REGIONS:-}"
+        if [ -z "$REGIONS" ]; then REGIONS="$AWS_REGION"; fi
+        REGION_ARGS=""
+        for r in $(printf '%s' "$REGIONS" | tr ',' ' '); do
+          REGION_ARGS="$REGION_ARGS --region $r"
+        done
+        printf '%s' "$REGION_ARGS" > /tmp/region-args
+        # 멤버 역할이 sts:ExternalId 조건을 걸었을 때만(스택 A MemberExternalId = 스택 B ExternalId) — 비우면 넘기지 않는다
+        if [ -n "${MEMBER_EXTERNAL_ID:-}" ]; then
+          printf '%s' "--external-id $MEMBER_EXTERNAL_ID" > /tmp/external-id-arg
+        else
+          : > /tmp/external-id-arg
+        fi
+        if [ -n "$ACCOUNTS" ]; then
+          echo "Regions: $REGIONS - accounts: $(printf '%s' "$ACCOUNTS" | tr ',' '\n' | grep -c .) (set by parameter)"
+        else
+          echo "Regions: $REGIONS - accounts are auto-discovered by the engine (see the discovery line in this log)"
+        fi
+  build:
+    commands:
+      - |
+        set -eu
+        mkdir -p out
+        $VENV/bin/nettopo collect $(cat /tmp/region-args) $(cat /tmp/accounts-arg) $(cat /tmp/external-id-arg) \
+          --role-name "$MEMBER_ROLE_NAME" \
+          --out out/topology.json
+        $VENV/bin/nettopo observe --topology out/topology.json --role-name "$MEMBER_ROLE_NAME" $(cat /tmp/external-id-arg) \
+          --no-sources --out out/obs-snap.json || rm -f out/obs-snap.json
+      - |
+        set -eu
+        CONNECT=""
+        if [ "$LIVE_CHANNEL" = ENABLED ]; then CONNECT="https://$ARTIFACT_BUCKET.s3.$AWS_REGION.amazonaws.com"; fi
+        (
+          cd renderer
+          IN=../out/topology.json OUT=../out/fixture-real.js STRUCT=1 SNAPOBS=../out/obs-snap.json node adapt-engine-snapshot.mjs
+          FIX=../out/fixture-real.js OUT=../out/index.html \
+            CSP_CONNECT="$CONNECT" node build-standalone.mjs
+        )
+  post_build:
+    commands:
+      - |
+        set -eu
+        cd "$CODEBUILD_SRC_DIR"
+        if [ "${CODEBUILD_BUILD_SUCCEEDING:-0}" != "1" ]; then
+          echo "Build failed - nothing is uploaded" >&2
+          exit 1
+        fi
+        STAMP="$(date -u +%Y/%m/%d/%H%MZ)"
+        aws s3 cp out/topology.json \
+          "s3://$ARTIFACT_BUCKET/snapshots/structure/$STAMP/topology.json" --sse AES256
+        if aws s3 cp "s3://$ARTIFACT_BUCKET/structure-latest.json" out/structure-was.json --only-show-errors; then
+          DIGEST_PY='import json,sys; print(json.load(open(sys.argv[1]))["run"].get("content_digest",""))'
+          OLD_DIGEST="$($VENV/bin/python -c "$DIGEST_PY" out/structure-was.json)"
+          NEW_DIGEST="$($VENV/bin/python -c "$DIGEST_PY" out/topology.json)"
+          if [ "$OLD_DIGEST" != "$NEW_DIGEST" ]; then
+            aws s3 cp out/structure-was.json \
+              "s3://$ARTIFACT_BUCKET/structure-previous.json" --sse AES256
+          fi
+        fi
+        aws s3 cp out/topology.json \
+          "s3://$ARTIFACT_BUCKET/structure-latest.json" --sse AES256
+        if [ "$LIVE_CHANNEL" = ENABLED ]; then
+          aws s3 cp out/index.html "s3://$ARTIFACT_BUCKET/unsigned/index.html" --sse AES256
+          echo "Unsigned build output: s3://$ARTIFACT_BUCKET/unsigned/index.html - the signer function publishes it as index.html"
+        else
+          aws s3 cp out/index.html "s3://$ARTIFACT_BUCKET/index.html" --sse AES256
+        fi
+        echo "Output: s3://$ARTIFACT_BUCKET/index.html (no public path - download with s3 cp)"

@@ -1,0 +1,316 @@
+{
+  "schema_version": "2.13.0",
+  "run": {
+    "collected_at": "2026-01-02T03:04:05Z",
+    "tool_version": "0.0.0+fixture"
+  },
+  "scope": {
+    "account_ids": [
+      "111122223333"
+    ],
+    "regions": [
+      "us-east-1"
+    ],
+    "resource_types": [
+      "vpc",
+      "subnet",
+      "route_table",
+      "vpc_peering_connection"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "account/111122223333",
+      "type": "account",
+      "account_id": "111122223333",
+      "region": null,
+      "native_id": "111122223333",
+      "arn": null,
+      "name": null,
+      "parent_id": null,
+      "partial": false,
+      "attributes": {}
+    },
+    {
+      "id": "region/111122223333/us-east-1",
+      "type": "region",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "us-east-1",
+      "arn": null,
+      "name": null,
+      "parent_id": "account/111122223333",
+      "partial": false,
+      "attributes": {}
+    },
+    {
+      "id": "route_table/111122223333/us-east-1/rtb-0bbb1111cccc0030",
+      "type": "route_table",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "rtb-0bbb1111cccc0030",
+      "arn": null,
+      "name": "example-app-main-rtb",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0bbb1111cccc0001",
+      "partial": false,
+      "attributes": {
+        "main": true,
+        "association_count": 1,
+        "route_count": 2
+      }
+    },
+    {
+      "id": "route_table/111122223333/us-east-1/rtb-0bbb1111cccc0031",
+      "type": "route_table",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "rtb-0bbb1111cccc0031",
+      "arn": null,
+      "name": "example-app-a-rtb",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0bbb1111cccc0001",
+      "partial": false,
+      "attributes": {
+        "main": false,
+        "association_count": 1,
+        "route_count": 2
+      }
+    },
+    {
+      "id": "route_table/111122223333/us-east-1/rtb-0bbb1111cccc0040",
+      "type": "route_table",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "rtb-0bbb1111cccc0040",
+      "arn": null,
+      "name": "example-db-main-rtb",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0bbb1111cccc0002",
+      "partial": false,
+      "attributes": {
+        "main": true,
+        "association_count": 1,
+        "route_count": 2
+      }
+    },
+    {
+      "id": "subnet/111122223333/us-east-1/subnet-0bbb1111cccc0011",
+      "type": "subnet",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "subnet-0bbb1111cccc0011",
+      "arn": null,
+      "name": "example-app-a",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0bbb1111cccc0001",
+      "partial": false,
+      "attributes": {
+        "cidr_block": "10.1.0.0/24",
+        "availability_zone": "us-east-1a",
+        "map_public_ip_on_launch": false
+      }
+    },
+    {
+      "id": "subnet/111122223333/us-east-1/subnet-0bbb1111cccc0012",
+      "type": "subnet",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "subnet-0bbb1111cccc0012",
+      "arn": null,
+      "name": "example-app-b",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0bbb1111cccc0001",
+      "partial": false,
+      "attributes": {
+        "cidr_block": "10.1.1.0/24",
+        "availability_zone": "us-east-1b",
+        "map_public_ip_on_launch": false
+      }
+    },
+    {
+      "id": "subnet/111122223333/us-east-1/subnet-0bbb1111cccc0021",
+      "type": "subnet",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "subnet-0bbb1111cccc0021",
+      "arn": null,
+      "name": "example-db-a",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0bbb1111cccc0002",
+      "partial": false,
+      "attributes": {
+        "cidr_block": "10.2.0.0/24",
+        "availability_zone": "us-east-1a",
+        "map_public_ip_on_launch": false
+      }
+    },
+    {
+      "id": "vpc/111122223333/us-east-1/vpc-0bbb1111cccc0001",
+      "type": "vpc",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "vpc-0bbb1111cccc0001",
+      "arn": null,
+      "name": "example-app-vpc",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "attributes": {
+        "cidr_blocks": [
+          "10.1.0.0/16"
+        ],
+        "is_default": false
+      }
+    },
+    {
+      "id": "vpc/111122223333/us-east-1/vpc-0bbb1111cccc0002",
+      "type": "vpc",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "vpc-0bbb1111cccc0002",
+      "arn": null,
+      "name": "example-db-vpc",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "attributes": {
+        "cidr_blocks": [
+          "10.2.0.0/16"
+        ],
+        "is_default": false
+      }
+    },
+    {
+      "id": "vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050",
+      "type": "vpc_peering_connection",
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "native_id": "pcx-0bbb1111cccc0050",
+      "arn": null,
+      "name": "example-app-db",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "attributes": {
+        "state": "active",
+        "requester_vpc_id": "vpc-0bbb1111cccc0001",
+        "requester_account_id": "111122223333",
+        "requester_region": "us-east-1",
+        "requester_cidr_blocks": [
+          "10.1.0.0/16"
+        ],
+        "accepter_vpc_id": "vpc-0bbb1111cccc0002",
+        "accepter_account_id": "111122223333",
+        "accepter_region": "us-east-1",
+        "accepter_cidr_blocks": [
+          "10.2.0.0/16"
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "association|route_table/111122223333/us-east-1/rtb-0bbb1111cccc0031|subnet/111122223333/us-east-1/subnet-0bbb1111cccc0011",
+      "type": "association",
+      "source": "route_table/111122223333/us-east-1/rtb-0bbb1111cccc0031",
+      "target": "subnet/111122223333/us-east-1/subnet-0bbb1111cccc0011",
+      "directed": false,
+      "partial": false,
+      "attributes": {
+        "state": "associated"
+      }
+    },
+    {
+      "id": "peering|vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050|vpc/111122223333/us-east-1/vpc-0bbb1111cccc0001|requester",
+      "type": "peering",
+      "source": "vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050",
+      "target": "vpc/111122223333/us-east-1/vpc-0bbb1111cccc0001",
+      "directed": false,
+      "partial": false,
+      "attributes": {
+        "state": "active",
+        "side": "requester"
+      }
+    },
+    {
+      "id": "peering|vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050|vpc/111122223333/us-east-1/vpc-0bbb1111cccc0002|accepter",
+      "type": "peering",
+      "source": "vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050",
+      "target": "vpc/111122223333/us-east-1/vpc-0bbb1111cccc0002",
+      "directed": false,
+      "partial": false,
+      "attributes": {
+        "state": "active",
+        "side": "accepter"
+      }
+    },
+    {
+      "id": "route|route_table/111122223333/us-east-1/rtb-0bbb1111cccc0030|vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050",
+      "type": "route",
+      "source": "route_table/111122223333/us-east-1/rtb-0bbb1111cccc0030",
+      "target": "vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050",
+      "directed": true,
+      "partial": false,
+      "attributes": {
+        "destinations": [
+          "10.2.0.0/16"
+        ],
+        "blackhole": false
+      }
+    },
+    {
+      "id": "route|route_table/111122223333/us-east-1/rtb-0bbb1111cccc0031|vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050",
+      "type": "route",
+      "source": "route_table/111122223333/us-east-1/rtb-0bbb1111cccc0031",
+      "target": "vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050",
+      "directed": true,
+      "partial": false,
+      "attributes": {
+        "destinations": [
+          "10.2.0.0/16"
+        ],
+        "blackhole": false
+      }
+    },
+    {
+      "id": "route|route_table/111122223333/us-east-1/rtb-0bbb1111cccc0040|vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050",
+      "type": "route",
+      "source": "route_table/111122223333/us-east-1/rtb-0bbb1111cccc0040",
+      "target": "vpc_peering_connection/111122223333/us-east-1/pcx-0bbb1111cccc0050",
+      "directed": true,
+      "partial": false,
+      "attributes": {
+        "destinations": [
+          "10.1.0.0/16"
+        ],
+        "blackhole": false
+      }
+    }
+  ],
+  "coverage": [
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "route_table",
+      "status": "ok",
+      "reason": null,
+      "item_count": 3
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "subnet",
+      "status": "ok",
+      "reason": null,
+      "item_count": 3
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "vpc",
+      "status": "ok",
+      "reason": null,
+      "item_count": 2
+    },
+    {
+      "account_id": "111122223333",
+      "region": "us-east-1",
+      "resource_type": "vpc_peering_connection",
+      "status": "ok",
+      "reason": null,
+      "item_count": 1
+    }
+  ]
+}

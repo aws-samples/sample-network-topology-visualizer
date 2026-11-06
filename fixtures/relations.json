@@ -1,0 +1,2353 @@
+{
+  "coverage": [
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "api_gateway",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "api_gateway_v2",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "auto_scaling_group",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "cloudfront",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "core_network",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "customer_gateway",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "direct_connect_connection",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "direct_connect_gateway",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "direct_connect_virtual_interface",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 3,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "ec2_instance",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "ec2_instance_connect_endpoint",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "ecs_service",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "eks_cluster",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 6,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "elastic_ip",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "elasticache_cluster",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "global_accelerator",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "internet_gateway",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "lambda_function",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 2,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "lattice_service",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "lattice_service_network",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 3,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "load_balancer",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "msk_cluster",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "nat_gateway",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "network_acl",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "network_firewall",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "opensearch_domain",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "rds_db_cluster",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 3,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "rds_db_instance",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 2,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "rds_db_proxy",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "route53_hosted_zone",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 3,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "route_table",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "sagemaker_domain",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "sagemaker_endpoint",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "sagemaker_notebook_instance",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "security_group",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 6,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "subnet",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "transit_gateway",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 5,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "transit_gateway_attachment",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "transit_gateway_route_table",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "vpc",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "vpc_endpoint",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "vpc_peering_connection",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 0,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "vpn_connection",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "vpn_gateway",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 2,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "waf_web_acl",
+      "status": "ok"
+    },
+    {
+      "account_id": "111122223333",
+      "item_count": 1,
+      "reason": null,
+      "region": "us-east-1",
+      "resource_type": "waf_web_acl_global",
+      "status": "ok"
+    }
+  ],
+  "edges": [
+    {
+      "attributes": {
+        "endpoint_region": "us-east-1",
+        "endpoint_type": "eip",
+        "listener_ports": [
+          "TCP 443"
+        ],
+        "via_eip": "eipalloc-0abc1234def70104"
+      },
+      "directed": true,
+      "id": "accelerator_endpoint|global_accelerator/111122223333/global/0a1b2c3d-1111-2222-3333-0abc1234def7|ec2_instance/111122223333/us-east-1/i-0abc1234def70002",
+      "partial": false,
+      "source": "global_accelerator/111122223333/global/0a1b2c3d-1111-2222-3333-0abc1234def7",
+      "target": "ec2_instance/111122223333/us-east-1/i-0abc1234def70002",
+      "type": "accelerator_endpoint"
+    },
+    {
+      "attributes": {
+        "endpoint_region": "us-east-1",
+        "endpoint_type": "lb",
+        "listener_ports": [
+          "TCP 443"
+        ]
+      },
+      "directed": true,
+      "id": "accelerator_endpoint|global_accelerator/111122223333/global/0a1b2c3d-1111-2222-3333-0abc1234def7|load_balancer/111122223333/us-east-1/pub-alb",
+      "partial": false,
+      "source": "global_accelerator/111122223333/global/0a1b2c3d-1111-2222-3333-0abc1234def7",
+      "target": "load_balancer/111122223333/us-east-1/pub-alb",
+      "type": "accelerator_endpoint"
+    },
+    {
+      "attributes": {
+        "state": "associated"
+      },
+      "directed": false,
+      "id": "association|route_table/111122223333/us-east-1/rtb-0rel1234abcd0071|subnet/111122223333/us-east-1/subnet-0rel1234abcd0011",
+      "partial": false,
+      "source": "route_table/111122223333/us-east-1/rtb-0rel1234abcd0071",
+      "target": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0011",
+      "type": "association"
+    },
+    {
+      "attributes": {
+        "state": "associated"
+      },
+      "directed": false,
+      "id": "association|route_table/111122223333/us-east-1/rtb-0rel1234abcd0071|subnet/111122223333/us-east-1/subnet-0rel1234abcd0012",
+      "partial": false,
+      "source": "route_table/111122223333/us-east-1/rtb-0rel1234abcd0071",
+      "target": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0012",
+      "type": "association"
+    },
+    {
+      "attributes": {
+        "state": "associated"
+      },
+      "directed": false,
+      "id": "association|route_table/111122223333/us-east-1/rtb-0rel1234abcd0072|subnet/111122223333/us-east-1/subnet-0rel1234abcd0021",
+      "partial": false,
+      "source": "route_table/111122223333/us-east-1/rtb-0rel1234abcd0072",
+      "target": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0021",
+      "type": "association"
+    },
+    {
+      "attributes": {
+        "state": "associated"
+      },
+      "directed": false,
+      "id": "association|route_table/111122223333/us-east-1/rtb-0rel1234abcd0072|subnet/111122223333/us-east-1/subnet-0rel1234abcd0022",
+      "partial": false,
+      "source": "route_table/111122223333/us-east-1/rtb-0rel1234abcd0072",
+      "target": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0022",
+      "type": "association"
+    },
+    {
+      "attributes": {
+        "state": "available"
+      },
+      "directed": false,
+      "id": "attachment|internet_gateway/111122223333/us-east-1/igw-0rel1234abcd0041|vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "source": "internet_gateway/111122223333/us-east-1/igw-0rel1234abcd0041",
+      "target": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "type": "attachment"
+    },
+    {
+      "attributes": {
+        "state": "available"
+      },
+      "directed": false,
+      "id": "attachment|transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0052|transit_gateway/111122223333/us-east-1/tgw-0rel1234abcd0051",
+      "partial": false,
+      "source": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0052",
+      "target": "transit_gateway/111122223333/us-east-1/tgw-0rel1234abcd0051",
+      "type": "attachment"
+    },
+    {
+      "attributes": {
+        "state": "available"
+      },
+      "directed": false,
+      "id": "attachment|transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0052|vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "source": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0052",
+      "target": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "type": "attachment"
+    },
+    {
+      "attributes": {
+        "state": "available"
+      },
+      "directed": false,
+      "id": "attachment|transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0053|transit_gateway/111122223333/us-east-1/tgw-0rel1234abcd0051",
+      "partial": false,
+      "source": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0053",
+      "target": "transit_gateway/111122223333/us-east-1/tgw-0rel1234abcd0051",
+      "type": "attachment"
+    },
+    {
+      "attributes": {
+        "state": "available"
+      },
+      "directed": false,
+      "id": "attachment|transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0054|direct_connect_gateway/111122223333/global/0d0e0f00-1111-2222-3333-0abc1234def7",
+      "partial": false,
+      "source": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0054",
+      "target": "direct_connect_gateway/111122223333/global/0d0e0f00-1111-2222-3333-0abc1234def7",
+      "type": "attachment"
+    },
+    {
+      "attributes": {
+        "state": "available"
+      },
+      "directed": false,
+      "id": "attachment|transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0054|transit_gateway/111122223333/us-east-1/tgw-0rel1234abcd0051",
+      "partial": false,
+      "source": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0054",
+      "target": "transit_gateway/111122223333/us-east-1/tgw-0rel1234abcd0051",
+      "type": "attachment"
+    },
+    {
+      "attributes": {
+        "state": "available"
+      },
+      "directed": false,
+      "id": "attachment|transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0055|transit_gateway/111122223333/us-east-1/tgw-0rel1234abcd0051",
+      "partial": false,
+      "source": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0055",
+      "target": "transit_gateway/111122223333/us-east-1/tgw-0rel1234abcd0051",
+      "type": "attachment"
+    },
+    {
+      "attributes": {
+        "state": "available"
+      },
+      "directed": false,
+      "id": "attachment|transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0056|transit_gateway/111122223333/us-east-1/tgw-0rel1234abcd0051",
+      "partial": false,
+      "source": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0056",
+      "target": "transit_gateway/111122223333/us-east-1/tgw-0rel1234abcd0051",
+      "type": "attachment"
+    },
+    {
+      "attributes": {
+        "state": "attached"
+      },
+      "directed": false,
+      "id": "attachment|vpn_gateway/111122223333/us-east-1/vgw-0rel1234abcd0061|vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "source": "vpn_gateway/111122223333/us-east-1/vgw-0rel1234abcd0061",
+      "target": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "type": "attachment"
+    },
+    {
+      "attributes": {
+        "state": "available"
+      },
+      "directed": true,
+      "id": "connect_transport|transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0053|transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0052",
+      "partial": false,
+      "source": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0053",
+      "target": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0052",
+      "type": "connect_transport"
+    },
+    {
+      "attributes": {
+        "state": "available"
+      },
+      "directed": true,
+      "id": "connect_transport|transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0055|transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0054",
+      "partial": false,
+      "source": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0055",
+      "target": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0054",
+      "type": "connect_transport"
+    },
+    {
+      "attributes": {
+        "attachment_ids": [
+          "attachment-0rel1234abcd0211"
+        ],
+        "edge_locations": [
+          "us-east-1"
+        ],
+        "segments": [
+          "prod"
+        ],
+        "state": "available"
+      },
+      "directed": false,
+      "id": "core_network_attachment|core_network/111122223333/global/core-network-0rel1234abcd0201|vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "source": "core_network/111122223333/global/core-network-0rel1234abcd0201",
+      "target": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "type": "core_network_attachment"
+    },
+    {
+      "attributes": {
+        "network_interface_id": "eni-0abc1234def70031",
+        "private_ip_address": "10.30.1.10"
+      },
+      "directed": true,
+      "id": "eip_association|elastic_ip/111122223333/us-east-1/eipalloc-0abc1234def70101|ec2_instance/111122223333/us-east-1/i-0abc1234def70001",
+      "partial": false,
+      "source": "elastic_ip/111122223333/us-east-1/eipalloc-0abc1234def70101",
+      "target": "ec2_instance/111122223333/us-east-1/i-0abc1234def70001",
+      "type": "eip_association"
+    },
+    {
+      "attributes": {
+        "network_interface_id": "eni-0abc1234def70021",
+        "private_ip_address": "10.30.2.50"
+      },
+      "directed": true,
+      "id": "eip_association|elastic_ip/111122223333/us-east-1/eipalloc-0abc1234def70102|nat_gateway/111122223333/us-east-1/nat-0abc1234def70011",
+      "partial": false,
+      "source": "elastic_ip/111122223333/us-east-1/eipalloc-0abc1234def70102",
+      "target": "nat_gateway/111122223333/us-east-1/nat-0abc1234def70011",
+      "type": "eip_association"
+    },
+    {
+      "attributes": {
+        "network_interface_id": "eni-0abc1234def70022",
+        "private_ip_address": "10.30.1.60"
+      },
+      "directed": true,
+      "id": "eip_association|elastic_ip/111122223333/us-east-1/eipalloc-0abc1234def70103|load_balancer/111122223333/us-east-1/pub-alb",
+      "partial": false,
+      "source": "elastic_ip/111122223333/us-east-1/eipalloc-0abc1234def70103",
+      "target": "load_balancer/111122223333/us-east-1/pub-alb",
+      "type": "eip_association"
+    },
+    {
+      "attributes": {
+        "network_interface_id": "eni-0abc1234def70032",
+        "private_ip_address": "10.30.1.11"
+      },
+      "directed": true,
+      "id": "eip_association|elastic_ip/111122223333/us-east-1/eipalloc-0abc1234def70104|ec2_instance/111122223333/us-east-1/i-0abc1234def70002",
+      "partial": false,
+      "source": "elastic_ip/111122223333/us-east-1/eipalloc-0abc1234def70104",
+      "target": "ec2_instance/111122223333/us-east-1/i-0abc1234def70002",
+      "type": "eip_association"
+    },
+    {
+      "attributes": {
+        "state": "active"
+      },
+      "directed": false,
+      "id": "lattice_service_association|lattice_service_network/111122223333/us-east-1/sn-0rel1234abcd0301|lattice_service/111122223333/us-east-1/svc-0rel1234abcd0311",
+      "partial": false,
+      "source": "lattice_service_network/111122223333/us-east-1/sn-0rel1234abcd0301",
+      "target": "lattice_service/111122223333/us-east-1/svc-0rel1234abcd0311",
+      "type": "lattice_service_association"
+    },
+    {
+      "attributes": {
+        "state": "active"
+      },
+      "directed": false,
+      "id": "lattice_service_association|lattice_service_network/111122223333/us-east-1/sn-0rel1234abcd0301|lattice_service/111122223333/us-east-1/svc-0rel1234abcd0312",
+      "partial": false,
+      "source": "lattice_service_network/111122223333/us-east-1/sn-0rel1234abcd0301",
+      "target": "lattice_service/111122223333/us-east-1/svc-0rel1234abcd0312",
+      "type": "lattice_service_association"
+    },
+    {
+      "attributes": {
+        "ports": [
+          8080
+        ],
+        "target_groups": [
+          "orders-ec2"
+        ],
+        "target_type": "instance"
+      },
+      "directed": true,
+      "id": "lattice_target|lattice_service/111122223333/us-east-1/svc-0rel1234abcd0311|ec2_instance/111122223333/us-east-1/i-0abc1234def70003",
+      "partial": false,
+      "source": "lattice_service/111122223333/us-east-1/svc-0rel1234abcd0311",
+      "target": "ec2_instance/111122223333/us-east-1/i-0abc1234def70003",
+      "type": "lattice_target"
+    },
+    {
+      "attributes": {
+        "ports": [],
+        "target_groups": [
+          "orders-fn"
+        ],
+        "target_type": "lambda"
+      },
+      "directed": true,
+      "id": "lattice_target|lattice_service/111122223333/us-east-1/svc-0rel1234abcd0311|lambda_function/111122223333/us-east-1/rel-fn",
+      "partial": false,
+      "source": "lattice_service/111122223333/us-east-1/svc-0rel1234abcd0311",
+      "target": "lambda_function/111122223333/us-east-1/rel-fn",
+      "type": "lattice_target"
+    },
+    {
+      "attributes": {
+        "ports": [
+          80
+        ],
+        "target_groups": [
+          "orders-alb"
+        ],
+        "target_type": "alb"
+      },
+      "directed": true,
+      "id": "lattice_target|lattice_service/111122223333/us-east-1/svc-0rel1234abcd0311|load_balancer/111122223333/us-east-1/int-alb",
+      "partial": false,
+      "source": "lattice_service/111122223333/us-east-1/svc-0rel1234abcd0311",
+      "target": "load_balancer/111122223333/us-east-1/int-alb",
+      "type": "lattice_target"
+    },
+    {
+      "attributes": {
+        "state": "active"
+      },
+      "directed": false,
+      "id": "lattice_vpc_association|lattice_service_network/111122223333/us-east-1/sn-0rel1234abcd0301|vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "source": "lattice_service_network/111122223333/us-east-1/sn-0rel1234abcd0301",
+      "target": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "type": "lattice_vpc_association"
+    },
+    {
+      "attributes": {
+        "state": "active"
+      },
+      "directed": false,
+      "id": "load_balancer_placement|load_balancer/111122223333/us-east-1/edge-nlb|subnet/111122223333/us-east-1/subnet-0rel1234abcd0021",
+      "partial": false,
+      "source": "load_balancer/111122223333/us-east-1/edge-nlb",
+      "target": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0021",
+      "type": "load_balancer_placement"
+    },
+    {
+      "attributes": {
+        "state": "active"
+      },
+      "directed": false,
+      "id": "load_balancer_placement|load_balancer/111122223333/us-east-1/edge-nlb|subnet/111122223333/us-east-1/subnet-0rel1234abcd0022",
+      "partial": false,
+      "source": "load_balancer/111122223333/us-east-1/edge-nlb",
+      "target": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0022",
+      "type": "load_balancer_placement"
+    },
+    {
+      "attributes": {
+        "state": "active"
+      },
+      "directed": false,
+      "id": "load_balancer_placement|load_balancer/111122223333/us-east-1/int-alb|subnet/111122223333/us-east-1/subnet-0rel1234abcd0021",
+      "partial": false,
+      "source": "load_balancer/111122223333/us-east-1/int-alb",
+      "target": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0021",
+      "type": "load_balancer_placement"
+    },
+    {
+      "attributes": {
+        "state": "active"
+      },
+      "directed": false,
+      "id": "load_balancer_placement|load_balancer/111122223333/us-east-1/int-alb|subnet/111122223333/us-east-1/subnet-0rel1234abcd0022",
+      "partial": false,
+      "source": "load_balancer/111122223333/us-east-1/int-alb",
+      "target": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0022",
+      "type": "load_balancer_placement"
+    },
+    {
+      "attributes": {
+        "state": "active"
+      },
+      "directed": false,
+      "id": "load_balancer_placement|load_balancer/111122223333/us-east-1/pub-alb|subnet/111122223333/us-east-1/subnet-0rel1234abcd0011",
+      "partial": false,
+      "source": "load_balancer/111122223333/us-east-1/pub-alb",
+      "target": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0011",
+      "type": "load_balancer_placement"
+    },
+    {
+      "attributes": {
+        "state": "active"
+      },
+      "directed": false,
+      "id": "load_balancer_placement|load_balancer/111122223333/us-east-1/pub-alb|subnet/111122223333/us-east-1/subnet-0rel1234abcd0012",
+      "partial": false,
+      "source": "load_balancer/111122223333/us-east-1/pub-alb",
+      "target": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0012",
+      "type": "load_balancer_placement"
+    },
+    {
+      "attributes": {
+        "ports": [
+          5432
+        ],
+        "target_type": "cluster"
+      },
+      "directed": true,
+      "id": "proxy_target|rds_db_proxy/111122223333/us-east-1/rel-proxy-aurora|rds_db_cluster/111122223333/us-east-1/rel-aurora",
+      "partial": false,
+      "source": "rds_db_proxy/111122223333/us-east-1/rel-proxy-aurora",
+      "target": "rds_db_cluster/111122223333/us-east-1/rel-aurora",
+      "type": "proxy_target"
+    },
+    {
+      "attributes": {
+        "ports": [
+          5432
+        ],
+        "target_type": "instance"
+      },
+      "directed": true,
+      "id": "proxy_target|rds_db_proxy/111122223333/us-east-1/rel-proxy-orders|rds_db_instance/111122223333/us-east-1/orders-db",
+      "partial": false,
+      "source": "rds_db_proxy/111122223333/us-east-1/rel-proxy-orders",
+      "target": "rds_db_instance/111122223333/us-east-1/orders-db",
+      "type": "proxy_target"
+    },
+    {
+      "attributes": {
+        "blackhole": false,
+        "blackhole_destinations": [],
+        "destinations": [
+          "0.0.0.0/0"
+        ]
+      },
+      "directed": true,
+      "id": "route|route_table/111122223333/us-east-1/rtb-0rel1234abcd0071|internet_gateway/111122223333/us-east-1/igw-0rel1234abcd0041",
+      "partial": false,
+      "source": "route_table/111122223333/us-east-1/rtb-0rel1234abcd0071",
+      "target": "internet_gateway/111122223333/us-east-1/igw-0rel1234abcd0041",
+      "type": "route"
+    },
+    {
+      "attributes": {
+        "blackhole": false,
+        "blackhole_destinations": [],
+        "destinations": [
+          "10.200.0.0/16"
+        ]
+      },
+      "directed": true,
+      "id": "route|route_table/111122223333/us-east-1/rtb-0rel1234abcd0072|core_network/111122223333/global/core-network-0rel1234abcd0201",
+      "partial": false,
+      "source": "route_table/111122223333/us-east-1/rtb-0rel1234abcd0072",
+      "target": "core_network/111122223333/global/core-network-0rel1234abcd0201",
+      "type": "route"
+    },
+    {
+      "attributes": {
+        "blackhole": false,
+        "blackhole_destinations": [],
+        "destinations": [
+          "pl-0rel1234abcd0103"
+        ]
+      },
+      "directed": true,
+      "id": "route|route_table/111122223333/us-east-1/rtb-0rel1234abcd0072|transit_gateway/111122223333/us-east-1/tgw-0rel1234abcd0051",
+      "partial": false,
+      "source": "route_table/111122223333/us-east-1/rtb-0rel1234abcd0072",
+      "target": "transit_gateway/111122223333/us-east-1/tgw-0rel1234abcd0051",
+      "type": "route"
+    },
+    {
+      "attributes": {
+        "blackhole": false,
+        "blackhole_destinations": [],
+        "destinations": [
+          "pl-0rel1234abcd0101"
+        ]
+      },
+      "directed": true,
+      "id": "route|route_table/111122223333/us-east-1/rtb-0rel1234abcd0072|vpc_endpoint/111122223333/us-east-1/vpce-0rel1234abcd0081",
+      "partial": false,
+      "source": "route_table/111122223333/us-east-1/rtb-0rel1234abcd0072",
+      "target": "vpc_endpoint/111122223333/us-east-1/vpce-0rel1234abcd0081",
+      "type": "route"
+    },
+    {
+      "attributes": {
+        "blackhole": false,
+        "blackhole_destinations": [],
+        "destinations": [
+          "pl-0rel1234abcd0102"
+        ]
+      },
+      "directed": true,
+      "id": "route|route_table/111122223333/us-east-1/rtb-0rel1234abcd0072|vpn_gateway/111122223333/us-east-1/vgw-0rel1234abcd0061",
+      "partial": false,
+      "source": "route_table/111122223333/us-east-1/rtb-0rel1234abcd0072",
+      "target": "vpn_gateway/111122223333/us-east-1/vgw-0rel1234abcd0061",
+      "type": "route"
+    },
+    {
+      "attributes": {
+        "blackhole": false,
+        "blackhole_destinations": [],
+        "destinations": [
+          "0.0.0.0/0"
+        ]
+      },
+      "directed": true,
+      "id": "route|route_table/111122223333/us-east-1/rtb-0rel1234abcd0073|nat_gateway/111122223333/us-east-1/nat-0abc1234def70011",
+      "partial": false,
+      "source": "route_table/111122223333/us-east-1/rtb-0rel1234abcd0073",
+      "target": "nat_gateway/111122223333/us-east-1/nat-0abc1234def70011",
+      "type": "route"
+    },
+    {
+      "attributes": {
+        "blackhole": false,
+        "blackhole_destinations": [],
+        "destinations": [
+          "pl-0rel1234abcd0101"
+        ]
+      },
+      "directed": true,
+      "id": "route|route_table/111122223333/us-east-1/rtb-0rel1234abcd0073|vpc_endpoint/111122223333/us-east-1/vpce-0rel1234abcd0081",
+      "partial": false,
+      "source": "route_table/111122223333/us-east-1/rtb-0rel1234abcd0073",
+      "target": "vpc_endpoint/111122223333/us-east-1/vpce-0rel1234abcd0081",
+      "type": "route"
+    },
+    {
+      "attributes": {
+        "vpc_link_ids": [
+          "vl0abc1"
+        ],
+        "vpc_link_names": [
+          "orders-link"
+        ]
+      },
+      "directed": true,
+      "id": "vpc_link|api_gateway/111122223333/us-east-1/a1b2c3d4e5|load_balancer/111122223333/us-east-1/edge-nlb",
+      "partial": false,
+      "source": "api_gateway/111122223333/us-east-1/a1b2c3d4e5",
+      "target": "load_balancer/111122223333/us-east-1/edge-nlb",
+      "type": "vpc_link"
+    },
+    {
+      "attributes": {
+        "vpc_link_ids": [
+          "v2l0abc1"
+        ],
+        "vpc_link_names": [
+          "web-link"
+        ]
+      },
+      "directed": true,
+      "id": "vpc_link|api_gateway/111122223333/us-east-1/f6e5d4c3b2|load_balancer/111122223333/us-east-1/int-alb",
+      "partial": false,
+      "source": "api_gateway/111122223333/us-east-1/f6e5d4c3b2",
+      "target": "load_balancer/111122223333/us-east-1/int-alb",
+      "type": "vpc_link"
+    },
+    {
+      "attributes": {
+        "stages": [
+          "beta",
+          "prod"
+        ]
+      },
+      "directed": true,
+      "id": "waf_protection|waf_web_acl/111122223333/us-east-1/0rel1234-aaaa-bbbb-cccc-0rel0waf0401|api_gateway/111122223333/us-east-1/a1b2c3d4e5",
+      "partial": false,
+      "source": "waf_web_acl/111122223333/us-east-1/0rel1234-aaaa-bbbb-cccc-0rel0waf0401",
+      "target": "api_gateway/111122223333/us-east-1/a1b2c3d4e5",
+      "type": "waf_protection"
+    },
+    {
+      "attributes": {},
+      "directed": true,
+      "id": "waf_protection|waf_web_acl/111122223333/us-east-1/0rel1234-aaaa-bbbb-cccc-0rel0waf0401|load_balancer/111122223333/us-east-1/pub-alb",
+      "partial": false,
+      "source": "waf_web_acl/111122223333/us-east-1/0rel1234-aaaa-bbbb-cccc-0rel0waf0401",
+      "target": "load_balancer/111122223333/us-east-1/pub-alb",
+      "type": "waf_protection"
+    }
+  ],
+  "nodes": [
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {},
+      "id": "account/111122223333",
+      "name": null,
+      "native_id": null,
+      "parent_id": null,
+      "partial": false,
+      "region": null,
+      "type": "account"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "endpoint_types": [
+          "REGIONAL"
+        ],
+        "protocol": "REST",
+        "unresolved_vpc_links": [
+          "${stageVariables.vpcLinkId} stage_variable"
+        ],
+        "vpc_link_ids": [
+          "${stageVariables.vpcLinkId}",
+          "vl0abc1"
+        ]
+      },
+      "id": "api_gateway/111122223333/us-east-1/a1b2c3d4e5",
+      "name": "orders-api",
+      "native_id": "a1b2c3d4e5",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "team": "orders"
+      },
+      "type": "api_gateway"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "protocol": "HTTP",
+        "unresolved_vpc_links": [
+          "srv-0abc1234def70201 cloud_map"
+        ],
+        "vpc_link_ids": [
+          "v2l0abc1"
+        ]
+      },
+      "id": "api_gateway/111122223333/us-east-1/f6e5d4c3b2",
+      "name": "web-http",
+      "native_id": "f6e5d4c3b2",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "api_gateway"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:networkmanager::111122223333:core-network/core-network-0rel1234abcd0201",
+      "attributes": {
+        "attachment_count": 4,
+        "description": "rel core network",
+        "edge_locations": [
+          "eu-west-1",
+          "us-east-1"
+        ],
+        "global_network_id": "global-network-0rel1234abcd0200",
+        "other_attachments": [
+          "attachment-0rel1234abcd0214 connect us-east-1"
+        ],
+        "unresolved_attachments": [
+          "vpc-0rel1234abcd0091 not_in_scope eu-west-1",
+          "vpc-0rel1234abcd0092 not_collected"
+        ],
+        "unresolved_refs": [
+          "vpc-0rel1234abcd0092"
+        ]
+      },
+      "id": "core_network/111122223333/global/core-network-0rel1234abcd0201",
+      "name": "rel-core",
+      "native_id": "core-network-0rel1234abcd0201",
+      "parent_id": "account/111122223333",
+      "partial": false,
+      "region": null,
+      "tags": {
+        "Name": "rel-core"
+      },
+      "type": "core_network"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "amazon_side_asn": 64520,
+        "associated_account_ids": [],
+        "associated_regions": [],
+        "associated_transit_gateway_ids": [],
+        "associated_virtual_private_gateway_ids": [],
+        "gateway_associations": [],
+        "state": "available"
+      },
+      "id": "direct_connect_gateway/111122223333/global/0d0e0f00-1111-2222-3333-0abc1234def7",
+      "name": "rel-dxgw",
+      "native_id": "0d0e0f00-1111-2222-3333-0abc1234def7",
+      "parent_id": "account/111122223333",
+      "partial": false,
+      "region": null,
+      "type": "direct_connect_gateway"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "availability_zone": "us-east-1a",
+        "instance_type": "t4g.nano",
+        "private_ip_address": "10.30.1.10",
+        "security_group_ids": [
+          "sg-0abc1234def70301"
+        ],
+        "state": "running"
+      },
+      "id": "ec2_instance/111122223333/us-east-1/i-0abc1234def70001",
+      "name": "bastion",
+      "native_id": "i-0abc1234def70001",
+      "parent_id": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0011",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "bastion"
+      },
+      "type": "ec2_instance"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "availability_zone": "us-east-1a",
+        "instance_type": "t4g.nano",
+        "private_ip_address": "10.30.1.11",
+        "security_group_ids": [
+          "sg-0abc1234def70301"
+        ],
+        "state": "running"
+      },
+      "id": "ec2_instance/111122223333/us-east-1/i-0abc1234def70002",
+      "name": "game-1",
+      "native_id": "i-0abc1234def70002",
+      "parent_id": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0011",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "game-1"
+      },
+      "type": "ec2_instance"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "availability_zone": "us-east-1a",
+        "instance_type": "t4g.nano",
+        "private_ip_address": "10.30.11.10",
+        "security_group_ids": [
+          "sg-0abc1234def70301"
+        ],
+        "state": "running"
+      },
+      "id": "ec2_instance/111122223333/us-east-1/i-0abc1234def70003",
+      "name": "app-1",
+      "native_id": "i-0abc1234def70003",
+      "parent_id": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0021",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "app-1"
+      },
+      "type": "ec2_instance"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "associated": true,
+        "domain": "vpc",
+        "instance_id": "i-0abc1234def70001",
+        "network_border_group": "us-east-1",
+        "network_interface_id": "eni-0abc1234def70031",
+        "private_ip_address": "10.30.1.10",
+        "public_ip": "198.51.100.31",
+        "public_ipv4_pool": "amazon"
+      },
+      "id": "elastic_ip/111122223333/us-east-1/eipalloc-0abc1234def70101",
+      "name": "bastion-eip",
+      "native_id": "eipalloc-0abc1234def70101",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "bastion-eip"
+      },
+      "type": "elastic_ip"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "associated": true,
+        "domain": "vpc",
+        "network_border_group": "us-east-1",
+        "network_interface_id": "eni-0abc1234def70021",
+        "private_ip_address": "10.30.2.50",
+        "public_ip": "198.51.100.32",
+        "public_ipv4_pool": "amazon"
+      },
+      "id": "elastic_ip/111122223333/us-east-1/eipalloc-0abc1234def70102",
+      "name": null,
+      "native_id": "eipalloc-0abc1234def70102",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "elastic_ip"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "associated": true,
+        "domain": "vpc",
+        "network_border_group": "us-east-1",
+        "network_interface_id": "eni-0abc1234def70022",
+        "private_ip_address": "10.30.1.60",
+        "public_ip": "198.51.100.33",
+        "public_ipv4_pool": "amazon",
+        "service_managed": "alb"
+      },
+      "id": "elastic_ip/111122223333/us-east-1/eipalloc-0abc1234def70103",
+      "name": null,
+      "native_id": "eipalloc-0abc1234def70103",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "elastic_ip"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "associated": true,
+        "domain": "vpc",
+        "instance_id": "i-0abc1234def70002",
+        "network_border_group": "us-east-1",
+        "network_interface_id": "eni-0abc1234def70032",
+        "private_ip_address": "10.30.1.11",
+        "public_ip": "198.51.100.34",
+        "public_ipv4_pool": "amazon"
+      },
+      "id": "elastic_ip/111122223333/us-east-1/eipalloc-0abc1234def70104",
+      "name": null,
+      "native_id": "eipalloc-0abc1234def70104",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "elastic_ip"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "associated": false,
+        "domain": "vpc",
+        "network_border_group": "us-east-1",
+        "public_ip": "198.51.100.35",
+        "public_ipv4_pool": "amazon"
+      },
+      "id": "elastic_ip/111122223333/us-east-1/eipalloc-0abc1234def70105",
+      "name": "spare-eip",
+      "native_id": "eipalloc-0abc1234def70105",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "spare-eip"
+      },
+      "type": "elastic_ip"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "associated": true,
+        "association_unresolved": "eni-0abc1234def70029 no_eni",
+        "domain": "vpc",
+        "network_border_group": "us-east-1",
+        "network_interface_id": "eni-0abc1234def70029",
+        "private_ip_address": "10.30.12.99",
+        "public_ip": "198.51.100.36",
+        "public_ipv4_pool": "amazon"
+      },
+      "id": "elastic_ip/111122223333/us-east-1/eipalloc-0abc1234def70106",
+      "name": null,
+      "native_id": "eipalloc-0abc1234def70106",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "elastic_ip"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:globalaccelerator::111122223333:accelerator/0a1b2c3d-1111-2222-3333-0abc1234def7",
+      "attributes": {
+        "dns_name": "a0abc1234def7.awsglobalaccelerator.com",
+        "empty_endpoint_regions": [
+          "eu-west-2"
+        ],
+        "enabled": true,
+        "endpoint_regions": [
+          "eu-west-1",
+          "us-east-1"
+        ],
+        "endpoint_targets": [
+          "eu-west-1 alb eu-alb",
+          "us-east-1 alb pub-alb",
+          "us-east-1 eip eipalloc-0abc1234def70104",
+          "us-east-1 nlb retired-nlb"
+        ],
+        "ip_address_type": "IPV4",
+        "listener_ports": [
+          "TCP 443"
+        ],
+        "static_ips": [
+          "192.0.2.10",
+          "192.0.2.11"
+        ],
+        "unresolved_endpoints": [
+          "eu-alb not_in_scope eu-west-1",
+          "retired-nlb not_collected"
+        ],
+        "unresolved_refs": [
+          "retired-nlb"
+        ]
+      },
+      "id": "global_accelerator/111122223333/global/0a1b2c3d-1111-2222-3333-0abc1234def7",
+      "name": "rel-ga",
+      "native_id": "0a1b2c3d-1111-2222-3333-0abc1234def7",
+      "parent_id": "account/111122223333",
+      "partial": false,
+      "region": null,
+      "type": "global_accelerator"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "attached_vpc_ids": [
+          "vpc-0rel1234abcd0001"
+        ],
+        "state": "attached"
+      },
+      "id": "internet_gateway/111122223333/us-east-1/igw-0rel1234abcd0041",
+      "name": "rel-igw",
+      "native_id": "igw-0rel1234abcd0041",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-igw"
+      },
+      "type": "internet_gateway"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:lambda:us-east-1:111122223333:function:rel-fn",
+      "attributes": {
+        "function_name": "rel-fn",
+        "runtime": "python3.12",
+        "security_group_ids": [],
+        "subnet_ids": []
+      },
+      "id": "lambda_function/111122223333/us-east-1/rel-fn",
+      "name": "rel-fn",
+      "native_id": "rel-fn",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "lambda_function"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:vpc-lattice:us-east-1:111122223333:service/svc-0rel1234abcd0311",
+      "attributes": {
+        "dns_name": "orders-svc-0rel1234abcd0311.7d67968.vpc-lattice-svcs.us-east-1.on.aws",
+        "target_groups": [
+          "orders-alb alb HTTP 80",
+          "orders-ec2 instance HTTP 8080",
+          "orders-fn lambda - -",
+          "orders-ip ip HTTP 8080"
+        ],
+        "unresolved_lattice_targets": [
+          "10.30.11.99 ip_target",
+          "i-0abc1234def70099 not_collected"
+        ],
+        "unresolved_refs": [
+          "i-0abc1234def70099"
+        ]
+      },
+      "id": "lattice_service/111122223333/us-east-1/svc-0rel1234abcd0311",
+      "name": "orders-svc",
+      "native_id": "svc-0rel1234abcd0311",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "lattice_service"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:vpc-lattice:us-east-1:111122223333:service/svc-0rel1234abcd0312",
+      "attributes": {
+        "dns_name": "status-svc-0rel1234abcd0312.7d67968.vpc-lattice-svcs.us-east-1.on.aws",
+        "empty_target_groups": [
+          "status-empty"
+        ],
+        "target_groups": [
+          "status-empty instance HTTP 80"
+        ]
+      },
+      "id": "lattice_service/111122223333/us-east-1/svc-0rel1234abcd0312",
+      "name": "status-svc",
+      "native_id": "svc-0rel1234abcd0312",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "lattice_service"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:vpc-lattice:us-east-1:111122223333:servicenetwork/sn-0rel1234abcd0301",
+      "attributes": {
+        "service_association_count": 3,
+        "unresolved_refs": [
+          "partner-svc",
+          "vpc-0rel1234abcd0093"
+        ],
+        "unresolved_service_associations": [
+          "partner-svc not_collected"
+        ],
+        "unresolved_vpc_associations": [
+          "vpc-0rel1234abcd0093 not_collected"
+        ],
+        "vpc_association_count": 2
+      },
+      "id": "lattice_service_network/111122223333/us-east-1/sn-0rel1234abcd0301",
+      "name": "rel-sn",
+      "native_id": "sn-0rel1234abcd0301",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "lattice_service_network"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/net/edge-nlb/0a1b2c3d4e5f6002",
+      "attributes": {
+        "availability_zones": [
+          "us-east-1a",
+          "us-east-1b"
+        ],
+        "dns_name": "edge-nlb-1234567890.us-east-1.elb.amazonaws.com",
+        "endpoint_service_names": [],
+        "listener_details": [
+          "TCP\t443\t\t\t\t"
+        ],
+        "listeners": [
+          "TCP:443"
+        ],
+        "load_balancer_type": "network",
+        "registered_target_count": 0,
+        "scheme": "internal",
+        "security_group_ids": [],
+        "state": "active",
+        "subnet_ids": [
+          "subnet-0rel1234abcd0021",
+          "subnet-0rel1234abcd0022"
+        ],
+        "target_group_details": [],
+        "target_group_registered_target_counts": [],
+        "target_groups": []
+      },
+      "id": "load_balancer/111122223333/us-east-1/edge-nlb",
+      "name": "edge-nlb",
+      "native_id": "edge-nlb",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "load_balancer"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/int-alb/0a1b2c3d4e5f6003",
+      "attributes": {
+        "availability_zones": [
+          "us-east-1a",
+          "us-east-1b"
+        ],
+        "dns_name": "int-alb-1234567890.us-east-1.elb.amazonaws.com",
+        "listener_details": [
+          "HTTP\t80\t\t0\t\t"
+        ],
+        "listeners": [
+          "HTTP:80"
+        ],
+        "load_balancer_type": "application",
+        "registered_target_count": 0,
+        "scheme": "internal",
+        "security_group_ids": [
+          "sg-0abc1234def70301"
+        ],
+        "state": "active",
+        "subnet_ids": [
+          "subnet-0rel1234abcd0021",
+          "subnet-0rel1234abcd0022"
+        ],
+        "target_group_details": [],
+        "target_group_registered_target_counts": [],
+        "target_groups": [],
+        "web_acl_arn": null
+      },
+      "id": "load_balancer/111122223333/us-east-1/int-alb",
+      "name": "int-alb",
+      "native_id": "int-alb",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "load_balancer"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:elasticloadbalancing:us-east-1:111122223333:loadbalancer/app/pub-alb/0a1b2c3d4e5f6001",
+      "attributes": {
+        "availability_zones": [
+          "us-east-1a",
+          "us-east-1b"
+        ],
+        "dns_name": "pub-alb-1234567890.us-east-1.elb.amazonaws.com",
+        "listener_details": [
+          "HTTPS\t443\t\t0\t\t"
+        ],
+        "listeners": [
+          "HTTPS:443"
+        ],
+        "load_balancer_type": "application",
+        "registered_target_count": 0,
+        "scheme": "internet-facing",
+        "security_group_ids": [
+          "sg-0abc1234def70301"
+        ],
+        "state": "active",
+        "subnet_ids": [
+          "subnet-0rel1234abcd0011",
+          "subnet-0rel1234abcd0012"
+        ],
+        "target_group_details": [],
+        "target_group_registered_target_counts": [],
+        "target_groups": [],
+        "web_acl_arn": "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/rel-waf-edge/0rel1234-aaaa-bbbb-cccc-0rel0waf0401"
+      },
+      "id": "load_balancer/111122223333/us-east-1/pub-alb",
+      "name": "pub-alb",
+      "native_id": "pub-alb",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "load_balancer"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "addresses": [
+          "198.51.100.32\t10.30.2.50\teni-0abc1234def70021\teipalloc-0abc1234def70102\tfalse"
+        ],
+        "connectivity_type": "public",
+        "public_ips": [
+          "198.51.100.32"
+        ],
+        "state": "available"
+      },
+      "id": "nat_gateway/111122223333/us-east-1/nat-0abc1234def70011",
+      "name": "rel-nat",
+      "native_id": "nat-0abc1234def70011",
+      "parent_id": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0012",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-nat"
+      },
+      "type": "nat_gateway"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:rds:us-east-1:111122223333:cluster:rel-aurora",
+      "attributes": {
+        "availability_zones": [
+          "us-east-1a",
+          "us-east-1b"
+        ],
+        "endpoint": "rel-aurora.cluster-x.us-east-1.rds.amazonaws.com",
+        "engine": "aurora-postgresql",
+        "engine_mode": "provisioned",
+        "engine_version": "16.4",
+        "member_instance_ids": [
+          "rel-aurora-1",
+          "rel-aurora-2"
+        ],
+        "multi_az": false,
+        "port": 5432,
+        "reader_endpoint": null,
+        "security_group_ids": [
+          "sg-0abc1234def70302"
+        ],
+        "storage_encrypted": true,
+        "subnet_group_name": "rel-db",
+        "subnet_group_subnet_ids": [
+          "subnet-0rel1234abcd0031",
+          "subnet-0rel1234abcd0032"
+        ]
+      },
+      "id": "rds_db_cluster/111122223333/us-east-1/rel-aurora",
+      "name": "rel-aurora",
+      "native_id": "rel-aurora",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "rds_db_cluster"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:rds:us-east-1:111122223333:db:orders-db",
+      "attributes": {
+        "availability_zone": "us-east-1a",
+        "engine": "postgres",
+        "instance_class": "db.t4g.micro",
+        "multi_az": false,
+        "publicly_accessible": false,
+        "security_group_ids": [
+          "sg-0abc1234def70302"
+        ],
+        "subnet_group_name": "rel-db",
+        "subnet_group_subnet_ids": [
+          "subnet-0rel1234abcd0031",
+          "subnet-0rel1234abcd0032"
+        ]
+      },
+      "id": "rds_db_instance/111122223333/us-east-1/orders-db",
+      "name": "orders-db",
+      "native_id": "orders-db",
+      "parent_id": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0031",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "rds_db_instance"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:rds:us-east-1:111122223333:db:rel-aurora-1",
+      "attributes": {
+        "availability_zone": "us-east-1a",
+        "db_cluster_identifier": "rel-aurora",
+        "engine": "aurora-postgresql",
+        "instance_class": "db.t4g.micro",
+        "multi_az": false,
+        "publicly_accessible": false,
+        "security_group_ids": [
+          "sg-0abc1234def70302"
+        ],
+        "subnet_group_name": "rel-db",
+        "subnet_group_subnet_ids": [
+          "subnet-0rel1234abcd0031",
+          "subnet-0rel1234abcd0032"
+        ]
+      },
+      "id": "rds_db_instance/111122223333/us-east-1/rel-aurora-1",
+      "name": "rel-aurora-1",
+      "native_id": "rel-aurora-1",
+      "parent_id": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0031",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "rds_db_instance"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:rds:us-east-1:111122223333:db:rel-aurora-2",
+      "attributes": {
+        "availability_zone": "us-east-1b",
+        "db_cluster_identifier": "rel-aurora",
+        "engine": "aurora-postgresql",
+        "instance_class": "db.t4g.micro",
+        "multi_az": false,
+        "publicly_accessible": false,
+        "security_group_ids": [
+          "sg-0abc1234def70302"
+        ],
+        "subnet_group_name": "rel-db",
+        "subnet_group_subnet_ids": [
+          "subnet-0rel1234abcd0031",
+          "subnet-0rel1234abcd0032"
+        ]
+      },
+      "id": "rds_db_instance/111122223333/us-east-1/rel-aurora-2",
+      "name": "rel-aurora-2",
+      "native_id": "rel-aurora-2",
+      "parent_id": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0032",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "rds_db_instance"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:rds:us-east-1:111122223333:db-proxy:prx-0abc1234def72",
+      "attributes": {
+        "endpoint": "rel-proxy-aurora.proxy-x.us-east-1.rds.amazonaws.com",
+        "engine_family": "POSTGRESQL",
+        "idle_client_timeout": 1800,
+        "require_tls": true,
+        "security_group_ids": [
+          "sg-0abc1234def70302"
+        ],
+        "subnet_ids": [
+          "subnet-0rel1234abcd0031",
+          "subnet-0rel1234abcd0032"
+        ],
+        "target_count": 3,
+        "target_instance_ids": [
+          "rel-aurora-1",
+          "rel-aurora-2"
+        ]
+      },
+      "id": "rds_db_proxy/111122223333/us-east-1/rel-proxy-aurora",
+      "name": "rel-proxy-aurora",
+      "native_id": "rel-proxy-aurora",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "rds_db_proxy"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:rds:us-east-1:111122223333:db-proxy:prx-0abc1234def71",
+      "attributes": {
+        "endpoint": "rel-proxy-orders.proxy-x.us-east-1.rds.amazonaws.com",
+        "engine_family": "POSTGRESQL",
+        "idle_client_timeout": 1800,
+        "require_tls": true,
+        "security_group_ids": [
+          "sg-0abc1234def70302"
+        ],
+        "subnet_ids": [
+          "subnet-0rel1234abcd0031"
+        ],
+        "target_count": 2,
+        "unresolved_proxy_targets": [
+          "legacy-db not_collected"
+        ],
+        "unresolved_refs": [
+          "legacy-db"
+        ]
+      },
+      "id": "rds_db_proxy/111122223333/us-east-1/rel-proxy-orders",
+      "name": "rel-proxy-orders",
+      "native_id": "rel-proxy-orders",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "rds_db_proxy"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {},
+      "id": "region/111122223333/us-east-1",
+      "name": "us-east-1",
+      "native_id": null,
+      "parent_id": "account/111122223333",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "region"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "association_count": 2,
+        "edge_association_gateway_ids": [],
+        "ipv4_route_count": 2,
+        "ipv6_route_count": 0,
+        "main": false,
+        "propagated_route_count": 0,
+        "propagating_vgw_ids": [],
+        "route_count": 2,
+        "routes": [
+          "0.0.0.0/0 igw-0rel1234abcd0041 active -",
+          "10.30.0.0/16 local active -"
+        ]
+      },
+      "id": "route_table/111122223333/us-east-1/rtb-0rel1234abcd0071",
+      "name": "rel-public-rt",
+      "native_id": "rtb-0rel1234abcd0071",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-public-rt"
+      },
+      "type": "route_table"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "association_count": 2,
+        "edge_association_gateway_ids": [],
+        "ipv4_route_count": 5,
+        "ipv6_route_count": 0,
+        "main": false,
+        "prefix_list_entries": [
+          "pl-0rel1234abcd0102 192.168.10.0/24",
+          "pl-0rel1234abcd0102 192.168.20.0/24"
+        ],
+        "prefix_list_entries_unread": [
+          "pl-0rel1234abcd0103"
+        ],
+        "prefix_lists": [
+          "pl-0rel1234abcd0101 aws com.amazonaws.us-east-1.s3",
+          "pl-0rel1234abcd0102 customer corp-onprem",
+          "pl-0rel1234abcd0103 customer partner-nets"
+        ],
+        "propagated_route_count": 0,
+        "propagating_vgw_ids": [],
+        "route_count": 5,
+        "routes": [
+          "10.200.0.0/16 core-network-0rel1234abcd0201 active -",
+          "10.30.0.0/16 local active -",
+          "pl-0rel1234abcd0101 vpce-0rel1234abcd0081 active -",
+          "pl-0rel1234abcd0102 vgw-0rel1234abcd0061 active -",
+          "pl-0rel1234abcd0103 tgw-0rel1234abcd0051 active -"
+        ]
+      },
+      "id": "route_table/111122223333/us-east-1/rtb-0rel1234abcd0072",
+      "name": "rel-app-rt",
+      "native_id": "rtb-0rel1234abcd0072",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": true,
+      "partial_reasons": [
+        {
+          "api": "ec2:GetManagedPrefixListEntries",
+          "code": "access_denied",
+          "message": "An error occurred (UnauthorizedOperation) when calling the GetManagedPrefixListEntries operation: 재현용 오류"
+        }
+      ],
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-app-rt"
+      },
+      "type": "route_table"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "association_count": 1,
+        "edge_association_gateway_ids": [],
+        "ipv4_route_count": 3,
+        "ipv6_route_count": 0,
+        "main": true,
+        "prefix_lists": [
+          "pl-0rel1234abcd0101 aws com.amazonaws.us-east-1.s3"
+        ],
+        "propagated_route_count": 0,
+        "propagating_vgw_ids": [],
+        "route_count": 3,
+        "routes": [
+          "0.0.0.0/0 nat-0abc1234def70011 active -",
+          "10.30.0.0/16 local active -",
+          "pl-0rel1234abcd0101 vpce-0rel1234abcd0081 active -"
+        ]
+      },
+      "id": "route_table/111122223333/us-east-1/rtb-0rel1234abcd0073",
+      "name": "rel-data-rt",
+      "native_id": "rtb-0rel1234abcd0073",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-data-rt"
+      },
+      "type": "route_table"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "availability_zone": "us-east-1a",
+        "availability_zone_id": "use1-az1",
+        "cidr_block": "10.30.1.0/24",
+        "map_public_ip_on_launch": true,
+        "state": "available"
+      },
+      "id": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0011",
+      "name": "rel-pub-a",
+      "native_id": "subnet-0rel1234abcd0011",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-pub-a"
+      },
+      "type": "subnet"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "availability_zone": "us-east-1b",
+        "availability_zone_id": "use1-az2",
+        "cidr_block": "10.30.2.0/24",
+        "map_public_ip_on_launch": true,
+        "state": "available"
+      },
+      "id": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0012",
+      "name": "rel-pub-b",
+      "native_id": "subnet-0rel1234abcd0012",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-pub-b"
+      },
+      "type": "subnet"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "availability_zone": "us-east-1a",
+        "availability_zone_id": "use1-az1",
+        "cidr_block": "10.30.11.0/24",
+        "map_public_ip_on_launch": false,
+        "state": "available"
+      },
+      "id": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0021",
+      "name": "rel-app-a",
+      "native_id": "subnet-0rel1234abcd0021",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-app-a"
+      },
+      "type": "subnet"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "availability_zone": "us-east-1b",
+        "availability_zone_id": "use1-az2",
+        "cidr_block": "10.30.12.0/24",
+        "map_public_ip_on_launch": false,
+        "state": "available"
+      },
+      "id": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0022",
+      "name": "rel-app-b",
+      "native_id": "subnet-0rel1234abcd0022",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-app-b"
+      },
+      "type": "subnet"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "availability_zone": "us-east-1a",
+        "availability_zone_id": "use1-az1",
+        "cidr_block": "10.30.21.0/24",
+        "map_public_ip_on_launch": false,
+        "state": "available"
+      },
+      "id": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0031",
+      "name": "rel-data-a",
+      "native_id": "subnet-0rel1234abcd0031",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-data-a"
+      },
+      "type": "subnet"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "availability_zone": "us-east-1b",
+        "availability_zone_id": "use1-az2",
+        "cidr_block": "10.30.22.0/24",
+        "map_public_ip_on_launch": false,
+        "state": "available"
+      },
+      "id": "subnet/111122223333/us-east-1/subnet-0rel1234abcd0032",
+      "name": "rel-data-b",
+      "native_id": "subnet-0rel1234abcd0032",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-data-b"
+      },
+      "type": "subnet"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:ec2:us-east-1:111122223333:transit-gateway/tgw-0rel1234abcd0051",
+      "attributes": {
+        "amazon_side_asn": 64512,
+        "default_route_table_association": "",
+        "state": "available"
+      },
+      "id": "transit_gateway/111122223333/us-east-1/tgw-0rel1234abcd0051",
+      "name": "rel-tgw",
+      "native_id": "tgw-0rel1234abcd0051",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-tgw"
+      },
+      "type": "transit_gateway"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "resource_id": "vpc-0rel1234abcd0001",
+        "resource_owner_id": "111122223333",
+        "resource_type": "vpc",
+        "state": "available",
+        "transit_gateway_id": "tgw-0rel1234abcd0051",
+        "transit_gateway_owner_id": "111122223333"
+      },
+      "id": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0052",
+      "name": null,
+      "native_id": "tgw-attach-0rel1234abcd0052",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "transit_gateway_attachment"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "connect_peers": [
+          "tgw-connect-peer-0rel1234abcd0061 gre 10.99.0.10 10.30.12.20 169.254.100.0/29 64512 65010 sdwan-a"
+        ],
+        "connect_protocol": "gre",
+        "resource_id": "tgw-attach-0rel1234abcd0052",
+        "resource_owner_id": "111122223333",
+        "resource_type": "connect",
+        "state": "available",
+        "transit_gateway_id": "tgw-0rel1234abcd0051",
+        "transit_gateway_owner_id": "111122223333",
+        "transport_attachment_id": "tgw-attach-0rel1234abcd0052"
+      },
+      "id": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0053",
+      "name": "rel-sdwan",
+      "native_id": "tgw-attach-0rel1234abcd0053",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-sdwan"
+      },
+      "type": "transit_gateway_attachment"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "resource_id": "0d0e0f00-1111-2222-3333-0abc1234def7",
+        "resource_owner_id": "111122223333",
+        "resource_type": "direct-connect-gateway",
+        "state": "available",
+        "transit_gateway_id": "tgw-0rel1234abcd0051",
+        "transit_gateway_owner_id": "111122223333"
+      },
+      "id": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0054",
+      "name": null,
+      "native_id": "tgw-attach-0rel1234abcd0054",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "transit_gateway_attachment"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "connect_peers": [
+          "tgw-connect-peer-0rel1234abcd0062 gre 10.99.0.11 172.16.5.10 169.254.101.0/29 64512 65020 branch-dx"
+        ],
+        "connect_protocol": "gre",
+        "resource_id": "tgw-attach-0rel1234abcd0054",
+        "resource_owner_id": "111122223333",
+        "resource_type": "connect",
+        "state": "available",
+        "transit_gateway_id": "tgw-0rel1234abcd0051",
+        "transit_gateway_owner_id": "111122223333",
+        "transport_attachment_id": "tgw-attach-0rel1234abcd0054"
+      },
+      "id": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0055",
+      "name": "rel-sdwan-dx",
+      "native_id": "tgw-attach-0rel1234abcd0055",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-sdwan-dx"
+      },
+      "type": "transit_gateway_attachment"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "connect_peers": [],
+        "connect_protocol": "gre",
+        "resource_id": "tgw-attach-0rel1234abcd0059",
+        "resource_owner_id": "111122223333",
+        "resource_type": "connect",
+        "state": "available",
+        "transit_gateway_id": "tgw-0rel1234abcd0051",
+        "transit_gateway_owner_id": "111122223333",
+        "transport_attachment_id": "tgw-attach-0rel1234abcd0059",
+        "unresolved_refs": [
+          "tgw-attach-0rel1234abcd0059"
+        ]
+      },
+      "id": "transit_gateway_attachment/111122223333/us-east-1/tgw-attach-0rel1234abcd0056",
+      "name": "rel-sdwan-gone",
+      "native_id": "tgw-attach-0rel1234abcd0056",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-sdwan-gone"
+      },
+      "type": "transit_gateway_attachment"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "cidr_blocks": [
+          "10.30.0.0/16"
+        ],
+        "enable_dns_hostnames": false,
+        "enable_dns_support": true,
+        "is_default": false,
+        "state": "available"
+      },
+      "id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "name": "rel-vpc",
+      "native_id": "vpc-0rel1234abcd0001",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-vpc"
+      },
+      "type": "vpc"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "endpoint_type": "Gateway",
+        "ip_address_type": null,
+        "network_interface_ids": [],
+        "private_dns_enabled": false,
+        "route_table_ids": [
+          "rtb-0rel1234abcd0072",
+          "rtb-0rel1234abcd0073"
+        ],
+        "security_groups": [],
+        "service_name": "com.amazonaws.us-east-1.s3",
+        "state": "available",
+        "subnet_ids": []
+      },
+      "id": "vpc_endpoint/111122223333/us-east-1/vpce-0rel1234abcd0081",
+      "name": "rel-s3",
+      "native_id": "vpce-0rel1234abcd0081",
+      "parent_id": "vpc/111122223333/us-east-1/vpc-0rel1234abcd0001",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-s3"
+      },
+      "type": "vpc_endpoint"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": null,
+      "attributes": {
+        "amazon_side_asn": 64513,
+        "attached_vpc_ids": [
+          "vpc-0rel1234abcd0001"
+        ],
+        "state": "available",
+        "type": "ipsec.1"
+      },
+      "id": "vpn_gateway/111122223333/us-east-1/vgw-0rel1234abcd0061",
+      "name": "rel-vgw",
+      "native_id": "vgw-0rel1234abcd0061",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "tags": {
+        "Name": "rel-vgw"
+      },
+      "type": "vpn_gateway"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:wafv2:us-east-1:111122223333:global/webacl/rel-waf-cf/0rel1234-aaaa-bbbb-cccc-0rel0waf0403",
+      "attributes": {
+        "default_action": "allow",
+        "firewall_manager": true,
+        "managed_rule_groups": [],
+        "rule_count": 1,
+        "rule_names": [
+          "geo-block"
+        ],
+        "rules": [
+          "0\tgeo-block\tblock"
+        ],
+        "scope": "cloudfront"
+      },
+      "id": "waf_web_acl/111122223333/global/0rel1234-aaaa-bbbb-cccc-0rel0waf0403",
+      "name": "rel-waf-cf",
+      "native_id": "0rel1234-aaaa-bbbb-cccc-0rel0waf0403",
+      "parent_id": "account/111122223333",
+      "partial": false,
+      "region": null,
+      "type": "waf_web_acl"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/rel-waf-edge/0rel1234-aaaa-bbbb-cccc-0rel0waf0401",
+      "attributes": {
+        "capacity": 1400,
+        "default_action": "allow",
+        "firewall_manager": false,
+        "managed_rule_groups": [
+          "AWS/AWSManagedRulesCommonRuleSet"
+        ],
+        "rule_count": 2,
+        "rule_names": [
+          "common",
+          "rate-limit"
+        ],
+        "rules": [
+          "0\tcommon\tnone",
+          "1\trate-limit\tblock"
+        ],
+        "scope": "regional",
+        "unresolved_protected": [
+          "q9w8e7r6t5 not_collected"
+        ],
+        "unresolved_refs": [
+          "q9w8e7r6t5"
+        ]
+      },
+      "id": "waf_web_acl/111122223333/us-east-1/0rel1234-aaaa-bbbb-cccc-0rel0waf0401",
+      "name": "rel-waf-edge",
+      "native_id": "0rel1234-aaaa-bbbb-cccc-0rel0waf0401",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "waf_web_acl"
+    },
+    {
+      "account_id": "111122223333",
+      "arn": "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/rel-waf-idle/0rel1234-aaaa-bbbb-cccc-0rel0waf0402",
+      "attributes": {
+        "default_action": "block",
+        "firewall_manager": false,
+        "managed_rule_groups": [],
+        "rule_count": 0,
+        "rule_names": [],
+        "rules": [],
+        "scope": "regional"
+      },
+      "id": "waf_web_acl/111122223333/us-east-1/0rel1234-aaaa-bbbb-cccc-0rel0waf0402",
+      "name": "rel-waf-idle",
+      "native_id": "0rel1234-aaaa-bbbb-cccc-0rel0waf0402",
+      "parent_id": "region/111122223333/us-east-1",
+      "partial": false,
+      "region": "us-east-1",
+      "type": "waf_web_acl"
+    }
+  ],
+  "run": {
+    "collected_at": "2026-01-02T03:04:05Z",
+    "content_digest": "sha256:c60ae2472d85d5388aff7533aa3226786ddafbce25f9c241f4d176677e070e7b",
+    "tool_version": "0.1.0"
+  },
+  "schema_version": "2.13.0",
+  "scope": {
+    "account_ids": [
+      "111122223333"
+    ],
+    "regions": [
+      "us-east-1"
+    ],
+    "resource_types": [
+      "vpc",
+      "subnet",
+      "route_table",
+      "internet_gateway",
+      "nat_gateway",
+      "transit_gateway",
+      "transit_gateway_attachment",
+      "vpc_peering_connection",
+      "vpc_endpoint",
+      "security_group",
+      "network_acl",
+      "load_balancer",
+      "direct_connect_connection",
+      "direct_connect_virtual_interface",
+      "direct_connect_gateway",
+      "ec2_instance",
+      "auto_scaling_group",
+      "eks_cluster",
+      "network_firewall",
+      "cloudfront",
+      "transit_gateway_route_table",
+      "rds_db_instance",
+      "ecs_service",
+      "sagemaker_notebook_instance",
+      "sagemaker_domain",
+      "sagemaker_endpoint",
+      "ec2_instance_connect_endpoint",
+      "vpn_gateway",
+      "customer_gateway",
+      "vpn_connection",
+      "lambda_function",
+      "route53_hosted_zone",
+      "elasticache_cluster",
+      "rds_db_cluster",
+      "opensearch_domain",
+      "msk_cluster",
+      "elastic_ip",
+      "api_gateway",
+      "api_gateway_v2",
+      "rds_db_proxy",
+      "global_accelerator",
+      "core_network",
+      "lattice_service_network",
+      "lattice_service",
+      "waf_web_acl",
+      "waf_web_acl_global"
+    ]
+  }
+}

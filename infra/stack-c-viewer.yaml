@@ -1,0 +1,293 @@
+# NetworkTopology Stack C - viewer (CloudFront + OAC + signed link). Optional; deploy in the same Region as Stack A.
+# Usage, parameters and clean-up: README.md; security design and data handling: SECURITY.md.
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: >-
+  AWS Network Topology - Stack C (viewer, optional). CloudFront + OAC serving index.html only,
+  behind CloudFront signed URLs. GET/HEAD only, no caching, no write path.
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: {default: "Stack A output"}
+        Parameters: [ArtifactBucketName]
+      - Label: {default: "Link signing key"}
+        Parameters: [ViewerPublicKeyPem, KeyLabel, PreviousPublicKeyPem]
+      - Label: {default: "Access logs"}
+        Parameters: [AccessLogRetentionDays, LogReaderPrincipalArns]
+      - Label: {default: "Custom domain (optional - empty uses the CloudFront default domain)"}
+        Parameters: [CustomDomainName, CustomDomainCertificateArn]
+
+Parameters:
+  ArtifactBucketName:
+    Type: String
+    AllowedPattern: "^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$"
+    Description: >-
+      Name of Stack A's artifact bucket (Stack A output ArtifactBucketName). Deploy this stack in the same region as Stack A.
+
+  ViewerPublicKeyPem:
+    Type: String
+    AllowedPattern: "^-----BEGIN PUBLIC KEY-----[A-Za-z0-9+/=\\s]+-----END PUBLIC KEY-----\\s*$"
+    ConstraintDescription: "Must be a full PEM starting with -----BEGIN PUBLIC KEY-----."
+    Description: >-
+      Full PEM of the RSA 2048 public key used to sign links (output of openssl rsa -pubout). Keep the private key on the admin's machine only.
+
+  KeyLabel:
+    Type: String
+    Default: k1
+    AllowedValues: [k1, k2]
+    Description: >-
+      Key slot (k1 or k2) that holds ViewerPublicKeyPem. New links are signed with this key (output ViewerKeyPairId).
+      To rotate, move the new public key to the other slot (k1 <-> k2). With PreviousPublicKeyPem empty, the old key
+      leaves in the same update and every old link stops working (the response to a leaked key).
+
+  PreviousPublicKeyPem:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^-----BEGIN PUBLIC KEY-----[A-Za-z0-9+/=\\s]+-----END PUBLIC KEY-----\\s*$"
+    ConstraintDescription: "Empty, or a full PEM starting with -----BEGIN PUBLIC KEY-----."
+    Description: >-
+      Optional, only during a rotation. The old public key, kept in the other slot so links it signed keep working
+      until they expire. Must be exactly the ViewerPublicKeyPem value the stack had before the rotation. Leave empty
+      (default) to keep one key; clear it after the old links expire to remove the old key.
+
+  AccessLogRetentionDays:
+    Type: Number
+    Default: 90
+    MinValue: 1
+    Description: >-
+      Days to keep CloudFront access logs. Logs contain full links including signatures, so reads are limited by LogReaderPrincipalArns.
+
+  LogReaderPrincipalArns:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^arn:aws[a-z-]*:iam::[0-9]{12}:(role|user)/[A-Za-z0-9+=.@_/-]+(,arn:aws[a-z-]*:iam::[0-9]{12}:(role|user)/[A-Za-z0-9+=.@_/-]+)*$"
+    ConstraintDescription: "Comma-separated IAM role or user ARNs, no spaces, no wildcards."
+    Description: >-
+      IAM role or user ARNs in this account that may read the access logs (comma-separated, no spaces, no wildcards).
+      Logs contain full signed links, so anyone who reads them can reuse a link. Use the role ARN with its path
+      (for IAM Identity Center: arn:aws:iam::<account>:role/aws-reserved/sso.amazonaws.com/<region>/AWSReservedSSO_<set>_<id>),
+      not the assumed-role session ARN. Leave empty and only the account root user can read the logs.
+
+  CustomDomainName:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$"
+    Description: >-
+      Optional. Leave empty to use the CloudFront default domain. If set, create the DNS record yourself and set
+      Stack A ViewerOrigin to https://<this domain> - otherwise the diagram opens but live numbers are blocked.
+
+  CustomDomainCertificateArn:
+    Type: String
+    Default: ""
+    AllowedPattern: "^$|^arn:aws[a-z-]*:acm:us-east-1:[0-9]{12}:certificate/[-a-f0-9]+$"
+    Description: >-
+      Optional, only with a custom domain. CloudFront requires an ACM certificate in us-east-1.
+
+Rules:
+  PreviousKeyIsNotTheNewKey:
+    RuleCondition: !Not [!Equals [!Ref PreviousPublicKeyPem, ""]]
+    Assertions:
+      - Assert: !Not [!Equals [!Ref PreviousPublicKeyPem, !Ref ViewerPublicKeyPem]]
+        AssertDescription: PreviousPublicKeyPem must be the old key, not the new ViewerPublicKeyPem.
+
+  CustomDomainNeedsCertificate:
+    RuleCondition: !Not [!Equals [!Ref CustomDomainName, ""]]
+    Assertions:
+      - Assert: !Not [!Equals [!Ref CustomDomainCertificateArn, ""]]
+        AssertDescription: A custom domain needs an ACM certificate ARN in us-east-1.
+
+Conditions:
+  HasCustomDomain: !Not [!Equals [!Ref CustomDomainName, ""]]
+  KeyInSlot1: !Equals [!Ref KeyLabel, k1]
+  KeyInSlot2: !Equals [!Ref KeyLabel, k2]
+  KeepPreviousKey: !Not [!Equals [!Ref PreviousPublicKeyPem, ""]]
+  Slot1InUse: !Or [!Condition KeyInSlot1, !Condition KeepPreviousKey]
+  Slot2InUse: !Or [!Condition KeyInSlot2, !Condition KeepPreviousKey]
+  HasLogReaders: !Not [!Equals [!Ref LogReaderPrincipalArns, ""]]
+
+Resources:
+  ViewerPublicKey:
+    Type: AWS::CloudFront::PublicKey
+    Condition: Slot1InUse
+    Properties:
+      PublicKeyConfig:
+        CallerReference: !Sub "${AWS::StackName}-k1"
+        Name: !Sub "${AWS::StackName}-k1"
+        EncodedKey: !If [KeyInSlot1, !Ref ViewerPublicKeyPem, !Ref PreviousPublicKeyPem]
+        Comment: NetworkTopology viewer link signing key
+
+  ViewerPublicKeyK2:
+    Type: AWS::CloudFront::PublicKey
+    Condition: Slot2InUse
+    Properties:
+      PublicKeyConfig:
+        CallerReference: !Sub "${AWS::StackName}-k2"
+        Name: !Sub "${AWS::StackName}-k2"
+        EncodedKey: !If [KeyInSlot2, !Ref ViewerPublicKeyPem, !Ref PreviousPublicKeyPem]
+        Comment: NetworkTopology viewer link signing key
+
+  ViewerKeyGroup:
+    Type: AWS::CloudFront::KeyGroup
+    Properties:
+      KeyGroupConfig:
+        Name: !Sub "${AWS::StackName}-viewers"
+        Comment: NetworkTopology viewer links
+        # Issue #141. One key, except during an overlapping rotation (PreviousPublicKeyPem set): then both slots.
+        Items: !If [KeepPreviousKey, [!Ref ViewerPublicKey, !Ref ViewerPublicKeyK2], [!If [KeyInSlot1, !Ref ViewerPublicKey, !Ref ViewerPublicKeyK2]]]
+
+  ViewerOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub "${AWS::StackName}-oac"
+        Description: NetworkTopology artifact bucket, index.html only
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  ViewerResponseHeaders:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub "${AWS::StackName}-viewer-headers"
+        Comment: NetworkTopology viewer - no-store, no-referrer
+        SecurityHeadersConfig:
+          StrictTransportSecurity: {AccessControlMaxAgeSec: 31536000, IncludeSubdomains: false, Preload: false, Override: true}
+          ContentTypeOptions: {Override: true}
+          FrameOptions: {FrameOption: DENY, Override: true}
+          ReferrerPolicy: {ReferrerPolicy: no-referrer, Override: true}
+        CustomHeadersConfig:
+          Items:
+            - {Header: Cache-Control, Value: no-store, Override: true}
+            - {Header: X-Robots-Tag, Value: "noindex, nofollow", Override: true}
+
+  AccessLogBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules: [{ObjectOwnership: BucketOwnerPreferred}]
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: {SSEAlgorithm: AES256}
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-access-logs
+            Status: Enabled
+            ExpirationInDays: !Ref AccessLogRetentionDays
+
+  AccessLogBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AccessLogBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt AccessLogBucket.Arn
+              - !Sub "${AccessLogBucket.Arn}/*"
+            Condition:
+              Bool: {"aws:SecureTransport": "false"}
+          # Issue #81. The logs hold full signed viewer links (anyone who reads a log line can reuse the link), so reads
+          # are denied to every principal except the account root user and LogReaderPrincipalArns. This is a Deny only -
+          # it grants nothing; a listed reader still needs s3:GetObject/s3:ListBucket from its own IAM policy.
+          # - Reads only. The write path is not in this Action list: Standard logging (legacy) - the DistributionConfig
+          #   Logging block below, not v2 / AWS::Logs::Delivery - writes through the bucket ACL. "CloudFront uses these
+          #   permissions to update the ACL for the bucket to give the awslogsdelivery account FULL_CONTROL permission.
+          #   The awslogsdelivery account writes log files to the bucket." (CloudFront Developer Guide, "Configure standard
+          #   logging (legacy)" > Permissions: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/standard-logging-legacy-s3.html).
+          #   The same page requires s3:GetBucketAcl/s3:PutBucketAcl for whoever enables logging - also not denied here.
+          #   UNVERIFIED: AWS does not document whether delivery ever reads or lists objects; confirm that a log object still
+          #   arrives after this policy is deployed (deploy check, not tested offline).
+          # - Root = break-glass. In aws:PrincipalArn the root ARN matches only the root user, not the whole account
+          #   ("it limits permissions only for the root user", IAM User Guide, aws:PrincipalArn). The root user cannot be
+          #   deleted or renamed, unlike a role ARN (an Identity Center role name carries a generated suffix that can change),
+          #   so the customer can never lock themselves out of their own logs. Policy edits (s3:PutBucketPolicy) are not denied either.
+          # - Anonymous requests have no aws:PrincipalArn; ArnNotLike on a missing key is true, so they are denied too.
+          - Sid: DenyLogReadsExceptListedReaders
+            Effect: Deny
+            Principal: "*"
+            Action: [s3:GetObject, s3:GetObjectVersion, s3:ListBucket, s3:ListBucketVersions]
+            Resource:
+              - !GetAtt AccessLogBucket.Arn
+              - !Sub "${AccessLogBucket.Arn}/*"
+            Condition:
+              ArnNotLike:
+                aws:PrincipalArn: !If
+                  - HasLogReaders
+                  - !Split [",", !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root,${LogReaderPrincipalArns}"]
+                  - [!Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"]
+
+  ViewerDistribution:
+    Type: AWS::CloudFront::Distribution
+    DependsOn: AccessLogBucketPolicy
+    Metadata:
+      cfn-lint: {config: {ignore_checks: [W1030]}}
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: NetworkTopology viewer - signed URL, index.html only
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        PriceClass: PriceClass_All
+        Aliases: !If [HasCustomDomain, [!Ref CustomDomainName], !Ref "AWS::NoValue"]
+        ViewerCertificate: !If
+          - HasCustomDomain
+          - AcmCertificateArn: !Ref CustomDomainCertificateArn
+            SslSupportMethod: sni-only
+            MinimumProtocolVersion: TLSv1.2_2021
+          - CloudFrontDefaultCertificate: true
+        Origins:
+          - Id: artifact-bucket
+            DomainName: !Sub "${ArtifactBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}"
+            OriginAccessControlId: !GetAtt ViewerOriginAccessControl.Id
+            S3OriginConfig: {OriginAccessIdentity: ""}
+        DefaultCacheBehavior:
+          TargetOriginId: artifact-bucket
+          ViewerProtocolPolicy: https-only
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+          ResponseHeadersPolicyId: !Ref ViewerResponseHeaders
+          TrustedKeyGroups: [!Ref ViewerKeyGroup]
+        Logging:
+          Bucket: !GetAtt AccessLogBucket.DomainName
+          Prefix: cloudfront/
+          IncludeCookies: false
+
+Outputs:
+  ViewerDomain:
+    Description: Link domain. Only index.html is served on it (403 without a signature).
+    Value: !If [HasCustomDomain, !Ref CustomDomainName, !GetAtt ViewerDistribution.DomainName]
+  ViewerKeyPairId:
+    Description: Key-Pair-Id of new links (public key ID in slot KeyLabel). It changes when the key is rotated.
+    Value: !If [KeyInSlot1, !Ref ViewerPublicKey, !Ref ViewerPublicKeyK2]
+  PreviousKeyPairId:
+    Condition: KeepPreviousKey
+    Description: >-
+      Key-Pair-Id of the old key kept during an overlapping rotation. Links with this ID stop working when
+      PreviousPublicKeyPem is cleared. Do not sign new links with it.
+    Value: !If [KeyInSlot1, !Ref ViewerPublicKeyK2, !Ref ViewerPublicKey]
+  DistributionId:
+    Description: CloudFront distribution ID.
+    Value: !Ref ViewerDistribution
+  AccessLogBucketName:
+    Description: >-
+      Access log bucket (private). Logs contain full signed links. Only the account root user and LogReaderPrincipalArns
+      can read them (other principals get AccessDenied even with s3:GetObject in their IAM policy).
+    Value: !Ref AccessLogBucket
+  IssueLinkCommand:
+    Description: Issue a viewer link (admin machine or CloudShell). Share the printed link with your team.
+    Value: !Sub "infra/issue-viewer-link.sh --stack ${AWS::StackName} --region ${AWS::Region} --profile <PROFILE> --key <PRIVATE_KEY_PEM> --days <DAYS>"
