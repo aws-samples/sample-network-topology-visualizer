@@ -1,17 +1,8 @@
-"""msk_cluster(Amazon MSK — Kafka 클러스터) 수집 — 「이음매 2」 · #114 · 스키마 2.9.0.
+"""Collect provisioned and serverless MSK network configuration.
 
-**카드 하나 = 클러스터 하나**(`ListClustersV2` 의 항목 · 프로비저닝·서버리스 둘 다). 브로커는 카드가 아니다 — 브로커 ENI 는
-클러스터의 속성(`broker_eni_ids`)이고, LB 의 IP 대상이 그 ENI 면 3패스가 이 카드로 잇는다(`lb_targets.py` — **ENI id** 로 잇는다:
-설명 글자 형식에 기대지 않는다).
-
-🔴 **응답에 VPC 가 없다**(ASG·ECS 와 같다). 클라이언트 서브넷(`BrokerNodeGroupInfo.ClientSubnets` · 서버리스는 `VpcConfigs[].SubnetIds`)만
-준다 → 부모 = 리전 + `subnet_ids`(걸친 서브넷). 렌더러가 서브넷으로 VPC 를 찾는다 — 서브넷이 VPC 를 말하므로 날조가 아니다.
-
-후속 호출: 프로비저닝 클러스터마다 `ListNodes`(브로커 ENI id · 클라이언트 서브넷). 거부되면 그 클러스터만 「일부 못 읽음」 —
-구성의 서브넷은 그대로 있고 브로커 ENI 키가 **없다**(LB 선은 못 잇는다 · 「브로커 0개」로 적지 않는다). 서버리스는 브로커를
-고객에게 보이지 않는다 — 묻지 않는다.
-
-🔴 **상태는 담지 않는다.** `State` 는 탐침(`state`)으로만 나간다.
+Record placement in subnet_ids and query provisioned broker ENIs through
+ListNodes. Record broker query failures in partial_reasons rather than
+using a count of zero.
 """
 
 from __future__ import annotations
@@ -30,7 +21,11 @@ _BROKERS = "_Brokers"
 
 
 def enrich(client: Any, items: list[Fetched]) -> list[Fetched]:
-    """프로비저닝 클러스터마다 `ListNodes` 로 브로커 ENI 를 붙인다. 거부는 그 클러스터의 사유로만 남는다(항목은 그대로)."""
+    """Query broker ENIs for provisioned clusters through ListNodes.
+
+    client: boto3 client for this service
+    items: Fetched items from the listing API
+    """
     out: list[Fetched] = []
     for f in items:
         arn = f.payload.get("ClusterArn")
@@ -73,7 +68,6 @@ def build(item: dict[str, Any], ctx: Ctx) -> NodeDraft:
         )
         brokers = item.get(_BROKERS)
         if brokers is not None:
-            # 읽었다 — 브로커 ENI id(정렬). 못 읽었으면 키가 없다(「브로커 0개」 ≠ 「못 읽음」)
             attributes["broker_eni_ids"] = _sorted(
                 b.get("AttachedENIId") for b in brokers
             )
@@ -106,7 +100,6 @@ def build(item: dict[str, Any], ctx: Ctx) -> NodeDraft:
 
 
 def state(item: dict[str, Any]) -> str | None:
-    """상태 탐침 — 상태 단 전용(`Service.state`)."""
     value = item.get("State")
     return str(value) if value else None
 

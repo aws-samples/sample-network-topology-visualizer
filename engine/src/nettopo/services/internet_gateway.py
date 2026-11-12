@@ -1,7 +1,6 @@
-"""인터넷 게이트웨이 수집 — 「이음매 2」.
+"""Collect internet gateway configuration and VPC attachment links.
 
-🔴 부모는 **리전**이다. IGW 는 VPC 에서 떼어도 살아 있으므로 VPC 를 부모로 두면 분리된 IGW 가
-그림에서 사라진다. VPC 와의 관계는 `attachment` 엣지로 표현한다(ADR 0002 §1).
+Use the region as parent. Keep gateway nodes without VPC attachments.
 """
 
 from __future__ import annotations
@@ -47,7 +46,6 @@ def build(item: dict[str, Any], ctx: Ctx) -> NodeDraft:
         native_id=native,
         name=tags.get("Name"),
         attributes={
-            # IGW 는 VPC 에서 떼어도 살아 있다 → 부모는 리전, VPC 관계는 엣지(ADR 0002 §1).
             "state": "attached"
             if any(alive(a.get("State")) for a in attachments)
             else "detached",

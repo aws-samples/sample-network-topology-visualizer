@@ -1,17 +1,8 @@
-"""rds_db_proxy(RDS 프록시) 수집 — 「이음매 2」 · 배치 D(스키마 2.10.0 · ADR 0002 §12-4 · 사용자 결정 2026-10-20 · target-gap #14).
+"""Collect RDS proxy configuration and database target links.
 
-「앱은 프록시로 붙고, 프록시가 이 DB 로 넘긴다」. 노드 하나 = 프록시 하나 · 부모 = VPC(응답의 `VpcId`) · 걸친 서브넷 = `subnet_ids`
-(`VpcSubnetIds` — 프록시 엔드포인트가 그 서브넷들에 ENI 를 둔다 · 하나면 그 칸 · 여럿이면 VPC 오른쪽 열 · §17.36).
-
-엣지 `proxy_target`(프록시 → DB · 방향 있음): 기본 대상 그룹의 `DescribeDBProxyTargets` — `Type`:
-- `TRACKED_CLUSTER` · `RDS_SERVERLESS_ENDPOINT` → `rds_db_cluster`(같은 계정·리전 · `RdsResourceId` = 클러스터 식별자)
-- `RDS_INSTANCE` → `rds_db_instance` — 🔴 클러스터를 대상으로 둔 프록시는 클러스터 멤버도 `RDS_INSTANCE` 로 같이 준다. 그때는 **클러스터 선 하나**만
-  긋고 멤버는 속성 `target_instance_ids` 로 남긴다(멤버마다 선을 그으면 같은 길이 N 개다 — 클러스터 카드의 「멤버 인스턴스」 칸이 말한다).
-노드 id 는 이 쌍의 사실로 짓는다(`EdgeDraft.by_id` — 이름 색인은 다른 계정의 같은 이름 DB 를 가린다). 못 찾으면 `unresolved_refs` = 식별자 ·
-`unresolved_proxy_targets` = 「<식별자> not_collected」.
-
-🔴 대상 조회 거부 = 그 프록시의 사유(불변식 ④ · 키 없음 · 선 없음). 🔴 구성만 싣는다 — `Status`(시시각각) · `Auth`·`SecretArn`·`RoleArn`(비밀 위치 ·
-계정ID) · 대상 헬스(`TargetHealth` — 상태 단의 몫)는 싣지 않는다.
+Group cluster targets into cluster links and record member IDs in
+target_instance_ids. Exclude authentication settings, secret
+locations, and target health from topology.
 """
 
 from __future__ import annotations
@@ -43,6 +34,11 @@ _CLUSTER_TYPES = ("TRACKED_CLUSTER", "RDS_SERVERLESS_ENDPOINT")
 
 
 def enrich(client: Any, items: list[Fetched]) -> list[Fetched]:
+    """Query proxy DB targets to enrich instance and cluster references.
+
+    client: boto3 client for this service
+    items: Fetched items from the listing API
+    """
     out: list[Fetched] = []
     for it in items:
         name = str(it.payload.get("DBProxyName") or "")
@@ -100,7 +96,7 @@ def build(item: dict[str, Any], ctx: Ctx) -> NodeDraft:
                     nid,
                     node_id(kind, owner, ctx.region, rid),
                     None,
-                    True,  # 프록시 → 그 DB 로 넘긴다
+                    True,
                     {
                         "target_type": "cluster"
                         if kind == "rds_db_cluster"

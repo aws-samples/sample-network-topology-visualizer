@@ -1,8 +1,8 @@
-"""Transit Gateway 수집 — 「이음매 2」.
+"""Collect regional Transit Gateway configuration and owner accounts.
 
-TGW 는 리전 자원이고 계정 간 공유(RAM)의 대표 사례다 — 허브 계정이 소유하고 멤버 계정이
-어태치먼트를 만든다. 소유자 귀속은 `ctx.attribute` 가 처리한다(ADR 0002 §2). 어태치먼트는
-별 타입(`transit_gateway_attachment.py`)이다.
+Place nodes in the owner account if in scope, or the querying account
+otherwise. Record out-of-scope owners that differ from the querying
+account in attributes.owner_account_id.
 """
 
 from __future__ import annotations
@@ -20,7 +20,6 @@ SPEC = Spec(
 )
 
 
-# `Options` 키 → 속성 이름(콘솔 「세부 정보」 칸 순서)
 _OPTION_KEYS = (
     ("AssociationDefaultRouteTableId", "association_default_route_table_id"),
     ("DefaultRouteTablePropagation", "default_route_table_propagation"),
@@ -53,7 +52,6 @@ def _options(item: dict[str, Any], options: dict[str, Any]) -> dict[str, Any]:
 
 def build(item: dict[str, Any], ctx: Ctx) -> NodeDraft | None:
     if gone("transit_gateway", item.get("State")):
-        # AWS 가 「더는 없다」고 말하는 자원 — 노드로 만들지 않는다(`base.GONE_STATES`).
         return None
     tags = tags_of(item)
     owner, extra = ctx.attribute(item)
@@ -73,8 +71,6 @@ def build(item: dict[str, Any], ctx: Ctx) -> NodeDraft | None:
             "default_route_table_association": str(
                 options.get("DefaultRouteTableAssociation") or ""
             ),
-            # 2.13.0 — 콘솔 TGW 「세부 정보」 그대로(정보창 개편 사용자 결정 2026-10-24 · 목록 응답 `Options`).
-            #   값은 AWS 어휘(`enable`/`disable`) 그대로 — 화면이 콘솔 말로 옮긴다. 응답에 없는 키는 만들지 않는다.
             **_options(item, options),
             **extra,
         },

@@ -1,8 +1,4 @@
-"""nettopo — AWS 네트워크 토폴로지 수집 엔진.
-
-`engine/` 은 `renderer/` 를 모른다(불변식 ③). 유일한 접점은
-`schema/topology.schema.json` 이다.
-"""
+"""Define the version of the read-only AWS network collector package."""
 
 from __future__ import annotations
 

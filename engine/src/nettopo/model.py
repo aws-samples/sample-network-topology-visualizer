@@ -1,13 +1,10 @@
-"""`schema/topology.schema.json` v2.8.0 의 파이썬 표현.
+"""Define topology data structures for collected resources and links.
 
-스키마가 정본이다 — 여기에 필드를 더하려면 스키마를 먼저 바꾼다(불변식 ③, 승인 2명).
-정렬은 `to_document()` 한 곳에서만 한다: 여러 곳에서 정렬하면 한 곳을 빼먹었을 때
-조용히 결정론이 깨진다(불변식 ②).
-
-🔴 v2.0.0 은 `partial`·`directed`·`item_count` 를 **생략할 수 없게** 했다. JSON Schema 의
-`default` 는 주석이고 검증기가 값을 채워 주지 않으므로, 생략을 허용하면 (1) 같은 사실에
-두 가지 바이트 표현이 생기고(불변식 ②) (2) 엔진과 렌더러가 각자 기본값을 하드코딩해
-계약 밖 지식이 양쪽으로 샌다(불변식 ③). 그래서 **거짓이어도 항상 적는다.**
+Node holds resource details; Edge holds relationships between resources.
+Scope defines the collection scope, and CoverageEntry stores collection
+status by resource type. Snapshot.to_document() builds a topology
+document
+dictionary from these objects.
 """
 
 from __future__ import annotations
@@ -17,18 +14,15 @@ from typing import Any
 
 SCHEMA_VERSION = "2.13.0"
 
-# 컨테이너 2종은 수집 대상(scope.resource_types)이 아니라 계층 표현이다.
 CONTAINER_TYPES = ("account", "region")
-# 파생 노드(2.7.0) — 목록 API 가 없고 LB 의 등록 대상에서만 생긴다(`lb_targets.py`). 수집 요청의 단위가 아니다.
-# 🔵 2.8.0(P2-6) — `lambda_function` 은 수집 종류가 됐다(`services/lambda_function.py`). LB 대상 해소는 그 종류를 수집하지 않았거나
-#    못 읽었을 때만 예전처럼 최소 노드를 짓는다(`DERIVABLE_TYPES`) — 같은 id 라 둘이 겹치지 않는다.
-#    `s3_bucket`(2.8.0 · P2-3) = CloudFront S3 원본에서만 짓는다(S3 는 수집하지 않는다 · `origins.py`).
+
+# Node types created only from other resources' collection results.
+# external_ip: External target IP registered with ELB
+# s3_bucket: Bucket specified as a CloudFront S3 origin
 DERIVED_TYPES = ("external_ip", "s3_bucket")
 DERIVABLE_TYPES = ("lambda_function", "external_ip", "s3_bucket")
 
-# 글로벌 리소스(Direct Connect 게이트웨이)의 id 리전 자리. 어느 리전에서 조회해도 같은 id 가
-# 나와야 `_resolve` 의 「먼저 만난 것을 남긴다」가 중복 제거로 동작한다(ADR 0010). 노드의
-# `region` 필드는 null 이다 — 이 리터럴은 id 문법 안에서만 쓴다.
+# Use "global" in Node.id's region component and output region as null.
 GLOBAL = "global"
 
 
@@ -38,9 +32,9 @@ def node_id(
     region: str | None = None,
     native_id: str | None = None,
 ) -> str:
-    """`<type>/<account_id>[/<region>[/<native_id>]]` — 스키마 node_id 패턴.
+    """Build a string for Node.id.
 
-    글로벌 리소스는 `region` 자리에 `GLOBAL` 을 넘긴다(스키마 node.id description).
+    Pattern: <type>/<account_id>[/<region>[/<native_id>]]
     """
     parts = [node_type, account_id]
     if region is not None:
@@ -53,19 +47,17 @@ def node_id(
 
 
 def split_node_id(value: str) -> tuple[str, str, str | None, str | None]:
-    """`node_id()` 의 역함수 — `(종류, 계정, 리전, 원래 id)`. 없는 조각은 `None`.
+    """Split Node.id into (type, account_id, region, native_id).
 
-    🔴 **역함수를 여기 두는 이유**: 관측 이력(`history.py`)은 「이 대상이 어느 (계정,리전,종류)
-    칸에 속하나」를 알아야 하는데, 이전 관측 문서에는 그 칸이 적혀 있지 않고 id 만 있다. 그
-    문법을 다른 파일에서 다시 쪼개면 조립(`node_id`)과 분해가 조용히 갈라진다 — 그래서 같은
-    파일에 두고 `test_model.py` 가 **왕복**(조립 → 분해 → 같은 값)을 잰다.
+    Return None for omitted region and native_id components. Return
+    region as
+    None when the region component is "global". Preserve "/" in
+    native_id.
     """
     parts = value.split("/")
     if len(parts) < 2 or not all(parts):
         raise ValueError(f"노드 id 가 아니다: {value!r}")
     region = parts[2] if len(parts) > 2 else None
-    # 글로벌 리소스(DXGW)는 id 의 리전 자리에 리터럴 `global` 이 있고 노드의 `region` 은 `null` 이다
-    # (스키마 node.id description · ADR 0010) — 되돌릴 때 같은 값으로 접어야 왕복이 성립한다.
     if region == GLOBAL:
         region = None
     native_id = "/".join(parts[3:]) if len(parts) > 3 else None
@@ -73,9 +65,12 @@ def split_node_id(value: str) -> tuple[str, str, str | None, str | None]:
 
 
 def split_edge_id(value: str) -> tuple[str, str, str, str | None]:
-    """`collect._edge_id()` 의 역함수 — `(종류, source, target, 구분자)`.
+    """Split Edge.id into (type, source, target, disc).
 
-    노드 id 는 `|` 를 쓰지 않으므로 파싱이 유일하다(`collect.py:262` 의 주석이 그 보장이다).
+    disc distinguishes relationships between the same resource pair. For
+    example, security group references use ingress or egress. Return
+    None
+    when disc is omitted.
     """
     parts = value.split("|")
     if len(parts) not in (3, 4) or not all(parts[:3]):
@@ -124,7 +119,6 @@ class Node:
         if self.tags:
             doc["tags"] = dict(self.tags)
         if self.partial:
-            # partial 을 세웠으면 사유가 반드시 붙는다(스키마 allOf 가 강제한다).
             doc["partial_reasons"] = [r.to_dict() for r in self.partial_reasons]
         return doc
 
@@ -171,7 +165,6 @@ class CoverageEntry:
             "resource_type": self.resource_type,
             "status": self.status,
             "reason": self.reason.to_dict() if self.reason else None,
-            # 0 과 「수집 실패」는 전혀 다른 사실이다 — null 을 0 으로 바꾸지 마라.
             "item_count": self.item_count,
         }
 
@@ -204,7 +197,6 @@ class Snapshot:
     coverage: tuple[CoverageEntry, ...]
 
     def to_document(self) -> dict[str, Any]:
-        """스키마를 만족하는 dict. 배열 정렬은 여기서만 일어난다(불변식 ②)."""
         return {
             "schema_version": SCHEMA_VERSION,
             "run": {
