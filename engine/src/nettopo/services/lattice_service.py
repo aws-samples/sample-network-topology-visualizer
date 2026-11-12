@@ -1,16 +1,7 @@
-"""lattice_service(Amazon VPC Lattice 서비스) 수집 — 「이음매 2」 · #129(스키마 2.11.0 · ADR 0002 §13-3 · target-gap §C 16).
+"""Collect VPC Lattice service configuration and registered targets.
 
-서비스는 **리전 자원**이다(부모 = 리전). 요청을 넘기는 곳은 대상 그룹이다 — 그 쌍에서 한 번 `ListTargetGroups` 로 대상 그룹 전부를 읽고
-(요약의 `serviceArns` = 그 그룹을 쓰는 서비스 · 리스너·규칙을 따로 묻지 않는다), 이 쌍의 서비스가 쓰는 그룹마다 `ListTargets` 로 등록 대상을 읽는다.
-
-엣지 `lattice_target`(서비스 → 대상 · 방향 있음 · (서비스, 대상 노드)마다 하나 — LB 대상 선과 같은 묶음 규칙):
-- `INSTANCE` → EC2(인스턴스 id 색인) · `ALB` → 그 ALB(ARN 의 계정·리전·이름 · `EdgeDraft.by_id`) · `LAMBDA` → 그 함수(ARN 의 계정·리전·이름)
-- `IP` → 선을 짓지 않는다 — `unresolved_lattice_targets` 「<ip> ip_target」(사설 IP 의 주인을 찾는 ENI 조회는 아직 하지 않는다 · 정보창이 IP 를 말한다)
-- 모르는 꼴 → 「<id> unknown_type」 · 이 스냅샷에 없는 대상 → 「<ref> not_collected」(3패스)
-속성 `target_groups` = 「<이름> <종류> <프로토콜> <포트>」(그 서비스가 쓰는 그룹 · 이름 순) · 등록이 0 인 그룹 = `empty_target_groups`.
-
-🔴 대상 헬스(`ListTargets` 의 `status`·`reasonCode`)는 싣지 않는다(시시각각 · 상태 단의 몫 · 불변식 ②). 거부: `ListTargetGroups` = 그 쌍의 서비스 전부의 사유 ·
-`ListTargets` = 그 그룹을 쓰는 서비스의 사유 — 둘 다 키를 만들지 않는다(선 없이 사유만 · 불변식 ④). 188 에는 Lattice 가 없다 — 가짜 세계로만 쟀다.
+Resolve instance, ALB, and Lambda targets from collected resources.
+Record IP targets as unresolved and query failures in partial_reasons.
 """
 
 from __future__ import annotations
@@ -42,8 +33,14 @@ WHY_ATTR = "unresolved_lattice_targets"
 
 
 def enrich(client: Any, items: list[Fetched]) -> list[Fetched]:
+    """Query service target groups and registrations to enrich target
+    links.
+
+    client: boto3 client for this service
+    items: Fetched items from the listing API
+    """
     if not items:
-        return items  # 서비스가 없는 쌍은 대상 그룹을 묻지 않는다(최소 호출)
+        return items
     try:
         groups = pages(client, "list_target_groups", "items")
     except (ClientError, BotoCoreError) as exc:
@@ -53,7 +50,7 @@ def enrich(client: Any, items: list[Fetched]) -> list[Fetched]:
     targets: dict[str, list[dict[str, Any]] | Reason] = {}
     for g in sorted(groups, key=lambda x: str(x.get("id"))):
         if not arns & {str(a) for a in g.get("serviceArns") or []}:
-            continue  # 이 쌍의 서비스가 쓰지 않는 그룹은 대상을 묻지 않는다
+            continue
         try:
             targets[str(g["id"])] = pages(
                 client, "list_targets", "items", targetGroupIdentifier=str(g["id"])
@@ -81,7 +78,6 @@ def enrich(client: Any, items: list[Fetched]) -> list[Fetched]:
 
 
 def _target(kind: str, tid: str, ctx: Ctx) -> tuple[str, str | None, bool, str] | str:
-    """(대상 키, 대상 노드 타입, by_id, ref) — 못 잇는 꼴이면 까닭 코드 글자."""
     if kind == "instance" and tid.startswith("i-"):
         return tid, "ec2_instance", False, tid
     if kind == "alb":
@@ -92,7 +88,6 @@ def _target(kind: str, tid: str, ctx: Ctx) -> tuple[str, str | None, bool, str] 
         return node_id("load_balancer", account, region, name), None, True, name
     if kind == "lambda":
         parts = tid.split(":")
-        # arn:aws:lambda:<리전>:<계정>:function:<이름>[:<별칭·버전>]
         if len(parts) >= 7 and parts[2] == "lambda" and parts[5] == "function":
             return (
                 node_id("lambda_function", parts[4], parts[3], parts[6]),
@@ -109,7 +104,6 @@ def _target(kind: str, tid: str, ctx: Ctx) -> tuple[str, str | None, bool, str] 
 def build(item: dict[str, Any], ctx: Ctx) -> NodeDraft | None:
     raw_owner = arn_account(str(item.get("arn") or ""))
     if raw_owner and raw_owner != ctx.account_id and raw_owner in ctx.scope_accounts:
-        # 공유받은 계정의 뷰 — 대상 그룹은 소유 계정에 있다(그 계정의 `ListTargetGroups` 만 그 그룹을 본다) → 소유 계정의 뷰만 노드로 만든다
         return None
     owner, extra = ctx.attribute({"OwnerId": raw_owner})
     native = str(item["id"])
@@ -141,7 +135,7 @@ def build(item: dict[str, Any], ctx: Ctx) -> NodeDraft | None:
         why: set[str] = set()
         for g in rows:
             if g["_Targets"] is None:
-                continue  # 이 그룹의 대상을 못 읽었다 — 사유는 노드에 있다
+                continue
             kind = str(g.get("type") or "").lower()
             for t in g["_Targets"]:
                 tid = str(t.get("id") or "")
@@ -163,7 +157,7 @@ def build(item: dict[str, Any], ctx: Ctx) -> NodeDraft | None:
                     nid,
                     target,
                     ttype,
-                    True,  # 서비스 → 요청을 받는 대상
+                    True,
                     {
                         "target_groups": sorted(v["tgs"]),
                         "ports": sorted(v["ports"]),

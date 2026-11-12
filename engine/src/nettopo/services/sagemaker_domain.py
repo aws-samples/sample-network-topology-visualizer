@@ -1,13 +1,8 @@
-"""sagemaker_domain(SageMaker Studio 도메인) 수집 — 「이음매 2」 · W2.
+"""Collect SageMaker Studio domain network configuration.
 
-도메인은 VPC 하나와 서브넷 여러 개에 걸친다(EKS 와 같은 모양) → 부모는 VPC, 걸친 서브넷은
-`subnet_ids`. 목록(`list_domains`)에는 네트워크 구성이 없어 `describe_domain` 으로 채운다 — 거부되면
-이름만 든 부분 노드 + 사유.
-
-`app_network_access_type` = `PublicInternetOnly` 면 Studio 앱이 SageMaker 관리 망으로 인터넷에 나가고,
-`VpcOnly` 면 이 VPC 의 경로(NAT·엔드포인트)만 탄다 — 접근 경로를 가르는 구성이다.
-
-🔴 **상태는 담지 않는다.** `Status`(InService/Updating…)는 불변식 ② 소관 밖이다.
+Query VPC placement, subnets, and network access mode through
+DescribeDomain.
+Keep a partial node with its known name if description fails.
 """
 
 from __future__ import annotations
@@ -26,6 +21,11 @@ _DESCRIBE_API = "sagemaker:DescribeDomain"
 
 
 def enrich(client: Any, items: list[Fetched]) -> list[Fetched]:
+    """Describe domains to enrich VPC, subnet, and access mode details.
+
+    client: boto3 client for this service
+    items: Fetched items from the listing API
+    """
     out: list[Fetched] = []
     for item in items:
         domain_id = item.payload.get("DomainId")
@@ -85,7 +85,6 @@ def build(item: dict[str, Any], ctx: Ctx) -> NodeDraft:
 
 
 def state(item: dict[str, Any]) -> str | None:
-    """상태 탐침 — 상태 단 전용(`Service.state`). 목록 응답에도 있는 값이라 상세가 거부돼도 읽힌다."""
     value = item.get("Status")
     return str(value) if value else None
 
