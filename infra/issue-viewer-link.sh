@@ -43,7 +43,9 @@ fi
 [ "$expires" -gt "$(date +%s)" ] || die "만료 시각이 이미 지났다"
 
 if [ -z "$domain" ] || [ -z "$keypair" ]; then
-  # AWS CloudShell 에는 이름 있는 프로필이 없다(콘솔 로그인 권한 = 기본 자격 증명) — 거기서만 --profile 을 생략할 수 있다(deploy.sh 와 같은 신호).
+  # AWS CloudShell has no named profiles: the console login is the default
+  # credential. That is the only place --profile may be omitted, and it is
+  # detected with the same signal deploy.sh uses.
   cloudshell=0
   if [ "${AWS_EXECUTION_ENV:-}" = CloudShell ] || [ "$HOME" = /home/cloudshell-user ]; then cloudshell=1; fi
   [ -n "$stack" ] && [ -n "$region" ] && { [ -n "$profile" ] || [ "$cloudshell" = 1 ]; } \
@@ -55,15 +57,21 @@ if [ -z "$domain" ] || [ -z "$keypair" ]; then
 fi
 
 resource="https://${domain}/index.html"
-# 고정 정책(canned). 🔴 공백 없는 이 모양 그대로여야 CloudFront 가 같은 바이트로 다시 만들어 검사한다.
+# A canned policy. It has to keep exactly this whitespace-free shape, because
+# CloudFront rebuilds the same bytes to verify the signature.
 policy="{\"Statement\":[{\"Resource\":\"${resource}\",\"Condition\":{\"DateLessThan\":{\"AWS:EpochTime\":${expires}}}}]}"
-# SHA-256 서명 + `Hash-Algorithm=SHA256` 쿼리(CloudFront 기본은 SHA-1 — 이 매개변수가 없으면 SHA-1 로 검증해 403 이다 · 2026-10-28)
+# Sign with SHA-256 and say so in the `Hash-Algorithm=SHA256` query parameter.
+# CloudFront defaults to SHA-1, so without that parameter it verifies with SHA-1
+# and returns 403.
 signature=$(printf '%s' "$policy" | openssl dgst -sha256 -sign "$key" | openssl base64 -A | tr '+=/' '-_~')
 [ -n "$signature" ] || die "서명 실패(openssl)"
 
-# #141 — 키를 겹쳐 교체하는 동안 키 그룹에는 두 키가 있다. 새 링크는 **새 자리(KeyLabel) 키**로만 서명한다:
-#   ViewerKeyPairId 와 짝이 아닌 비밀키로 서명한 링크는 403 이고, 물러나는 옛 키로 서명한 링크는 옛 키를 빼는 날 끊긴다.
-#   그래서 스택을 조회한 경우에는 이 비밀키의 공개키가 스택의 ViewerPublicKeyPem 인지 확인한 뒤에만 링크를 내놓는다.
+# During an overlapping key rotation the key group holds two keys, and new links
+# must be signed with the incoming one. A link signed with a private key that
+# does not match ViewerKeyPairId returns 403, and one signed with the retiring
+# key stops working the day that key is removed. So whenever the stack was
+# queried, a link is only issued after confirming this private key's public half
+# is the stack's ViewerPublicKeyPem.
 if [ -n "$stack" ] && [ -n "$outputs" ]; then
   flat() { tr -d ' \t\r\n'; }
   stack_pem() {
@@ -83,10 +91,14 @@ printf '%s?Expires=%s&Signature=%s&Key-Pair-Id=%s&Hash-Algorithm=SHA256\n' "$res
 when=$(date -u -d "@$expires" '+%Y-%m-%d %H:%M UTC' 2>/dev/null || date -u -r "$expires" '+%Y-%m-%d %H:%M UTC')
 echo "만료: $when · 이 링크를 가진 사람은 누구나 본다 · 전부 무효화 = 키 교체(docs/install-guide.md 6단계)" >&2
 
-# 발급 기록(#141) — 「만료 · Key-Pair-Id · 발급 시각」 한 줄. 링크·서명은 적지 않는다.
-# 키를 겹쳐 교체할 때 deploy.sh 가 이 기록에서 「옛 키로 낸 링크의 가장 늦은 만료」 = 옛 키를 빼도 되는 때를 읽는다.
-# 자리 = 사용자 상태 폴더(XDG) 한 곳 — 비밀키 옆에 두면 안내서처럼 저장소 루트에서 서명할 때 추적 안 된 파일로 남는다.
-# 🔵 이 PC(이 사용자)에서 낸 링크만 셈한다 — 다른 PC·CloudShell 에서 낸 링크는 그쪽 기록에 있다.
+# The issuance ledger: one line of expiry, Key-Pair-Id and issuing time. Neither
+# the link nor the signature is recorded. During an overlapping rotation,
+# deploy.sh reads the latest expiry among links signed with the old key from
+# here, which is when that key can safely be removed. It lives in the user's
+# state directory (XDG) rather than next to the private key, where signing from
+# the repository root as the guide describes would leave an untracked file. Only
+# links issued on this machine by this user are counted; links from another
+# machine or from CloudShell are in that machine's ledger.
 ledger="${XDG_STATE_HOME:-$HOME/.local/state}/nettopo/viewer-links.log"
 if ! (umask 077 && mkdir -p "$(dirname "$ledger")" && printf '%s\t%s\t%s\n' "$expires" "$keypair" "$(date +%s)" >> "$ledger") 2> /dev/null; then
   echo "경고: 발급 기록을 남기지 못했다($ledger) — 키를 교체할 때 이 링크의 만료를 셈하지 못한다" >&2
