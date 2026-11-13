@@ -1,11 +1,18 @@
-# 상태 단 Lambda 꾸러미의 의존성 — **전부 == 고정 + 해시**(ADR 0004 D2-1 조건 1).
+# Dependencies of the state-tier Lambda bundle, every one pinned with == and a
+# hash.
 #
-# 🔴 boto3 하나만 고정하면 안 된다. boto3 는 botocore 를 범위(>=1.43.93,<1.44)로 끌어와서 설치하는
-#    날의 최신 botocore 가 들어간다(실측 2026-10-01: boto3 1.43.93 고정 → botocore 1.43.105).
-#    `awsguard.py` 가 훅을 거는 것은 botocore 다 — 검사를 통과한 그 botocore 여야 한다.
-# 🔴 버전 = 엔진 검사(`pytest engine infra`)를 통과시킨 워크스테이션의 설치본. 올릴 때는 그 버전으로
-#    검사를 다시 통과시킨 뒤 여기 7줄을 함께 바꾼다(해시 = PyPI 휠의 sha256, `pip download` 로 확인).
-# 휠은 전부 순수 파이썬(py3-none-any)이라 해시가 플랫폼과 무관하다.
+# Pinning boto3 alone is not enough: boto3 requires botocore by range
+# (>=1.43.93,<1.44), so whatever botocore is newest on the day of the build gets
+# installed (we measured boto3 1.43.93 pulling in botocore 1.43.105). What
+# `awsguard.py` hooks is botocore, and it has to be the botocore we verified.
+#
+# These versions are the ones installed on the workstation where the engine and
+# infra tests passed. To raise them, pass those tests again on the new versions
+# and change all seven lines here together; each hash is the sha256 of the wheel
+# on PyPI, which `pip download` reports.
+#
+# Every wheel is pure Python (py3-none-any), so the hashes are
+# platform-independent.
 boto3==1.43.93 --hash=sha256:3c948fe231490d446bf90bf3322d1452632107329d3683b37d88b7399bf481a0
 botocore==1.43.93 --hash=sha256:3ca57bb5d26d88b554a74de708a5c991f45306436c91aacca931252d1d4d54ff
 jmespath==1.1.0 --hash=sha256:a5663118de4908c91729bea0acadca56526eb2698e83de10cd116ae0f4e97c64
