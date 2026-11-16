@@ -1,15 +1,21 @@
-"""서명 단 — 「주소 칸만 바꾼다」는 약속이 사고 상황에서도 지켜지는지 재는 검사.
+"""The signing tier, tested for whether "only the address slot changes" still
+holds when things go wrong.
 
-여기서 재는 것은 「서명이 된다」가 아니라 **무엇을 쓰지 않는가**다:
+What these tests measure is not that signing works, but what the signer refuses
+to write:
 
-- 주소 칸이 0개·2개면 **아무것도 쓰지 않는가**(장치 ① — 추측으로 칸을 고르지 않는다)
-- 사람이 받는 `index.html` 을 **원본으로 읽지 않는가**(장치 ④ — 서명 전 원본 `unsigned/index.html` 에서만 게시한다 ·
-  QA B 2차 2026-10-17: 빌드가 `index.html` 을 빈 칸으로 덮던 2~9초 창을 없앴다)
-- 칸 밖의 바이트가 **한 글자도** 바뀌지 않는가
-- 서명하는 키가 화면이 부르는 **두 경로 + 이동 주소 하나뿐**인가(불변식 ⑥ 의 예외 2경로 + 클릭 전용 이동 · 2026-10-14)
-- 화면에 약속하는 만료가 **자격증명의 수명을 넘지 않는가**
+- With zero or two address slots, nothing is written at all; the slot is never
+  guessed.
+- The page people open (`index.html`) is never read as the source. Publishing
+  always starts from the unsigned build at `unsigned/index.html`, which is what
+  removed the 2 to 9 second window where the build had overwritten
+  `index.html` with an empty slot.
+- Not a single byte outside the slot changes.
+- Only three URLs the page calls are signed, plus one navigation URL.
+- The expiry the page promises never outlives the signing credentials.
 
-🔴 실제 S3 를 부르지 않는다. 서명은 botocore 가 로컬에서 계산하므로 가짜 자격증명으로 실제 URL 을 만든다.
+S3 is never contacted. botocore computes signatures locally, so fake credentials
+are enough to produce real URLs.
 """
 
 from __future__ import annotations
@@ -55,9 +61,10 @@ class _Body:
 
 
 class _FakeS3:
-    """S3 대역. 서명은 진짜 botocore 클라이언트에 맡기고(로컬 계산), 읽기·쓰기만 가로챈다."""
+    """Stands in for S3. Signing is delegated to a real botocore client, which
+    computes it locally; only reads and writes are intercepted."""
 
-    class exceptions:  # noqa: N801 — botocore 클라이언트의 모양을 따른다
+    class exceptions:  # noqa: N801 - mirrors the shape of a botocore client
         NoSuchKey = _NoSuchKey
 
     def __init__(self, real: Any, objects: dict[str, bytes]) -> None:
@@ -120,14 +127,18 @@ def _slot_payload(html: str) -> dict[str, Any]:
 
 
 def test_the_repo_page_has_exactly_the_slot_the_signer_looks_for():
-    """`flow.html` 의 태그와 `SLOT` 이 어긋나면 배포된 화면의 스위치가 **영영** 비활성이다.
+    """If the tag in `flow.html` and `SLOT` drift apart, the switch on the
+    deployed page is disabled permanently.
 
-    빌드는 통과하고(칸이 없다고 렌더가 실패하지 않는다) 서명 함수는 「칸 0개」를 로그에 남기고
-    끝난다 — 사람이 화면에서 보는 것은 「실시간을 쓸 수 없다」 한 줄뿐이다.
+    The build still passes, since a missing slot does not fail rendering, and the
+    signer just logs that it found zero slots and stops. All anyone sees on the
+    page is one line saying live monitoring is unavailable.
     """
     html = FLOW_HTML.read_text()
     assert len(sg.SLOT.findall(html)) == 1
-    assert _slot_payload(html)["state_url"] is None, "리포의 칸은 비어 있어야 한다"
+    assert _slot_payload(html)["state_url"] is None, (
+        "the slot in the repository should be empty"
+    )
 
 
 def test_rewrites_only_the_slot(monkeypatch):
@@ -137,12 +148,13 @@ def test_rewrites_only_the_slot(monkeypatch):
     ((key, body, extra),) = fake.puts
     assert key == "index.html"
     assert extra["ServerSideEncryption"] == "AES256"
-    # 어느 원본에서 게시했는지 — 배포 뒤 `head-object` 두 번으로 대조한다(런북).
+    # Which unsigned source this was published from; two `head-object` calls
+    # after a deployment confirm they are the same build.
     assert extra["Metadata"] == {"unsigned-etag": "etag-1"}
-    # 원본은 그대로다 — 다음 5분 주기가 같은 원본에서 다시 게시한다.
+    # The source is untouched, so the next 5-minute cycle republishes from it.
     assert fake.objects[UNSIGNED] == PAGE.encode()
     new = body.decode()
-    # 칸 밖은 한 글자도 바뀌지 않는다.
+    # Not a single byte outside the slot changes.
     assert sg.SLOT.sub("", new) == sg.SLOT.sub("", PAGE)
     payload = _slot_payload(new)
     assert payload["v"] == 1
@@ -152,20 +164,23 @@ def test_rewrites_only_the_slot(monkeypatch):
     assert payload["control_url"].startswith(
         f"https://{BUCKET}.s3.{REGION}.amazonaws.com/control/desired.json?"
     )
-    # 🆕 따라 보기(2026-10-28) — 같은 버킷 오리진의 `/control/desired.json` 읽기. 화면은 오리진·키가 다르면 칸을 버린다.
+    # Following along: a read of `/control/desired.json` on the same bucket
+    # origin. The page discards the slot if the origin or key differs.
     assert payload["control_get_url"].startswith(
         f"https://{BUCKET}.s3.{REGION}.amazonaws.com/control/desired.json?"
     )
-    # 🆕 최신 화면 열기(QA B P3) — 같은 버킷 오리진의 `/index.html`. 화면은 오리진·키가 다르면 버튼을 내지 않는다.
+    # "Open the latest page": `/index.html` on the same bucket origin. The page
+    # hides the button if the origin or key differs.
     assert payload["index_url"].startswith(
         f"https://{BUCKET}.s3.{REGION}.amazonaws.com/index.html?"
     )
 
 
 def test_signs_exactly_the_three_screen_paths_and_the_page(monkeypatch):
-    """불변식 ⑥ 의 예외는 **세 경로**(상태 읽기 · 제어 키 읽기·쓰기 — 🆕 제어 읽기 = 따라 보기, 사용자 결정 2026-10-28) +
-    **클릭 전용 이동 주소 하나**(`index.html` 읽기 · 사용자 결정 2026-10-14 QA B P3)다. 다섯 번째 URL 이 생기면 문서
-    (ADR 0003 D2 · ADR 0005 D4 보강 4 · ADR 0006 O6 · 불변식 ⑥ 「외부 요청 = 실시간 상태 읽기·제어 키 읽기·쓰기」)가 먼저 바뀌어야 한다."""
+    """The page is allowed exactly three request paths (reading state, and
+    reading and writing the control key) plus one click-only navigation URL
+    (reading `index.html`). A fifth URL means the documented contract has to
+    change first."""
     fake = _install(monkeypatch, {UNSIGNED: PAGE.encode()})
     sg.handler({})
     assert sorted((op, key) for op, key, _ in fake.signed) == [
@@ -174,13 +189,16 @@ def test_signs_exactly_the_three_screen_paths_and_the_page(monkeypatch):
         ("get_object", "state-latest.json"),
         ("put_object", "control/desired.json"),
     ]
-    # 네 주소의 수명은 같다 — 이동 주소만 먼저 죽으면 버튼이 403 화면으로 보내고, 읽기 주소만 먼저 죽으면 따라 보기가 멈춘다.
+    # All four URLs share one lifetime. If the navigation URL expired first the
+    # button would lead to a 403; if the read URL expired first, following along
+    # would stop.
     assert len({seconds for _, _, seconds in fake.signed}) == 1
 
 
 def test_signature_covers_host_only(monkeypatch):
-    """`content-type` 을 서명에 넣으면 브라우저가 한 글자 다른 헤더를 보낼 때 403 이 「권한 없음」과
-    구별되지 않는다. 서명 헤더는 `host` 하나여야 한다."""
+    """Signing `content-type` would mean that a browser sending a header one
+    character different gets a 403 indistinguishable from a permission failure.
+    The only signed header must be `host`."""
     fake = _install(monkeypatch, {UNSIGNED: PAGE.encode()})
     sg.handler({})
     payload = _slot_payload(fake.objects["index.html"].decode())
@@ -201,14 +219,17 @@ def test_wrong_slot_count_writes_nothing(monkeypatch, slots):
     result = sg.handler({})
     assert result == {"result": "slot-count", "slots": slots}
     assert fake.puts == []
-    assert fake.signed == [], "칸을 못 찾았는데 서명부터 했다 — 순서가 바뀌었다"
+    assert fake.signed == [], (
+        "signing happened before the slot was found, so the order is wrong"
+    )
 
 
 def test_tag_mentioned_in_inlined_code_is_not_a_slot(monkeypatch):
-    """인라인된 JS 주석이 태그 문자열을 품어도 칸으로 세지 않는다(뒤에 JSON 객체가 바로 안 온다)."""
+    """Inlined JS mentioning the tag inside a comment is not counted as a slot,
+    because no JSON object follows it directly."""
     page = PAGE.replace(
         "const x = 1",
-        '// <script id="nettopo-live" type="application/json"> 을 읽는다\nconst x = 1',
+        '// reads <script id="nettopo-live" type="application/json">\nconst x = 1',
     )
     fake = _install(monkeypatch, {UNSIGNED: page.encode()})
     assert sg.handler({})["result"] == "signed"
@@ -216,9 +237,11 @@ def test_tag_mentioned_in_inlined_code_is_not_a_slot(monkeypatch):
 
 
 def test_missing_unsigned_page_writes_nothing(monkeypatch):
-    """원본이 없으면(첫 빌드 전 · 옛 방식에서 갓 올린 스택) **아무것도 쓰지 않는다** — 남아 있는 `index.html` 을
-    원본으로 삼아 그 자리에서 고치지 않는다(그 키는 이 함수의 출력이다)."""
-    old = PAGE.replace("10.0.0.0/16", "옛 판").encode()
+    """With no unsigned source (before the first build, or on a stack just moved
+    off the older scheme) nothing is written. A leftover `index.html` is never
+    treated as the source and patched in place, because that key is this
+    function's output."""
+    old = PAGE.replace("10.0.0.0/16", "older revision").encode()
     fake = _install(monkeypatch, {"index.html": old})
     assert sg.handler({}) == {"result": "no-unsigned"}
     assert fake.puts == []
@@ -228,23 +251,28 @@ def test_missing_unsigned_page_writes_nothing(monkeypatch):
 
 
 def test_publishes_from_the_unsigned_build_never_from_the_page(monkeypatch):
-    """사람이 받는 `index.html` 에 서명 전 판이 한 순간도 없어야 한다(QA B 2차 2026-10-17).
+    """The page people open must never hold an unsigned revision, not even
+    briefly.
 
-    그러려면 빌드는 원본 키에만 올리고 이 함수가 **원본에서** 게시해야 한다. `index.html` 을 읽어 고치면 빌드가 다시
-    `index.html` 을 덮어야 새 구조가 보인다 — 그 덮는 순간이 바로 「모니터링을 켤 수 없는 화면」이다. 원본이 바뀌면
-    다음 실행이 **새 원본**을 게시하고, 원본이 그대로면 같은 원본에 새 서명만 붙는다.
+    That requires the build to upload only to the unsigned key and this function
+    to publish from it. Were the signer to read and patch `index.html` instead,
+    the build would have to overwrite `index.html` for a new structure to appear,
+    and during that overwrite the page cannot turn monitoring on. When the source
+    changes, the next run publishes the new one; when it does not, the same
+    source is republished with fresh signatures.
     """
-    old = PAGE.replace("10.0.0.0/16", "옛 판").encode()
+    old = PAGE.replace("10.0.0.0/16", "older revision").encode()
     fake = _install(monkeypatch, {"index.html": old, UNSIGNED: PAGE.encode()})
     assert sg.handler({})["result"] == "signed"
-    assert fake.gets == [UNSIGNED], "원본 말고 다른 키를 읽었다"
+    assert fake.gets == [UNSIGNED], "a key other than the unsigned source was read"
     assert [key for key, _, _ in fake.puts] == ["index.html"], (
-        "index.html 말고 다른 키를 썼다"
+        "a key other than index.html was written"
     )
     first = fake.objects["index.html"].decode()
     assert sg.SLOT.sub("", first) == sg.SLOT.sub("", PAGE)
-    assert _slot_payload(first)["state_url"], "게시한 판의 칸이 비어 있다"
-    # 다음 빌드가 원본만 바꿨다 → 다음 실행이 새 구조를 게시한다.
+    assert _slot_payload(first)["state_url"], "the published revision has an empty slot"
+    # The next build changed only the unsigned source, so the next run publishes
+    # the new structure.
     newer = PAGE.replace("10.0.0.0/16", "10.9.0.0/16")
     fake.objects[UNSIGNED] = newer.encode()
     fake.etag = '"etag-2"'
@@ -252,7 +280,7 @@ def test_publishes_from_the_unsigned_build_never_from_the_page(monkeypatch):
     second = fake.objects["index.html"].decode()
     assert sg.SLOT.sub("", second) == sg.SLOT.sub("", newer)
     assert fake.puts[-1][2]["Metadata"] == {"unsigned-etag": "etag-2"}
-    assert fake.objects[UNSIGNED] == newer.encode(), "원본을 고쳤다"
+    assert fake.objects[UNSIGNED] == newer.encode(), "the unsigned source was modified"
 
 
 def test_other_write_errors_are_not_swallowed(monkeypatch):
@@ -269,8 +297,9 @@ def test_other_write_errors_are_not_swallowed(monkeypatch):
 
 
 def test_resigning_replaces_the_previous_signature(monkeypatch):
-    """5분마다 같은 문서를 다시 서명한다 — 두 번째 서명이 **칸을 하나 더 만들면** 세 번째 주기부터
-    `slot-count` 로 멈춘다(= 배포 15분 뒤 스위치가 죽는다)."""
+    """The same document is re-signed every 5 minutes. If the second signature
+    added a second slot, the third cycle would stop with `slot-count`, so the
+    switch would die 15 minutes after deployment."""
     fake = _install(monkeypatch, {UNSIGNED: PAGE.encode()})
     sg.handler({})
     first = fake.objects["index.html"].decode()
@@ -289,9 +318,10 @@ def test_slot_json_cannot_close_the_script_element():
 
 
 def test_promised_expiry_never_exceeds_the_credential(monkeypatch):
-    """화면이 「HH:MM 까지」라고 말한 시각보다 URL 이 먼저 죽으면 사람은 고장으로 읽는다.
+    """A URL that dies before the time the page promised reads as a malfunction.
 
-    같은 키를 11시간 전에 처음 봤다면 남은 수명은 12시간 − 11시간 − 여유다(요청 수명 12시간이 아니다).
+    If this key was first seen 11 hours ago, the remaining lifetime is 12 hours
+    minus 11 hours minus the margin, not the 12 hours requested.
     """
     fake = _install(monkeypatch, {UNSIGNED: PAGE.encode()})
     now = datetime.now(timezone.utc)
@@ -316,7 +346,8 @@ def test_promised_expiry_never_exceeds_the_credential(monkeypatch):
 
 
 def test_new_credential_starts_a_new_clock(monkeypatch):
-    """자격증명이 바뀌었는데 옛 키의 시각으로 재면 **짧게** 틀린다 — 새 키는 새로 센다."""
+    """Measuring rotated credentials from the old key's timestamp would
+    understate the lifetime, so a new key restarts the clock."""
     now = datetime.now(timezone.utc)
     sg._FIRST_SEEN["test-access-key-old"] = now - timedelta(hours=11)
     deadline = sg.credential_deadline("test-access-key-new", now)
@@ -333,6 +364,7 @@ def test_nearly_dead_credential_bakes_nothing(monkeypatch):
 
 
 def test_signer_never_imports_the_engine():
-    """서명 함수는 대상 계정에 들어가지 않는다 — 엔진을 임포트하면 그 경계가 흐려진다."""
+    """The signer never enters a target account, and importing the engine would
+    blur that boundary."""
     source = Path(sg.__file__).read_text()
     assert not re.search(r"^\s*(from|import)\s+nettopo", source, re.MULTILINE)

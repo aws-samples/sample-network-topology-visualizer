@@ -1,22 +1,28 @@
-"""상태 단 실행체 — EventBridge 가 부르는 얇은 핸들러 (ADR 0004 D2-1, 조건 5개).
+"""State tier entry point: a thin Lambda handler invoked by EventBridge.
 
-부르는 것은 둘이다: 5분 스케줄 · S3 이벤트 — 화면이 제어 키를 쓴 순간(「누르면 바로 깨우기」 2026-10-06)과
-구조 단이 새 구조 포인터를 올린 순간(「구조를 따라간다」 QA B P3 · 사용자 결정 2026-10-14).
+Two things invoke it: the 5-minute schedule, and an S3 event (the page writing
+the control key, or the structure tier publishing a new structure pointer).
 
-이 파일이 하는 일은 넷뿐이다:
+The handler does only four things:
 
-1. **번들 검사**(조건 1) — 우리가 담은 boto3·botocore 가 실제로 임포트됐는지 본다.
-2. **시간 버전 키**(조건 2) — 키를 **EventBridge 이벤트의 `time`** 에서 만든다. 실행 시각이 아니다.
-3. **관측 실행** — `nettopo observe` 를 **로컬 파일로만** 돌린다(조건 4 — 엔진은 S3 를 모른다).
-4. **업로드** — 산출물을 `put_object` 로 올린다. 누적 키는 **덮어쓰지 않는다**(ADR 0004 D1).
+1. Verify the bundle: confirm the boto3 and botocore we packaged are the ones
+   that were actually imported.
+2. Build a time-versioned key from the EventBridge event's `time`, not from the
+   wall clock at execution.
+3. Run the observation by calling `nettopo observe` on local files only; the
+   engine knows nothing about S3.
+4. Upload the result with `put_object`. Archive keys are never overwritten.
 
-🔴 관측 논리는 한 줄도 여기 없다. `engine/src/` 에 `s3`·`put_object` 가 **0건**인 경계를
-유지하는 것이 조건 4 의 목적이고, 그 경계가 무너지면 「읽기 전용 엔진」(불변식 ①)의 검사 표면이
-엔진 밖으로 새어 나간다.
+No observation logic lives here. Keeping `s3` and `put_object` out of
+`engine/src/` is what makes the engine testable as a read-only component; once
+that boundary leaks, the read-only guarantee has to be verified outside the
+engine as well.
 
-🔴 **실패는 조용히 성공으로 바꾸지 않는다.** 번들이 어긋나거나 이벤트에 `time` 이 없거나 관측이
-0 이 아닌 코드로 끝나면 **예외로 죽는다** → 비동기 호출의 재시도 2회 뒤 DLQ 로 간다. 반쯤 만들어진
-관측 문서를 올리는 것이 최악이다 — 화면은 그것을 「지금 상태」로 그린다(불변식 ④).
+Failures are never turned into quiet successes. A mismatched bundle, an event
+without `time`, or a non-zero exit from the observation raises, which sends the
+invocation to the DLQ after the two automatic retries. Uploading a half-built
+observation document would be worse: the page renders whatever it finds as the
+current state.
 """
 
 from __future__ import annotations
@@ -33,62 +39,82 @@ import boto3
 import botocore
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
-# 패키징 스크립트(`build-state-lambda.sh`)가 zip 안에 써 넣는다. 배포 시각의 사실이므로
-# 템플릿 파라미터로 받지 않는다 — 파라미터는 사람이 잊어도 배포가 되고, 이 파일은 안 된다.
+# Written into the zip by the packaging script (`build-state-lambda.sh`). It is a
+# fact about the deployed artifact, so it is not a template parameter: a
+# parameter someone forgets still deploys, a missing file here does not.
 BUNDLED_VERSIONS = PACKAGE_ROOT / "bundled-versions.json"
 
-# UI 가 쓰는 유일한 객체(ADR 0005). 없으면 「실시간이 켜진 적이 없다」로 읽는다.
+# The only object the UI writes. Absent means live monitoring was never enabled.
 CONTROL_KEY = "control/desired.json"
-# 구조 단(CodeBuild)이 매 빌드 끝에 덮어쓰는 포인터. 목록 조회를 O(1) 로 만든다.
+# Pointer that the structure tier (CodeBuild) overwrites at the end of every
+# build, so finding the newest structure costs one GET instead of a listing.
 STRUCTURE_LATEST_KEY = "structure-latest.json"
-# 그 포인터가 가리키던 **직전 내용**의 구조. 구조 단이 내용이 바뀔 때만 옮겨 둔다(buildspec).
-# 없어진 리소스의 모습(`change.was`)을 이력에 적는 데만 쓴다 — 없으면 모습 없이 적는다.
+# The structure the pointer referred to before the current one. The structure
+# tier copies it aside only when the content actually changed. It is used only to
+# record what a deleted resource looked like; without it the history line still
+# gets written, just without that detail.
 STRUCTURE_PREVIOUS_KEY = "structure-previous.json"
-# 화면이 폴링하는 것 = **직전 관측 문서 그 자체**다. 그래서 이력 입력(`--previous`)도 이 키다.
+# What the page polls is the previous observation document itself, which is why
+# the history input (`--previous`) reads the same key.
 STATE_LATEST_KEY = "state-latest.json"
 STATE_PREFIX = "snapshots/state"
-# 구조 단의 누적 키(`snapshots/structure/YYYY/MM/DD/HHMMZ/topology.json`). 🆕 직전 관측의 구조가 지금 포인터에도 사본에도
-# 없을 때만 여기서 **그 한 장**을 찾는다(QA B 2차 N-05 · ADR 0004 D4 보강 개정 2026-10-17) — 실시간을 끈 사이 구조 내용이 두 번 넘게
-# 바뀌면 사본(`structure-previous.json`)이 이미 다른 구조로 덮여 있어서, 지운 리소스의 이력 줄이 이름 없이 id 로 남았다.
+# Archive keys written by the structure tier
+# (`snapshots/structure/YYYY/MM/DD/HHMMZ/topology.json`). We search here only
+# when the structure paired with the previous observation is neither the current
+# pointer nor the copy aside: if the structure changed more than once while live
+# monitoring was off, the copy has already been overwritten, and a deleted
+# resource would appear in the history with its id but no name.
 STRUCTURE_ARCHIVE_PREFIX = "snapshots/structure"
-# 🔴 누적 키의 시각은 구조 단 **post_build 의 벽시계**다(`stack-a-collector.yaml` `STAMP="$(date -u …)"`) — 수집 시작 시각
-#    (`run.collected_at` = 관측의 `topology_collected_at`)보다 늦다. 그래서 키를 그 시각에서 **정확히** 만들 수 없고, 그 시각의
-#    날짜 프리픽스를 나열해 [수집 시각(분 내림), + 창] 안의 키를 오래된 순으로 최대 몇 장만 받아 **지문으로 확인**한다.
+# The timestamp in an archive key comes from the structure tier's post_build wall
+# clock (`STAMP="$(date -u …)"` in `stack-a-collector.yaml`), which is later than
+# the time collection started (`run.collected_at`, the observation's
+# `topology_collected_at`). The key therefore cannot be derived exactly from that
+# time: we list the date prefixes around it, take the keys inside
+# [collection time floored to the minute, + window] oldest first, and confirm the
+# match by content digest.
 ARCHIVE_WINDOW = timedelta(hours=2)
 ARCHIVE_TRIES = 3
 _ARCHIVE_KEY = re.compile(
     r"^snapshots/structure/(\d{4})/(\d{2})/(\d{2})/(\d{2})(\d{2})Z/topology\.json$"
 )
 
-# ADR 0005 D4. 브라우저가 보낸 `expiresAt` 을 서버측에서 자르는 상한.
+# Server-side ceiling applied to the `expiresAt` the browser sends.
 MAX_TTL = timedelta(hours=8)
-# 깨우기(제어 키 쓰기)인데 직전 관측이 이만큼 안이고 층이 같으면 돌지 않는다 — 화면은 켠 동안 5분마다 임대를
-# 연장하느라 같은 키를 다시 쓴다. 6분 = 화면의 `LIVE_FRESH_MS`(켜기 전 6분 안의 문서는 「지금」으로 받는다)와 같은 값이다:
-# 이 안의 문서면 화면이 이미 그것을 얹으므로, 다시 돌아도 사용자가 보는 것은 같고 호출(2층 = 돈)만 는다.
+# On a wake-up (a control-key write), skip the run if the previous observation is
+# this fresh and was taken with the same layers enabled. While live monitoring is
+# on, the page rewrites the same key every 5 minutes to extend its lease. The 6
+# minutes matches the page's `LIVE_FRESH_MS`, the age at which it still treats a
+# document as current: inside that window the page is already showing the
+# document, so running again would show the user the same thing while adding
+# metric calls, which cost money.
 WAKE_FRESH = timedelta(minutes=6)
 WAKE_SOURCE = "aws.s3"
 TRIGGER_WORD = {"schedule": "주기", "wake": "깨우기", "structure": "새 구조"}
 
 
 def _tmp_root() -> Path:
-    # 🔵 상수가 아니라 함수다 — 임포트 시각에 굳으면 검사가 `/tmp` 를 진짜로 쓰게 된다.
+    # A function rather than a constant: resolved at import time, tests would
+    # write to the real `/tmp`.
     return Path(os.environ.get("NETTOPO_TMP", "/tmp"))  # noqa: S108
 
 
 class BundleError(RuntimeError):
-    """번들이 어긋났다 — 읽기 전용 방어선이 우리가 검사한 그 botocore 가 아니다."""
+    """The bundle is not ours, so the read-only guard is running against a
+    botocore we never verified."""
 
 
 class ScheduleError(RuntimeError):
-    """이벤트에 시각이 없다(스케줄·S3 이벤트 둘 다 `time` 을 준다) — 시간 버전 키를 만들 수 없다."""
+    """The event carries no timestamp (both the schedule and S3 events provide
+    `time`), so no time-versioned key can be built."""
 
 
 class ObserveError(RuntimeError):
-    """엔진이 0 이 아닌 코드로 끝났다 — 올리지 않는다."""
+    """The engine exited non-zero, so nothing is uploaded."""
 
 
 class MissingInputError(RuntimeError):
-    """관측의 입력(구조 스냅샷)이 없다 — 구조 단이 한 번도 성공하지 않았다."""
+    """The observation input (a structure snapshot) is missing: the structure
+    tier has never completed successfully."""
 
 
 def verify_bundle(
@@ -99,16 +125,18 @@ def verify_bundle(
     module_paths: dict[str, Path],
     in_lambda: bool,
 ) -> None:
-    """조건 1 — 번들이 우리가 만든 그 번들인지 본다. 아니면 **죽는다**.
+    """Raise unless the bundle is the one we built.
 
-    왜 버전 하나를 이렇게까지 보는가: `awsguard.py` 가 botocore **이벤트 2개**
-    (`before-parameter-build`·`before-call`)에 훅을 걸어 읽기 전용을 런타임 강제한다. 이벤트
-    이름과 발생 순서는 botocore 내부 규약이고 AWS 는 Lambda 런타임의 번들 boto3 를 **예고 없이**
-    올린다. 런타임 것이 임포트되면 훅은 조용히 다른 계약 위에서 돌고 **방어선이 헐거워진 것을
-    아무도 모른다.** 그래서 모르는 번들로는 한 번도 돌지 않는다.
+    Why two version numbers matter this much: `awsguard.py` enforces read-only
+    access at runtime by hooking two botocore events
+    (`before-parameter-build` and `before-call`). Those event names and their
+    ordering are botocore internals, and AWS upgrades the boto3 bundled with the
+    Lambda runtime without notice. If the runtime copy wins the import, the hooks
+    keep running against a different contract and nothing reports that the guard
+    has loosened. So we refuse to run on a bundle we have not verified.
 
-    🔵 로컬(`in_lambda=False`)에서는 번들이 존재하지 않으므로 검사할 대상이 없다 — 이 함수는
-    Lambda 안에서만 판정한다. 검사는 `in_lambda=True` 를 주고 재는 것이 정답이다.
+    Locally (`in_lambda=False`) there is no bundle to check, so this function only
+    judges inside Lambda; tests should pass `in_lambda=True` to exercise it.
     """
     if not in_lambda:
         return
@@ -133,11 +161,12 @@ def verify_bundle(
 
 
 def stamp_from_event_time(raw: Any) -> tuple[str, datetime]:
-    """조건 2 — 키를 **이벤트 시각**에서 만든다. 실행 시각으로 만들면 안 되는 이유가 있다.
+    """Build the key from the event time, never from the execution time.
 
-    비동기 호출은 **자동 재시도 2회**다. 실행 시각으로 키를 만들면 같은 주기의 재시도가
-    **다른 키**로 앉아 ADR 0004 D1(덮어쓰기 금지)과 싸운다 — 한 주기에 두 개의 「지금 상태」가
-    생기고 둘 중 무엇이 맞는지 아무도 모른다. 이벤트 시각이면 재시도가 **멱등**이다.
+    Asynchronous invocations are retried twice automatically. Keyed by execution
+    time, a retry of the same cycle would land on a different key and produce two
+    documents both claiming to be the current state, with no way to tell which is
+    right. Keyed by event time, retries are idempotent.
     """
     if not isinstance(raw, str) or not raw:
         raise ScheduleError(
@@ -158,7 +187,8 @@ class Decision(NamedTuple):
     live: bool
     layer2: bool
     reason: str
-    # 사용률(ADR 0011) — 2층과 **독립**이다(사용자 결정 2026-10-06 「사용률만 보고 싶은 고객은 사용률만」 · 관측 스키마 1.5.0)
+    # Utilization is independent of the metric layer: someone who only wants
+    # utilization can enable just that.
     utilization: bool = False
 
 
@@ -168,14 +198,18 @@ def decide(
     control_modified: datetime | None,
     now: datetime,
 ) -> Decision:
-    """제어 키를 **서버측에서** 해석한다(ADR 0005 D4 — 브라우저 값을 믿지 않는다).
+    """Interpret the control key server-side rather than trusting the browser.
 
-    🔴 만료 상한의 기준 시각은 **제어 객체의 `LastModified`** 다. 「켠 시각」은 브라우저만 알고
-    위조할 수 있지만 `LastModified` 는 S3 가 쓴다. 그래서 `expiresAt` 이 아무리 먼 미래여도
-    **마지막 PUT + 8시간**을 넘지 못한다 — 연장은 다시 PUT 하는 것으로만 되고(그러면
-    `LastModified` 가 갱신된다) 탭을 닫은 채 과금이 이어지는 경로가 사라진다.
+    The ceiling is measured from the control object's `LastModified`. Only the
+    browser knows when the user pressed the button, and it can forge that value,
+    whereas `LastModified` is written by S3. So however far in the future
+    `expiresAt` claims to be, it cannot outlast the last PUT plus 8 hours.
+    Extending the lease means writing the key again, which refreshes
+    `LastModified`, and that removes the path where a closed tab keeps spending
+    money.
 
-    🔵 기본은 **꺼짐**이다. 제어 키가 없거나 읽히지 않으면 돈이 드는 쪽으로 기울지 않는다.
+    The default is off: if the control key is missing or unreadable, we never lean
+    towards the option that costs money.
     """
     if control is None:
         return Decision(
@@ -206,8 +240,10 @@ def decide(
             f"만료됐다(유효 만료 {effective.isoformat()} ≤ 이벤트 시각 {now.isoformat()})",
         )
     layer2 = control.get("layer2") is True
-    # 🔴 키가 **없으면** 옛 화면 파일이 쓴 제어 키다 — 그 화면은 「지표까지」를 고르면 사용률도 같이 받았다(1.4.0 까지는
-    #    2층과 같이 돌았다). 그 판을 이어 가려면 없음 = 2층을 따른다. 키가 있으면 명시적 true 만 켜짐이다(돈이 드는 층).
+    # A missing key means the control object was written by an older page, where
+    # choosing the metric layer also turned utilization on. Treating "missing" as
+    # "follow the metric layer" keeps those pages working. When the key is
+    # present, only an explicit true enables it, because it costs money.
     raw_util = control.get("utilization")
     utilization = layer2 if raw_util is None else raw_util is True
     return Decision(True, layer2, "제어 키가 on · 만료 전", utilization)
@@ -220,11 +256,14 @@ def wake_is_redundant(
     flow_logs: bool,
     now: datetime,
 ) -> str | None:
-    """깨우기가 할 일이 없으면 그 이유를, 돌아야 하면 `None` 을 준다.
+    """Return why a wake-up has nothing to do, or `None` if it should run.
 
-    할 일이 없다 = 직전 관측이 `WAKE_FRESH` 안이고 **켜 달라는 층이 그 문서의 층과 같다.** 층이 하나라도 다르면
-    (모니터링만 보다가 사용률을 켰다 · 2층을 내렸다) 돈다 — 사용자가 방금 고른 것이 화면에 늦게 오는 것이 이 규칙이
-    없애려는 일이다. 직전 문서가 없거나 읽을 수 없으면 돈다(모르면 사용자 쪽으로 기운다).
+    Nothing to do means the previous observation is within `WAKE_FRESH` and was
+    taken with exactly the layers now being requested. If any layer differs (the
+    user just enabled utilization, or turned the metric layer off) we run,
+    because the point of this rule is to avoid redundant work, not to delay what
+    the user just asked for. If the previous document is missing or unreadable we
+    also run: when in doubt, favour the user.
     """
     if not isinstance(previous, dict):
         return None
@@ -255,7 +294,8 @@ def wake_is_redundant(
 
 
 def event_key(event: dict[str, Any]) -> str | None:
-    """S3 → EventBridge 「Object Created」 이벤트의 객체 키. 다른 모양이면 `None`."""
+    """The object key from an S3-to-EventBridge "Object Created" event, or `None`
+    for any other shape."""
     detail = event.get("detail")
     obj = detail.get("object") if isinstance(detail, dict) else None
     key = obj.get("key") if isinstance(obj, dict) else None
@@ -265,12 +305,16 @@ def event_key(event: dict[str, Any]) -> str | None:
 def pair_moved(
     previous: dict[str, Any] | None, structure: dict[str, Any] | None
 ) -> str | None:
-    """직전 관측이 **지금 구조 포인터와 짝이 아니면** 그 이유를, 짝이면(또는 판정할 재료가 없으면) `None` 을 준다.
+    """Return why the previous observation does not pair with the current
+    structure pointer, or `None` when it does pair (or when we cannot tell).
 
-    🔴 「직전 관측이 6분 안이다」만 보고 깨우기를 건너뛰면, 구조가 막 바뀐 뒤 «모니터링»을 켠 화면(새 구조)이
-    옛 구조의 문서를 받아 다음 5분 차례까지 「짝 안 맞음」으로 선다(QA B-09). 짝은 화면과 같은 규칙이다 —
-    내용 지문(`run.topology_content_digest` ↔ 구조의 `run.content_digest`)이 **양쪽에 다 있을 때만** 비교한다
-    (`renderer/flow.js` `pairOf`). 한쪽이라도 없으면 「모른다」 → 건너뛰기 판정을 그대로 둔다.
+    Skipping a wake-up on freshness alone breaks this case: the structure has
+    just changed, a page on the new structure turns monitoring on, and it
+    receives a document describing the old structure, so it sits unpaired until
+    the next 5-minute cycle. Pairing uses the same rule as the page: compare the
+    content digests (`run.topology_content_digest` against the structure's
+    `run.content_digest`) only when both sides have one. If either is missing the
+    answer is "unknown", and the skip decision stands.
     """
     if not isinstance(previous, dict) or not isinstance(structure, dict):
         return None
@@ -297,8 +341,9 @@ def pair_moved(
 def _get_json(
     s3: Any, bucket: str, key: str
 ) -> tuple[dict[str, Any] | None, datetime | None]:
-    """없으면 `(None, None)`. **다른 오류는 삼키지 않는다** — 권한 문제를 「없다」로 바꾸면
-    화면이 「사용자가 끈 것」과 「우리가 못 읽은 것」을 구분하지 못한다."""
+    """Return `(None, None)` when the key is absent. Other errors are not
+    swallowed: turning a permission problem into "not there" would leave the page
+    unable to tell "the user switched this off" from "we could not read it"."""
     try:
         response = s3.get_object(Bucket=bucket, Key=key)
     except s3.exceptions.NoSuchKey:
@@ -323,11 +368,13 @@ def _download(s3: Any, bucket: str, key: str, dest: Path) -> bool:
 
 
 def _download_optional(s3: Any, bucket: str, key: str, dest: Path) -> bool:
-    """선택 입력 — 읽기가 거부돼도 **주기를 죽이지 않는다**(불변식 ④). 대신 로그에 남긴다.
+    """An optional input: a denied read must not kill the cycle, only log.
 
-    🔴 `_download` 와 다른 이유: 필수 입력(구조·직전 관측)은 없으면 관측이 거짓이 되지만, 이
-    입력은 없어도 관측은 그대로 참이고 없어진 줄에 모습이 안 붙을 뿐이다. 권한이 빠진 채 배포된
-    스택(옛 템플릿 + 새 코드)에서 5분 관측 전체가 멈추는 것은 그 대가보다 크다.
+    Why this differs from `_download`: without a required input (the structure,
+    or the previous observation) the observation would be wrong, whereas without
+    this one the observation is still correct and a deleted resource simply has
+    no "before" detail attached. Stopping every 5-minute observation on a stack
+    deployed without the newer permission would cost far more than that.
     """
     try:
         return _download(s3, bucket, key, dest)
@@ -338,10 +385,14 @@ def _download_optional(s3: Any, bucket: str, key: str, dest: Path) -> bool:
 
 
 def structure_pairs(previous: Any, structure: Any) -> bool:
-    """직전 관측이 그 구조와 **짝**인가 — 엔진 `history._paired_structure` 와 같은 규칙이다.
+    """Does the previous observation pair with that structure? Same rule as the
+    engine's `history._paired_structure`.
 
-    지문(`run.topology_content_digest` ↔ `run.content_digest`)이 양쪽에 다 있으면 지문, 아니면 수집 시각.
-    🔴 규칙이 엔진과 갈라지면 이 함수가 「짝이 있다」고 건너뛴 회차에 엔진은 짝을 못 찾는다(= 모습 없는 줄).
+    Compare content digests (`run.topology_content_digest` against
+    `run.content_digest`) when both sides have one, otherwise compare collection
+    times. If this rule drifts from the engine's, the cycles this function skips
+    as "already paired" are the ones where the engine finds no pair, and history
+    lines lose their "before" detail.
     """
     if not isinstance(previous, dict) or not isinstance(structure, dict):
         return False
@@ -358,7 +409,8 @@ def structure_pairs(previous: Any, structure: Any) -> bool:
 
 
 def archive_prefixes(collected_at: str) -> list[str]:
-    """그 수집 시각에서 창 끝까지의 날짜 프리픽스(대개 하나 · 자정을 넘으면 둘)."""
+    """Date prefixes from that collection time to the end of the window: usually
+    one, two when the window crosses midnight."""
     start = _minute_floor(collected_at)
     days = dict.fromkeys(
         t.strftime(f"{STRUCTURE_ARCHIVE_PREFIX}/%Y/%m/%d/")
@@ -368,7 +420,9 @@ def archive_prefixes(collected_at: str) -> list[str]:
 
 
 def archive_candidates(collected_at: str, keys: list[str]) -> list[str]:
-    """누적 키 중 [수집 시각(분 내림), + 창] 안의 것 — **오래된 순**(결정론) · 최대 `ARCHIVE_TRIES` 장."""
+    """Archive keys inside [collection time floored to the minute, + window],
+    oldest first so the result is deterministic, at most `ARCHIVE_TRIES` of
+    them."""
     start = _minute_floor(collected_at)
     found: list[tuple[datetime, str]] = []
     for key in keys:
@@ -390,11 +444,17 @@ def _minute_floor(raw: str) -> datetime:
 def _archived_structure(
     s3: Any, bucket: str, previous: dict[str, Any], dest: Path
 ) -> bool:
-    """직전 관측과 짝인 구조를 누적 스냅샷에서 찾아 `dest` 에 쓴다. 못 찾으면 `False` — **주기는 계속 돈다**.
+    """Find the structure paired with the previous observation in the archive and
+    write it to `dest`. Return `False` when there is none; the cycle continues
+    either way.
 
-    🔴 선택 입력이다(`_download_optional` 과 같은 이유): 없어도 관측은 참이고 없어진 줄에 모습이 안 붙을 뿐이다.
-    🔴 받은 장은 **지문으로 확인한 뒤에만** 쓴다 — 창 안의 다른 구조(그 뒤 수동 수집 등)를 짝으로 넘기면 엔진은 짝을
-       못 찾고 끝나지만, 규칙이 갈라지는 날 다른 시각의 이름·연결이 「그때 모습」이 된다.
+    This is an optional input, for the same reason as `_download_optional`:
+    without it the observation is still correct, only the "before" detail is
+    missing. A downloaded candidate is used only after its digest confirms the
+    pairing. Handing over some other structure from inside the window (a manual
+    collection, say) merely leaves the engine without a pair today, but the day
+    the two rules drift apart it would present names and connections from a
+    different moment as "what it looked like then".
     """
     run = previous.get("run")
     collected = run.get("topology_collected_at") if isinstance(run, dict) else None
@@ -432,11 +492,12 @@ def _archived_structure(
 
 
 def _put_new_only(s3: Any, bucket: str, key: str, body: bytes) -> str:
-    """누적 키에 쓴다. **이미 있으면 그대로 둔다**(ADR 0004 D1 — 덮어쓰기 금지).
+    """Write to an archive key, leaving it alone if something is already there.
 
-    조건부 쓰기(`IfNoneMatch="*"`)가 412 를 주는 것은 **재시도가 멱등하게 끝났다**는 뜻이므로
-    오류가 아니다. 이것이 조건 2(이벤트 시각 키)와 짝이다 — 같은 주기의 재시도는 같은 키를
-    겨누고, 먼저 성공한 문서가 이긴다.
+    A 412 from the conditional write (`IfNoneMatch="*"`) is not an error: it
+    means a retry ended idempotently. This is the counterpart to keying by event
+    time, since retries of one cycle aim at the same key and the document that
+    landed first wins.
     """
     try:
         s3.put_object(
@@ -456,7 +517,8 @@ def _put_new_only(s3: Any, bucket: str, key: str, body: bytes) -> str:
 
 
 def _read_local(path: Path) -> Any:
-    """내려받은 입력을 짝 판정용으로 읽는다. 깨졌으면 `None` — 판정은 엔진이 다시 한다(여기서 죽지 않는다)."""
+    """Read a downloaded input for the pairing check. Return `None` if it is
+    corrupt: the engine makes the same judgement again, so we do not raise."""
     try:
         return json.loads(path.read_bytes())
     except (OSError, ValueError):
@@ -474,8 +536,9 @@ def _put(s3: Any, bucket: str, key: str, body: bytes) -> None:
 
 
 def _observe(argv: list[str]) -> int:
-    # 🔴 `subprocess` 가 아니라 **같은 프로세스**에서 부른다. 셸을 끼우면 인자 따옴표 규칙이
-    #    하나 더 생기고(구조 단 buildspec 에서 실제로 물린 자리다) 콜드스타트도 늘어난다.
+    # Called in-process rather than through `subprocess`. A shell would add one
+    # more layer of argument quoting rules, which has already bitten us in the
+    # structure tier's buildspec, and it would lengthen cold starts.
     from nettopo.cli import main as nettopo_main
 
     return nettopo_main(argv)
@@ -497,21 +560,26 @@ def handler(event: dict[str, Any], context: Any = None) -> dict[str, Any]:
     stamp, event_time = stamp_from_event_time(event.get("time"))
     bucket = os.environ["ARTIFACT_BUCKET"]
     role_name = os.environ["MEMBER_ROLE_NAME"]
-    # 🔴 스택 파라미터 `FlowLogReading` 이 그대로 온다(기본 `DISABLED`). 정확히 `ENABLED` 일 때만 켠다 — 권한 정책도
-    #    같은 값에서만 만들어지므로(스택 A `FlowLogsOn`), 다른 값을 켜짐으로 읽으면 매 주기 「권한 없음」만 쌓인다.
+    # This is the `FlowLogReading` stack parameter verbatim, `DISABLED` by
+    # default. Only the exact value `ENABLED` turns it on, because the permission
+    # policy is created from the same value: reading anything else as "on" would
+    # pile up permission errors every cycle instead.
     flow_logs = os.environ.get("FLOW_LOGS", "DISABLED") == "ENABLED"
     s3 = boto3.client("s3")
 
     control, modified = _get_json(s3, bucket, CONTROL_KEY)
     decision = decide(control, control_modified=modified, now=event_time)
     if not decision.live:
-        # 🔵 **아무것도 올리지 않는다.** 꺼진 주기에 문서를 쓰면 화면은 그것을 「지금 상태」로
-        #    읽는다. 꺼져 있다는 사실은 화면이 마지막 문서의 시각으로 말한다(ADR 0006).
+        # Upload nothing. A document written during a cycle where monitoring is
+        # off would still be read by the page as the current state; the page
+        # conveys "this is off" from the age of the last document instead.
         print(f"실시간 꺼짐 — {decision.reason} · 주기 {stamp}")
         return {"stamp": stamp, "live": False, "reason": decision.reason}
-    # 🔴 세 갈래다: 5분 차례(`schedule`) · 제어 키 쓰기(`wake`) · 새 구조 포인터(`structure`). 구조 포인터 이벤트는
-    #    **건너뛰지 않는다** — 그 이벤트가 온 이유가 곧 「직전 관측이 옛 구조의 것이 됐다」이고, 열어 둔 화면이 새 화면
-    #    파일로 넘어갔을 때 그 구조의 상태가 기다림 없이 와 있어야 한다(QA B-13 · B-09).
+    # Three ways in: the 5-minute cycle (`schedule`), a control-key write
+    # (`wake`), and a new structure pointer (`structure`). A structure-pointer
+    # event is never skipped, because the very reason it arrived is that the
+    # previous observation now describes an old structure, and a page that has
+    # just moved to the new diagram should find the matching state already there.
     trigger = "schedule"
     if event.get("source") == WAKE_SOURCE:
         trigger = "structure" if event_key(event) == STRUCTURE_LATEST_KEY else "wake"
@@ -521,15 +589,18 @@ def handler(event: dict[str, Any], context: Any = None) -> dict[str, Any]:
             previous_doc, decision, flow_logs=flow_logs, now=event_time
         )
         if redundant is not None:
-            # 신선하고 층도 같다 — 그래도 **옛 구조의 문서**면 돈다. 구조를 읽는 것은 건너뛰려는 순간뿐이다
-            # (임대 연장 쓰기 = 5분마다 1회) — 도는 경우는 어차피 아래에서 같은 키를 내려받는다.
+            # Fresh, same layers, but still run if the document describes an old
+            # structure. We only read the structure at the moment we are about to
+            # skip (once per 5-minute lease renewal); when we do run, the same key
+            # is downloaded below anyway.
             structure_doc, _ = _get_json(s3, bucket, STRUCTURE_LATEST_KEY)
             moved = pair_moved(previous_doc, structure_doc)
             if moved:
                 print(f"깨우기 건너뛰지 않음 — {moved} · 주기 {stamp}")
                 redundant = None
         if redundant:
-            # 🔵 아무것도 올리지 않는다 — 화면은 이미 그 문서를 얹고 있다. 다음 관측은 5분 주기가 낸다.
+            # Upload nothing: the page is already showing that document, and the
+            # next observation comes from the 5-minute cycle.
             print(f"깨우기 건너뜀 — {redundant} · 주기 {stamp}")
             return {
                 "stamp": stamp,
@@ -538,8 +609,9 @@ def handler(event: dict[str, Any], context: Any = None) -> dict[str, Any]:
                 "skipped": redundant,
             }
 
-    # 🔴 워밍된 컨테이너의 `/tmp` 는 **다음 호출까지 살아 있다.** 주기마다 새 디렉터리를 쓰고
-    #    끝나면 지운다 — 지난 주기의 파일이 남아 있으면 「올렸는데 옛 문서」가 될 수 있다.
+    # `/tmp` on a warm container survives until the next invocation, so each
+    # cycle gets its own directory and removes it afterwards. A leftover file
+    # from the previous cycle could end up uploaded as the current document.
     workdir = _tmp_root() / f"nettopo-{stamp.replace('/', '-')}"
     if workdir.exists():
         shutil.rmtree(workdir)
@@ -561,31 +633,41 @@ def handler(event: dict[str, Any], context: Any = None) -> dict[str, Any]:
             "--role-name",
             role_name,
         ]
-        # 스택 B `ExternalId` 를 준 멤버 역할은 같은 값을 넘겨야 들어간다(스택 A `MemberExternalId`) — 비우면 넘기지 않는다.
+        # A member role created with an `ExternalId` only admits callers passing
+        # the same value (Stack A's `MemberExternalId`). Empty means send none.
         external_id = os.environ.get("MEMBER_EXTERNAL_ID", "")
         if external_id:
             argv += ["--external-id", external_id]
         if decision.layer2:
             argv.append("--metrics")
-            # 흐름 로그 근거는 2층과 같은 창에서만 판정한다 — 2층을 끈 주기에 붙이면 엔진이 거부한다(rc 1).
+            # Flow-log evidence is only judged within the same window as the
+            # metric layer; passing it on a cycle without metrics makes the
+            # engine reject the run.
             if flow_logs:
                 argv.append("--flow-logs")
         if decision.utilization:
-            # 사용률(#27 · ADR 0011)은 2층과 **따로** 켠다(관측 스키마 1.5.0 — 2층 없이도 엔진이 받는다). 긴 묶음·서비스 한도의
-            # 1시간 이월은 아래 `--previous`(직전 관측 문서)에서 읽는다. 한도 읽기 권한이 없는 옛 스택은 「기본 한도」로 계속 돈다.
+            # Utilization is enabled separately from the metric layer; the engine
+            # accepts it on its own. Long-window values and the hourly carry-over
+            # of service quotas are read from `--previous` below. A stack without
+            # the quota-read permission keeps running against default limits.
             argv.append("--utilization")
         previous_topology = workdir / "previous-topology.json"
         if _download_optional(s3, bucket, STRUCTURE_PREVIOUS_KEY, previous_topology):
-            # 🔴 선택 입력이다. 삭제는 대개 5분 관측이 매시 구조 수집보다 먼저 보므로 모습은
-            #    `--topology` 에 있다. 그 사이에 구조가 새로 수집됐을 때만 이 파일이 필요하다.
+            # Optional input. A deletion is usually seen by the 5-minute
+            # observation before the hourly structure collection, so the "before"
+            # detail is already in `--topology`. This file is needed only when a
+            # new structure was collected in between.
             argv += ["--previous-topology", str(previous_topology)]
         previous = workdir / "previous.json"
         if _download(s3, bucket, STATE_LATEST_KEY, previous):
-            # 이력의 입력은 직전 관측 문서 하나다(ADR 0004 D4). 없으면 기준선이 이번 관측이
-            # 되고 그것은 오류가 아니다 — 첫 주기에는 파일이 없다.
+            # History takes exactly one input: the previous observation document.
+            # Without it this observation becomes the baseline, which is not an
+            # error; on the first cycle the file does not exist yet.
             argv += ["--previous", str(previous)]
-            # 🆕 직전 관측의 구조가 지금 포인터에도 사본에도 없으면 누적 스냅샷에서 그 한 장을 더 넘긴다(N-05).
-            #    두 장 중 하나와 짝이면 **목록 조회도 하지 않는다**(평소 5분 차례의 비용 0).
+            # If the structure paired with the previous observation is neither the
+            # current pointer nor the copy aside, pass one more from the archive.
+            # When either of those two pairs, we do not even list the bucket, so
+            # the usual 5-minute cycle costs nothing extra.
             prev_doc = _read_local(previous)
             have = [_read_local(p) for p in (topology, previous_topology) if p.exists()]
             if isinstance(prev_doc, dict) and not any(
@@ -603,7 +685,8 @@ def handler(event: dict[str, Any], context: Any = None) -> dict[str, Any]:
 
     key = f"{STATE_PREFIX}/{stamp}/observation.json"
     written = _put_new_only(s3, bucket, key, body)
-    # 화면이 폴링하는 포인터. 누적 키와 **같은 바이트**라 이력 입력(`--previous`)으로 그대로 쓴다.
+    # The pointer the page polls. Byte-for-byte the same as the archive key, so
+    # it doubles as the history input (`--previous`).
     _put(s3, bucket, STATE_LATEST_KEY, body)
     print(
         f"관측 {len(body)}바이트 · 키 {key} · {written} · 2층 {'on' if decision.layer2 else 'off'}"
