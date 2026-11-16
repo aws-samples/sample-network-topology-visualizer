@@ -2,249 +2,133 @@
 
 [한국어](README.ko.md)
 
-NetworkTopology collects the network configuration of multiple AWS accounts and Regions with **read-only** API calls and renders it as a single diagram. Deploy the collector with one CloudFormation stack in a monitoring account, and the diagram refreshes every hour as a single HTML file stored in a private S3 bucket in that account. There is no server, API, or database. In the target accounts it only calls `Describe*`, `Get*`, `List*`, and `Search*` APIs and never changes anything.
+NetworkTopology collects the network configuration of multiple AWS accounts and Regions with read-only API calls and renders it as one diagram. One CloudFormation stack in a monitoring account runs the collector every hour and writes the diagram, a single HTML file, to a private S3 bucket in that account. There is no server, API, or database. In the target accounts it calls only `Describe*`, `Get*`, `List*`, and `Search*` APIs.
 
+> [!NOTE]
 > This is sample code, for non-production usage. You should work with your security and legal teams to meet your organizational security, regulatory, and compliance requirements before deployment.
 
-![Example screen](docs/demo/scenario-finance-overview.png)
+![Diagram of one account in Seoul and Tokyo, nested as account > Region > VPC > AZ > subnet. Clicking a Transit Gateway or a VPC opens its details, search highlights matches, and the AZ and subnet layers can be folded away.](docs/img/demo.gif)
 
-> The diagram's on-screen text is in Korean. English covers the CloudFormation templates and this documentation.
+The recording is a collection from a test account with the account ID and public IP addresses replaced. Static screenshots of three fictional multi-account setups are in the [demo scenarios](docs/demo/scenario-finance.md).
 
----
+The diagram's on-screen text is in Korean. The CloudFormation templates and this documentation are in English. `deploy.sh` prints its messages in Korean; the [Troubleshooting](docs/install-guide.en.md#troubleshooting) section of the deployment guide explains each one in English.
 
 ## Architecture
 
 ![Architecture](docs/img/architecture.en.png)
 
-The monitoring account is where the collector runs. Source accounts are the accounts whose resources appear in the diagram. The source package (`nettopo-source.zip`) is stored in a private S3 package bucket (`PKG_BUCKET`) prepared before deployment. The collector (CodeBuild) reads this package, runs on an hourly EventBridge schedule, and assumes a read-only IAM role in each source account to collect resource data. It writes the generated diagram HTML to a separate S3 artifact bucket.
+The monitoring account runs the collector. Source accounts are the accounts whose resources appear in the diagram. The collector is a CodeBuild project on an hourly EventBridge schedule. It reads the deployment package from a private S3 bucket, assumes a read-only IAM role in each source account, and writes the generated HTML to a separate private S3 bucket.
 
 | CloudFormation stack | Account | Purpose | Required |
 |---|---|---|---|
-| **A Collector** `nettopo-collector` | Monitoring account | Collect, render, store to S3. Hourly schedule | Yes |
-| **B Source account role** `nettopo-member-role` | Each source account | Grant the collector read access to the account | When you have source accounts |
+| **A Collector** `nettopo-collector` | Monitoring account | Collect, render, store to S3, every hour | Yes |
+| **B Source account role** `nettopo-member-role` | Each source account | Read-only role for the collector | When you have source accounts |
 | **C Viewer** `nettopo-viewer` | Monitoring account | Signed viewing link for people without an AWS account | No |
 
-## Key Features
+## Features
 
-| Feature | Description | Requires |
-|---|---|---|
-| **Network diagram** | Nested as account > Region > VPC > AZ > subnet, with Transit Gateway, peering, VPN, and Direct Connect connections drawn as lines. When there are many resources of one type, they fold into a single "<type> ×N" icon — click it for the list, then click an entry for that resource. Refreshed hourly | Stack A |
-| **Multi-account, multi-Region** | One read-only role per source account brings it into the same diagram. Source accounts are discovered from the monitoring account's Transit Gateway attachments or listed explicitly | Stack B |
-| **Visible gaps** | Areas that could not be read are never drawn silently empty. A banner at the top of the screen names the account, Region, and resource types that were missed, together with what to do about it | Built in |
-| **Live monitoring** (optional) | Collect resource state every 5 minutes by default, with optional traffic monitoring through CloudWatch metrics | One Stack A parameter |
-| **Viewing link** (optional) | People without an AWS account open the diagram with a single signed URL | Stack C |
+- **Network diagram.** Nested as account > Region > VPC > AZ > subnet, with Transit Gateway, peering, VPN, and Direct Connect connections drawn as lines. Many resources of one type fold into a single "<type> ×N" icon.
+- **Multi-account, multi-Region.** One read-only role per source account. Source accounts are discovered from the monitoring account's Transit Gateway attachments or listed explicitly.
+- **Visible gaps.** Anything that could not be read is named in a banner at the top of the screen, with the account, Region, resource type, and what to do about it.
+- **Live monitoring** (optional). Re-reads resource state every 5 minutes while the screen is open. Two modes: 구조 조회만 (state only, from `Describe*` calls) and 지표까지 (state plus CloudWatch traffic metrics). Utilization against service quotas is a separate toggle. See [step 5](docs/install-guide.en.md#5-add-monitoring-and-utilization-update-stack-a) of the deployment guide.
+- **Viewing link** (optional). A CloudFront distribution with signed URLs for people without an AWS account. See [step 6](docs/install-guide.en.md#6-share-through-cloudfront-deploy-stack-c-and-issue-a-link).
 
-Collected resources: VPC, subnet, route table, internet gateway, NAT gateway, Transit Gateway (attachments, Connect, and route tables), Cloud WAN core network, VPC Lattice (service networks and services), VPC peering, VPC endpoint, security group, network ACL, load balancer, VPN (virtual private gateway, customer gateway, connection), Direct Connect (connection, virtual interface, gateway), Network Firewall, CloudFront, WAF web ACL (with lines to the CloudFront, ALB, and API Gateway it protects), EC2, Auto Scaling group, EKS, ECS, RDS (DB instances, Aurora clusters, proxies), ElastiCache, OpenSearch, MSK, Lambda functions, Route 53 hosted zones, Elastic IP, API Gateway, Global Accelerator, SageMaker, EC2 Instance Connect Endpoint. The permissions granted in a source account are exactly the policy in `infra/stack-b-member-role.yaml`, all read actions (per-action notes: [Required IAM permissions](docs/required-permissions.md), Korean).
+The generated HTML makes no outbound requests. Only when monitoring or utilization is on does it read from and write to S3 in the same account through signed URLs.
 
-> The generated HTML is a single file and makes no outbound requests. Only when monitoring or utilization is on does it read from and write to S3 in the same account through signed URLs.
+<details>
+<summary>Collected resources</summary>
 
-## Monitoring and Utilization Queries
+- **VPC:** VPC, subnet, route table, internet gateway, NAT gateway, VPC peering, VPC endpoint, security group, network ACL, Elastic IP, EC2 Instance Connect Endpoint
+- **Connectivity:** Transit Gateway (attachments, Connect, route tables), Cloud WAN core network, VPC Lattice (service networks, services), VPN (virtual private gateway, customer gateway, connection), Direct Connect (connection, virtual interface, gateway)
+- **Edge and security:** load balancer, Network Firewall, CloudFront, WAF web ACL (with lines to the CloudFront, ALB, and API Gateway it protects), Global Accelerator, API Gateway, Route 53 hosted zones
+- **Compute and data:** EC2, Auto Scaling group, EKS, ECS, Lambda, RDS (DB instances, Aurora clusters, proxies), ElastiCache, OpenSearch, MSK, SageMaker
 
-Monitoring and utilization queries are optional features. Deploy them by configuring `StateLambdaSourceKey` in CloudFormation Stack A.
+The permissions granted in a source account are exactly the policy in `infra/stack-b-member-role.yaml`, all read actions. Per-action notes: [Required IAM permissions](docs/required-permissions.md) (Korean).
 
-Monitoring provides two options.
-
-| | Resource state monitoring | State and traffic monitoring |
-|---|---|---|
-| **Description** | Check resource execution state, connection state, and target health through AWS Describe and other read APIs | Check resource state together with CloudWatch traffic and drop metrics |
-| **Display** | Normal/abnormal resource and connection state, with abnormal borders | State overlays, green flow lines, and verdict badges for segments with evidence |
-| **Examples** | Identify stopped EC2 instances, VPN tunnels that are DOWN, or unhealthy LB targets | Check traffic forwarded through a TGW attachment and packet drops |
-
-The current diagram labels these modes 「구조 조회만」 (resource state monitoring) and 「지표까지」 (state and traffic monitoring).
-
-### Utilization Queries
-
-Utilization displays resource usage and usage relative to a limit. Enabling utilization with resource state monitoring still queries CloudWatch metrics and service quotas. Utilization values are displayed separately from resource state and traffic flow verdicts.
+</details>
 
 ## Prerequisites
 
-- **AWS CLI v2**, **bash** (default on macOS, Linux, and AWS CloudShell), **git** (if you cloned the repository)
-- **Monitoring account credentials** that can create IAM roles, S3 buckets, CodeBuild, EventBridge, Lambda, CloudWatch Logs, SQS, and CloudFront. An IAM Identity Center profile (`aws configure sso`) is recommended; do not create long-term access keys. The action-level list is in [Required IAM permissions §6](docs/required-permissions.md#6-배포하는-사람에게-필요한-권한) (Korean)
+- **AWS CLI v2**, **bash** (default on macOS, Linux, and AWS CloudShell), **git**
+- **Monitoring account credentials** that can create IAM roles, S3 buckets, CodeBuild, EventBridge, Lambda, CloudWatch Logs, SQS, and CloudFront. An IAM Identity Center profile (`aws configure sso`) is recommended; do not create long-term access keys. Action-level list: [Required IAM permissions §6](docs/required-permissions.md#6-배포하는-사람에게-필요한-권한) (Korean)
 - **Source account credentials** that can create one IAM role per account (only when deploying Stack B)
 - Optional: **python3 + pip** (live monitoring), **openssl** (viewing link)
 
-## Quick Start
+## Deployment
 
-The shortest path to a basic diagram of a single account. Run the commands from the repository root. To use monitoring and utilization or CloudFront sharing from the start, first read [Deployment options](docs/install-guide.en.md#deployment-options) in the deployment guide. Adding source accounts is covered in steps [4-B](docs/install-guide.en.md#4-b-deploy-stack-b-in-each-source-account) and [4-C](docs/install-guide.en.md#4-c-deploy-with-stacksets-in-aws-organizations).
-
-`deploy.sh` runs the commands below in one go: `./deploy.sh --profile my-hub --region ap-northeast-2 --bucket nettopo-pkg-111122223333 --regions ap-northeast-2,ap-northeast-1`. `deploy.sh` prints its progress and error messages in Korean; the [Troubleshooting](docs/install-guide.en.md#troubleshooting) section of the deployment guide explains each failure in English. Options and what to do on failure are in [One-command install](docs/install-guide.en.md#one-command-install-deploysh) in the guide.
+From the repository root, with a monitoring account profile:
 
 ```sh
-# 0. Set your values
-PROFILE=my-hub                              # monitoring account profile
-REGION=ap-northeast-2                       # Region for the stacks (any Region works)
-PKG_BUCKET=nettopo-pkg-111122223333         # new private bucket for the deployment package; globally unique
-REGIONS=ap-northeast-2,ap-northeast-1       # Regions to collect (comma-separated)
-
-# 1. Upload the deployment package (engine/ + renderer/ + buildspec.yml) to a private bucket
-#    If REGION is us-east-1, drop the --create-bucket-configuration option
-mkdir -p out
-git archive --format=zip -o out/nettopo-source.zip HEAD engine renderer buildspec.yml
-aws s3api create-bucket --bucket "$PKG_BUCKET" \
-  --create-bucket-configuration LocationConstraint="$REGION" \
-  --profile "$PROFILE" --region "$REGION"
-aws s3api put-public-access-block --bucket "$PKG_BUCKET" \
-  --public-access-block-configuration BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true \
-  --profile "$PROFILE" --region "$REGION"
-aws s3 cp out/nettopo-source.zip "s3://$PKG_BUCKET/nettopo-source.zip" \
-  --sse AES256 --profile "$PROFILE" --region "$REGION"
-
-# 2. Deploy Stack A (collector); takes a few minutes (about 2 minutes in our test)
-aws cloudformation deploy \
-  --template-file infra/stack-a-collector.yaml \
-  --stack-name nettopo-collector \
-  --capabilities CAPABILITY_IAM \
-  --parameter-overrides \
-      SourceLocation="$PKG_BUCKET/nettopo-source.zip" \
-      TargetRegions="$REGIONS" \
-  --profile "$PROFILE" --region "$REGION"
-
-# 3. Run the first collection now instead of waiting for the schedule, and wait for it to finish (usually 2 to 5 minutes)
-BUILD_ID=$(aws codebuild start-build --project-name nettopo-collector-collector \
-  --query build.id --output text --profile "$PROFILE" --region "$REGION")
-until STATUS=$(aws codebuild batch-get-builds --ids "$BUILD_ID" --query "builds[0].buildStatus" --output text --profile "$PROFILE" --region "$REGION"); [ "$STATUS" != "IN_PROGRESS" ]; do sleep 20; done
-echo "Collection: $STATUS"   # anything other than SUCCEEDED (FAILED, STOPPED, ...): stop and check the build log in the CodeBuild console
-
-# 4. Download the diagram and open out/index.html in a browser (only after the collection SUCCEEDED)
-if [ "$STATUS" = "SUCCEEDED" ]; then
-  ARTIFACT_BUCKET=$(aws cloudformation describe-stacks --stack-name nettopo-collector \
-    --query "Stacks[0].Outputs[?OutputKey=='ArtifactBucketName'].OutputValue" --output text \
-    --profile "$PROFILE" --region "$REGION")
-  aws s3 cp "s3://$ARTIFACT_BUCKET/index.html" out/index.html --profile "$PROFILE" --region "$REGION"
-fi
+./deploy.sh --profile my-hub --region ap-northeast-2 \
+  --bucket nettopo-pkg-111122223333 \
+  --regions ap-northeast-2,ap-northeast-1
 ```
 
-- If you have source accounts, deploy Stack B in each of them (directly — [step 4-B](docs/install-guide.en.md#4-b-deploy-stack-b-in-each-source-account) — or with StackSets — [step 4-C](docs/install-guide.en.md#4-c-deploy-with-stacksets-in-aws-organizations)). If any source account is not attached to the monitoring account's Transit Gateway, add `TargetAccounts=<source account ID>,…` to the step 2 command and deploy again. Auto-discovery still runs and the listed accounts are added to the discovered ones, so list only the accounts not attached to the Transit Gateway. The monitoring account is always included.
-- Regions you do not list in `REGIONS` are not collected at all. They do not appear on the screen and nothing says they are missing, so list every Region you want to see.
-- The templates are in English because CloudFormation stores Korean description text as `?`.
+This creates the package bucket (private; the name must be globally unique), uploads the deployment package, deploys Stack A, runs one collection, and downloads the diagram to `out/index.html`. Stack A takes a few minutes and the first collection usually 2 to 5. Running the same command again updates the installation.
 
-> To add features to an existing installation, follow [step 5: monitoring and utilization (update Stack A)](docs/install-guide.en.md#5-add-monitoring-and-utilization-update-stack-a) or [step 6: CloudFront sharing (deploy Stack C and issue a link)](docs/install-guide.en.md#6-share-through-cloudfront-deploy-stack-c-and-issue-a-link). The full procedure is in the [deployment guide](docs/install-guide.en.md).
+- `--regions` is the list of Regions to collect. Regions not listed are not collected and nothing on the screen says they are missing.
+- To include source accounts, deploy Stack B in each of them. The script prints the Stack B command at the end. Accounts not attached to the monitoring account's Transit Gateway also need `--accounts <account IDs>`.
+- Add `--monitoring` for live monitoring and utilization, and `--viewer --days N` for a viewing link.
 
-## Project Structure
+The step-by-step equivalent with plain `aws` commands, the Stack B and StackSets procedures, all parameters, and troubleshooting are in the [deployment guide](docs/install-guide.en.md).
 
-```
-sample-network-topology-visualizer/
-├── deploy.sh                           # install, update, and delete in the monitoring account in one go
-├── infra/
-│   ├── stack-a-collector.yaml          # Stack A collector
-│   ├── stack-b-member-role.yaml        # Stack B read-only role for source accounts
-│   ├── stack-c-viewer.yaml             # Stack C viewer (optional)
-│   ├── state-lambda/                   # Live monitoring Lambda code
-│   ├── build-state-lambda.sh           # Build the live monitoring Lambda package
-│   └── issue-viewer-link.sh            # Issue a Stack C viewing link
-├── engine/                             # Collector (Python). Included in the deployment package
-├── renderer/                           # Diagram generator (JavaScript). Included in the deployment package
-└── docs/
-    └── install-guide.en.md             # Deployment guide (Korean: install-guide.md)
-```
+## Usage
 
-## Estimated Costs
-
-These are estimates calculated from the template defaults, not measurements. Prices vary by Region and change over time; use the [AWS Pricing Calculator](https://calculator.aws/) with your Region and settings.
-
-Charges are billed to the AWS account that owns the resource or, for API requests, to the account that owns the IAM principal making the request. Stack A and Stack C create all of their resources (CodeBuild, Lambda, S3, CloudWatch Logs, SQS, and CloudFront) in the monitoring account, so that account pays for them. Source accounts are charged only for CloudWatch `GetMetricData` requests, which the collector makes with the Stack B role it assumes in each source account. Stack B creates only an IAM role, which is free. If traffic monitoring and utilization are not enabled, source accounts incur no charges.
-
-| Item | What the cost depends on | Approximate monthly cost | Billed to |
-|---|---|---|---|
-| CodeBuild collection (`BUILD_GENERAL1_SMALL`, once an hour by default) | price per build minute × minutes per build × 720 builds a month. At $0.005 per minute (us-east-1 and ap-northeast-2, AWS price list of 2026-09-11) and the usual 2 to 5 minutes per build: $0.005 × 2 × 720 = $7.20 to $0.005 × 5 × 720 = $18 | About $7 to $18 | Monitoring account |
-| Lambda (live monitoring, if enabled): two functions, state observation (1,024 MB, arm64) and page signing (256 MB, arm64), each every 5 minutes and also on events | invocations × run time × memory | Depends on run time | Monitoring account |
-| S3 storage and requests | Grows over time: every build adds a snapshot, and the artifact bucket keeps previous versions (only previous versions of `index.html` and `unsigned/` expire, after 1 day). A package bucket created by `deploy.sh` also keeps previous versions | Grows with history | Monitoring account |
-| CloudWatch Logs | Three log groups (collector, state, signer), kept 30 days by default (`LogRetentionDays`) | Per GB ingested and stored | Monitoring account |
-| SQS dead-letter queue (live monitoring) | Holds only failed state runs; normally empty | About $0 | Monitoring account |
-| CloudFront (Stack C) | Data transfer and requests, plus the access logs stored in the log bucket (kept 90 days by default) | Depends on viewers | Monitoring account |
-| CloudWatch metric queries (traffic monitoring or utilization) | Metrics requested per collection cycle. `GetMetricData` costs $0.01 per 1,000 metrics and is not included in the CloudWatch Free Tier. The time range and the number of data points returned do not affect the price | Depends on resources | Account that owns the metrics |
-| Structure collection API calls (`Describe*` and similar) | Not billed | None | No charge |
-
-Almost all of it is CodeBuild run time. Each extra minute per build (more accounts, Regions, or resources) adds about $3.60 a month ($0.005 × 720); a longer `Schedule` reduces it proportionally.
-
-## Useful Commands
-
-| Command | Description |
-|---|---|
-| `aws codebuild start-build --project-name nettopo-collector-collector --profile "$PROFILE" --region "$REGION"` | Run one collection |
-| `aws codebuild batch-get-builds --ids <build ID> --query "builds[0].buildStatus" --output text --profile "$PROFILE" --region "$REGION"` | Check collection status (`SUCCEEDED` means done) |
-| `aws s3 cp "s3://$ARTIFACT_BUCKET/index.html" out/index.html --profile "$PROFILE" --region "$REGION"` | Download the latest diagram |
-| `./deploy.sh --profile "$PROFILE" --region "$REGION"` (with the options of the first installation) | Deploy a new version. To do it yourself, rerun the zip build and `aws s3 cp` of Quick Start step 1 and step 2 (skip the two bucket creation commands). Parameters you do not pass are kept. This version also requires a Stack B update in source accounts ([Updating](docs/install-guide.en.md#updating)) |
-| `./deploy.sh --profile "$PROFILE" --region "$REGION" --collect` | Collect once and download `out/index.html` (waits until done) |
-| `infra/issue-viewer-link.sh --stack nettopo-viewer --key out/viewer-k1.pem --days 30 --profile "$PROFILE" --region "$REGION"` | Issue a viewing link (Stack C) |
-| `aws cloudformation delete-stack --stack-name nettopo-collector --profile "$PROFILE" --region "$REGION"` | Delete Stack A. The artifact bucket is retained; follow the [Cleanup section](docs/install-guide.en.md#cleanup) |
-
-## Security
-
-See [SECURITY.md](SECURITY.md) for how to report a security issue and for a summary of the security design.
-
-The diagram HTML contains AWS account IDs, CIDR blocks, public IP addresses, and resource tags from your environment. Do not put it in a public location (for example a public S3 bucket, a public repository, or a public web page). Share it only through the signed links described in the [deployment guide](docs/install-guide.en.md).
-
-Optional hardening, off by default: an external ID and an AWS Organizations condition on the source account role, and narrowing the bucket CORS rule and CloudFront read access to your Stack C distribution. See [Optional hardening](docs/install-guide.en.md#optional-hardening).
-
-## Clean up
-
-If you installed with `deploy.sh`, `./deploy.sh --profile "$PROFILE" --region "$REGION" --destroy` deletes Stack C, Stack A, and every object version in the log, artifact, and package buckets of the monitoring account after you type a confirmation (`--dry-run` lists the targets first). It does not delete Stack B in source accounts; do step 2 below yourself. It also deletes the package bucket you passed with `--bucket`, even if you created that bucket yourself.
-
-To clean up by hand, delete in this order. Stack A's artifact bucket and Stack C's log bucket are kept when their stacks are deleted (`DeletionPolicy: Retain`). The artifact bucket has versioning enabled, and a package bucket created by `deploy.sh` does too, so every previous object version and delete marker must be removed before the bucket can be deleted; `aws s3 rb --force` does not remove previous versions.
+The collector refreshes the diagram in S3 every hour. To fetch it, or to collect again now:
 
 ```sh
-PROFILE=my-hub              # monitoring account profile
-REGION=ap-northeast-2       # Region of the stacks
-empty_and_delete_bucket() {   # every object version and delete marker, then the bucket
-  local batch out
-  while :; do
-    batch=$(aws s3api list-object-versions --bucket "$1" --max-items 1000 \
-      --query '{Objects: [(Versions || `[]`)[].{Key: Key, VersionId: VersionId}, (DeleteMarkers || `[]`)[].{Key: Key, VersionId: VersionId}][], Quiet: `true`}' \
-      --output json --profile "$PROFILE" --region "$REGION") || return 1
-    printf '%s' "$batch" | grep -q '"Key"' || break
-    out=$(aws s3api delete-objects --bucket "$1" --delete "$batch" --profile "$PROFILE" --region "$REGION") || return 1
-    if printf '%s' "$out" | grep -q '"Errors"'; then printf '%s\n' "$out"; return 1; fi
-  done
-  aws s3api delete-bucket --bucket "$1" --profile "$PROFILE" --region "$REGION"
-}
-
-# Capture the bucket names first; the stack outputs disappear when the stacks are deleted
-LOG_BUCKET=$(aws cloudformation describe-stacks --stack-name nettopo-viewer \
-  --query "Stacks[0].Outputs[?OutputKey=='AccessLogBucketName'].OutputValue" --output text \
-  --profile "$PROFILE" --region "$REGION")
-ARTIFACT_BUCKET=$(aws cloudformation describe-stacks --stack-name nettopo-collector \
-  --query "Stacks[0].Outputs[?OutputKey=='ArtifactBucketName'].OutputValue" --output text \
-  --profile "$PROFILE" --region "$REGION")
-PKG_BUCKET=$(aws cloudformation describe-stacks --stack-name nettopo-collector \
-  --query "Stacks[0].Parameters[?ParameterKey=='SourceLocation'].ParameterValue" --output text \
-  --profile "$PROFILE" --region "$REGION" | cut -d/ -f1)
-
-# 1. Stack C (if deployed), then its access-log bucket (kept by the stack)
-aws cloudformation delete-stack --stack-name nettopo-viewer --profile "$PROFILE" --region "$REGION"
-aws cloudformation wait stack-delete-complete --stack-name nettopo-viewer --profile "$PROFILE" --region "$REGION"
-[ -z "$LOG_BUCKET" ] || [ "$LOG_BUCKET" = None ] || empty_and_delete_bucket "$LOG_BUCKET"
-
-# 2. Stack B in each source account (direct deployment)
-aws cloudformation delete-stack --stack-name nettopo-member-role \
-  --profile <source-account-profile> --region <stack-b-region>
-#    or, for an Organizations StackSet: instances first, then the StackSet (add --call-as DELEGATED_ADMIN from a delegated administrator)
-aws cloudformation delete-stack-instances --stack-set-name nettopo-member-role \
-  --deployment-targets OrganizationalUnitIds=<OU ID> --regions <stackset-region> --no-retain-stacks \
-  --profile <management-account-profile> --region <stackset-region>
-aws cloudformation list-stack-set-operations --stack-set-name nettopo-member-role --max-results 1 \
-  --query "Summaries[0].Status" --output text \
-  --profile <management-account-profile> --region <stackset-region>      # repeat until SUCCEEDED
-aws cloudformation delete-stack-set --stack-set-name nettopo-member-role \
-  --profile <management-account-profile> --region <stackset-region>
-
-# 3. Stack A
-aws cloudformation delete-stack --stack-name nettopo-collector --profile "$PROFILE" --region "$REGION"
-aws cloudformation wait stack-delete-complete --stack-name nettopo-collector --profile "$PROFILE" --region "$REGION"
-
-# 4. Artifact bucket (kept by Stack A; versioned, so every version is deleted)
-empty_and_delete_bucket "$ARTIFACT_BUCKET"
-
-# 5. Deployment package bucket (not created by a stack)
-empty_and_delete_bucket "$PKG_BUCKET"
+./deploy.sh --profile my-hub --region ap-northeast-2 --download   # latest diagram -> out/index.html
+./deploy.sh --profile my-hub --region ap-northeast-2 --collect    # collect once, then download
 ```
 
-Files on your computer are not deleted: `out/` (the diagram, templates, and the signing keys `viewer-k*.pem`) and the link log `~/.local/state/nettopo/viewer-links.log`. Remove them yourself if you no longer need them. CloudWatch Logs groups are part of the stacks and are deleted with them.
+Open `out/index.html` in a browser. Do not put this file anywhere public; see [Security](#security).
+
+## Estimated costs
+
+About $7 to $18 a month at the template defaults. Almost all of it is CodeBuild run time (once an hour, usually 2 to 5 minutes per build). Live monitoring, CloudFront, S3 history, and logs add usage-based costs. Source accounts pay nothing unless traffic monitoring or utilization is on, in which case they pay for their own CloudWatch `GetMetricData` requests. Item-by-item breakdown and billing accounts: [Estimated Costs](docs/costs.en.md). Check your Region and settings with the [AWS Pricing Calculator](https://calculator.aws/).
+
+## Cleanup
+
+```sh
+./deploy.sh --profile my-hub --region ap-northeast-2 --destroy
+```
+
+After a confirmation prompt this deletes Stack C, Stack A, and every object version in the log, artifact, and package buckets of the monitoring account. Add `--dry-run` to list the targets first. It does not delete Stack B in source accounts; delete `nettopo-member-role` there yourself. The manual procedure, including StackSets, is in [Cleanup](docs/install-guide.en.md#cleanup) in the deployment guide.
+
+## Project structure
+
+```
+.
+├── deploy.sh          # install, update, collect, download, and delete in the monitoring account
+├── buildspec.yml      # CodeBuild steps for one collection run
+├── infra/             # CloudFormation templates (stacks A, B, C), monitoring Lambda, helper scripts
+├── engine/            # Collector (Python); part of the deployment package
+├── renderer/          # Diagram generator (JavaScript); part of the deployment package
+├── schema/            # JSON schema of the collected snapshot
+├── fixtures/          # Scrubbed sample snapshots for tests
+└── docs/              # Deployment guide, permissions, costs, demo scenarios
+```
 
 ## Documentation
 
-- [Deployment guide](docs/install-guide.en.md) · [한국어](docs/install-guide.md) — three deployment options (single account / source accounts directly / Organizations StackSets), parameters, updating, cleanup, troubleshooting, security
+- [Deployment guide](docs/install-guide.en.md) · [한국어](docs/install-guide.md): deployment options, step-by-step install, Stack B and StackSets, updating, cleanup, troubleshooting, parameters, security
+- [Estimated Costs](docs/costs.en.md) · [한국어](docs/costs.md)
+- [Required IAM permissions](docs/required-permissions.md) (Korean): every action in the three stacks and why
+- [Sharing the diagram](docs/viewer-sharing.md) (Korean): the five ways a person can open the diagram, for security reviewers
+- Demo scenarios (Korean): [finance](docs/demo/scenario-finance.md), [game](docs/demo/scenario-game.md), [e-commerce](docs/demo/scenario-ecommerce.md), each with a sample snapshot and screenshots
+
+## Security
+
+The diagram HTML contains AWS account IDs, CIDR blocks, public IP addresses, and resource tags from your environment. Do not put it in a public location such as a public S3 bucket, a public repository, or a public web page. Share it only through the signed links described in the deployment guide.
+
+Optional hardening, off by default: an external ID and an AWS Organizations condition on the source account role, and narrowing the bucket CORS rule and CloudFront read access to your Stack C distribution. See [Optional hardening](docs/install-guide.en.md#optional-hardening). A summary of the security design is in [SECURITY.md](SECURITY.md).
+
+See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information on reporting security issues.
+
+## Contributing
+
+See [CONTRIBUTING](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 
-MIT-0 ([`LICENSE`](LICENSE))
+This library is licensed under the MIT-0 License. See the [LICENSE](LICENSE) file.
