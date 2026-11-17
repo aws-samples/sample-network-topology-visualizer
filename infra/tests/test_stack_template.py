@@ -1583,6 +1583,40 @@ def test_permission_doc_lists_exactly_the_template_actions() -> None:
     assert not wild, f"wildcard in an Allow action: {wild}"
 
 
+def test_both_permission_documents_list_the_same_actions() -> None:
+    """The English permissions document lists the same actions, in the same order,
+    as the Korean one.
+
+    Only the Korean document is compared against the templates by the test above,
+    so without this the English version would drift the first time an action is
+    added: a reviewer reading it would approve a policy that no longer matches
+    what is deployed, and nothing would fail.
+    """
+    docs = INFRA.parent / "docs"
+    ko = (docs / "required-permissions.md").read_text()
+    en = (docs / "required-permissions.en.md").read_text()
+
+    def rows(text: str) -> list[str]:
+        return [
+            line.split("`")[1]
+            for line in text.splitlines()
+            if line.startswith("| `") and ":" in line.split("`")[1]
+        ]
+
+    ko_rows, en_rows = rows(ko), rows(en)
+    # If the parser found nothing, two empty lists would compare equal.
+    assert len(ko_rows) >= 140, len(ko_rows)
+    assert en_rows == ko_rows, (
+        "the two permissions documents disagree - only in Korean: "
+        f"{sorted(set(ko_rows) - set(en_rows))} · only in English: "
+        f"{sorted(set(en_rows) - set(ko_rows))}"
+    )
+    heading = re.compile(r"^#{2,4} ", re.MULTILINE)
+    assert len(heading.findall(en)) == len(heading.findall(ko)), (
+        "the two documents do not have the same number of sections"
+    )
+
+
 # A size budget for Stack A. CloudFormation's inline limit is 51,200 bytes, and
 # the manual installation command in the guide uploads the body without
 # `--s3-bucket`, so the day the template exceeds the limit that command fails in

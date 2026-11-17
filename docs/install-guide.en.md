@@ -37,7 +37,7 @@ Terms: the **monitoring account** is where the collector (Stack A) is deployed; 
 | **What you end up with** | `out/index.html` on your computer: a single HTML file with the diagram. The collector refreshes it in S3 every hour |
 | **How long it takes** | Stack A: a few minutes (about 2 minutes in our test). First collection: usually 2 to 5 minutes (1 min 47 s in our test with 2 accounts and 3 Regions). Stack B: about 30 seconds per account. Stack C: a few minutes (about 3.5 minutes in our test, mostly CloudFront) |
 | **Cost** | About $7 to $18 a month at the template defaults, almost all of it CodeBuild run time (once an hour, usually 2 to 5 minutes per build). Live monitoring, CloudFront, S3 history, and logs add usage-based costs. Details: [Estimated Costs](../README.md#estimated-costs) in the README |
-| **Permissions you need** | Monitoring account: create IAM roles, S3 buckets, CodeBuild, EventBridge, Lambda, CloudWatch Logs, SQS, and CloudFront. Each source account: create one IAM role. Action-level list: [Required IAM permissions §6](required-permissions.md#6-배포하는-사람에게-필요한-권한) (Korean) |
+| **Permissions you need** | Monitoring account: create IAM roles, S3 buckets, CodeBuild, EventBridge, Lambda, CloudWatch Logs, SQS, and CloudFront. Each source account: create one IAM role. Action-level list: [Required IAM permissions §6](required-permissions.en.md#6-permissions-the-person-deploying-needs) |
 
 ## Deployment options
 
@@ -58,7 +58,7 @@ Check each item before you start:
 
 - [ ] **AWS CLI v2** (`aws --version` prints `aws-cli/2.…`; `deploy.sh` stops on v1), **bash** (default on macOS, Linux, and AWS CloudShell), and **git**
 - [ ] **A named profile for the monitoring account** (`--profile`). An IAM Identity Center profile is recommended; see below
-- [ ] **Permissions**: credentials in the monitoring account that can create IAM roles, S3 buckets, CodeBuild, EventBridge, Lambda, CloudWatch Logs, SQS, and CloudFront. Credentials in each source account that can create an IAM role. The permissions each stack creates are listed in [Required IAM permissions](required-permissions.md) (Korean); the action-level list for the person deploying is in [§6 of the same document](required-permissions.md#6-배포하는-사람에게-필요한-권한)
+- [ ] **Permissions**: credentials in the monitoring account that can create IAM roles, S3 buckets, CodeBuild, EventBridge, Lambda, CloudWatch Logs, SQS, and CloudFront. Credentials in each source account that can create an IAM role. The permissions each stack creates are listed in [Required IAM permissions](required-permissions.en.md); the action-level list for the person deploying is in [§6 of the same document](required-permissions.en.md#6-permissions-the-person-deploying-needs)
 - [ ] Only if you choose monitoring and utilization queries: **python3 with pip**. If pip is missing, run `python3 -m ensurepip --user`
 - [ ] Only if you choose CloudFront sharing: **openssl**
 
@@ -672,7 +672,7 @@ Only the commonly used parameters are listed. See the `Parameters` section of ea
 ## Security
 
 - In target accounts the collector calls only `Describe*`, `Get*`, `List*`, and `Search*` APIs and changes nothing. The single exception is `sts:AssumeRole`, used to enter a source account; the assumed session keeps the read-only restriction, which is enforced at runtime.
-- The permissions granted in a source account are exactly the policy in `infra/stack-b-member-role.yaml`, all read actions (the only exception is decryption through S3 when flow logs are encrypted with a KMS customer key). The collector's permissions in the monitoring account are in the role policies of `infra/stack-a-collector.yaml`. For each action, why it is needed, its resource scope, and what the screen shows when it is denied, see [Required IAM permissions](required-permissions.md) (Korean).
+- The permissions granted in a source account are exactly the policy in `infra/stack-b-member-role.yaml`, all read actions (the only exception is decryption through S3 when flow logs are encrypted with a KMS customer key). The collector's permissions in the monitoring account are in the role policies of `infra/stack-a-collector.yaml`. For each action, why it is needed, its resource scope, and what the screen shows when it is denied, see [Required IAM permissions](required-permissions.en.md).
 - The deployment package and results live only in private buckets in your account. There are no public URLs.
 - The generated HTML makes no outbound requests. With live monitoring enabled, it reads and writes S3 in the same account through signed URLs only.
 - With live monitoring enabled, the HTML embeds three signed URLs: one to read state, one to write the monitoring signal, and one to open the latest page (read `index.html`). They are valid for at most about 12 hours and each is limited to a single S3 key. Treat the HTML as private; if it leaks, only those three operations are possible until the signatures expire.

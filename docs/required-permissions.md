@@ -2,6 +2,8 @@
 
 NetworkTopology 가 각 스택에 만드는 IAM 권한을 액션 하나씩 설명합니다. 보안 검토자가 템플릿 정책을 읽을 때 옆에 두고 보는 문서입니다. 정책의 정본은 템플릿(`infra/stack-a-collector.yaml` · `infra/stack-b-member-role.yaml` · `infra/stack-c-viewer.yaml`)이며, 이 문서의 액션 목록이 템플릿과 같은지는 저장소의 시험이 확인합니다.
 
+[English](required-permissions.en.md)
+
 ## 원칙
 
 - **소스 계정에서는 읽기만 합니다.** 수집기가 부르는 API 는 `Describe*` · `Get*` · `List*` · `Search*` 로 시작하는 것뿐이고, 그 밖의 호출은 수집 엔진이 실행 중에 막습니다(`engine/src/nettopo/awsguard.py`). 유일한 예외는 소스 계정으로 들어가는 `sts:AssumeRole` 이며, 들어간 뒤의 세션에도 같은 제한이 걸립니다.
