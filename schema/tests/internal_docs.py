@@ -1,15 +1,23 @@
-"""내부 리포에만 있는 문서 — 공개 트리(`scripts/make-public-tree.sh`)에서 빠진다.
+"""Documents that exist only in the internal repository and are left out of the
+public tree.
 
-테스트 몇 개는 이 문서의 표를 정본으로 읽어 코드·스키마와 대조한다. 공개 트리에는 문서가 없으므로
-그 대조만 **있을 때만** 하고, 없으면 사유를 적고 건너뛴다(`read_or_skip`). 다른 테스트까지 같이
-죽지 않게 문서는 import 때가 아니라 쓰는 테스트 안에서 읽는다.
+A few tests read a table in one of these documents as the source of truth and
+compare it against the code or the schema. The documents are absent from the
+public tree, so those comparisons run **only when the document is there** and
+otherwise record a reason and skip (`read_or_skip`). A document is read inside
+the test that uses it rather than at import time, so that a missing one cannot
+take the rest of the file down with it.
 
-🔴 이 목록은 「있을 때만」의 유일한 정본이다. 내부 리포에서 문서가 사라지면 대조가 조용히 「건너뜀」이
-   되므로 `scripts/tests/test_internal_docs_present.py` 가 내부 리포에 전부 있는지 잰다(공개 트리에는
-   scripts/ 가 없어 그 가드가 실리지 않는다). 고객 문서(설치 안내서 등)는 여기에 넣지 않는다 — 없으면 실패해야 한다.
+This list is the only thing that decides when a comparison may be skipped. If a
+document disappeared from the internal repository, that comparison would quietly
+turn into a skip, so `scripts/tests/test_internal_docs_present.py` checks that
+they are all present there (the public tree has no `scripts/`, so that guard does
+not ship with it). Documents that ship to everyone, such as the install guide, do
+not belong in this list: a missing one should fail.
 
-임포트: schema/tests 는 이 폴더의 테스트가 돌 때 pytest 가 경로에 붙인다. 다른 폴더(engine·infra·scripts 테스트)는
-각자 `sys.path` 에 이 폴더를 붙인다(conftest).
+On imports: pytest adds `schema/tests` to the path when the tests in this folder
+run. Tests in other folders (engine, infra, scripts) add this folder to
+`sys.path` from their own conftest.
 """
 
 from __future__ import annotations
@@ -20,21 +28,22 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 
-# 리포 루트 기준 경로 → 건너뛸 때 적는 사유
+# Paths relative to the repository root, each with the reason recorded on a skip
 INTERNAL_DOCS: dict[str, str] = {
-    "docs/adr/0006-observation-schema.md": "docs/adr/0006 은 내부 설계 문서라 공개 트리에 없다",
-    "docs/adr/0008-flow-verdict.md": "docs/adr/0008 은 내부 설계 문서라 공개 트리에 없다",
-    "docs/adr/0009-optional-evidence-sources.md": "docs/adr/0009 는 내부 설계 문서라 공개 트리에 없다",
-    "docs/contract-seams.md": "docs/contract-seams.md 는 내부 설계 문서라 공개 트리에 없다",
-    "infra/README.md": "infra/README.md 는 개발 계정 배포 기록이라 공개 트리에 없다",
+    "docs/adr/0006-observation-schema.md": "docs/adr/0006 is an internal design document and is not in the public tree",
+    "docs/adr/0008-flow-verdict.md": "docs/adr/0008 is an internal design document and is not in the public tree",
+    "docs/adr/0009-optional-evidence-sources.md": "docs/adr/0009 is an internal design document and is not in the public tree",
+    "docs/contract-seams.md": "docs/contract-seams.md is an internal design document and is not in the public tree",
+    "infra/README.md": "infra/README.md records deployments in our development account and is not in the public tree",
 }
 
 
 def skip_if_missing(rel: str) -> Path:
-    """목록에 있는 내부 문서의 경로. 없으면 사유를 적고 그 테스트를 건너뛴다."""
+    """The path of a listed internal document. If it is absent, record the reason
+    and skip that test."""
     if rel not in INTERNAL_DOCS:
         raise KeyError(
-            f"{rel} 는 INTERNAL_DOCS 에 없다 — 목록 밖의 문서는 건너뛰지 않는다"
+            f"{rel} is not in INTERNAL_DOCS; a document outside the list is never skipped"
         )
     path = ROOT / rel
     if not path.exists():
