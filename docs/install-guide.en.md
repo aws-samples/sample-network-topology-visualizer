@@ -677,7 +677,7 @@ Only the commonly used parameters are listed. See the `Parameters` section of ea
 - The generated HTML makes no outbound requests. With live monitoring enabled, it reads and writes S3 in the same account through signed URLs only.
 - With live monitoring enabled, the HTML embeds three signed URLs: one to read state, one to write the monitoring signal, and one to open the latest page (read `index.html`). They are valid for at most about 12 hours and each is limited to a single S3 key. Treat the HTML as private; if it leaks, only those three operations are possible until the signatures expire.
 - Anyone holding a Stack C viewing link can open it. Treat links like passwords and rotate the key if one leaks. CloudFront access logs contain the full link.
-- For each sharing path (download, S3 signed URL, Stack C, Identity Center, internal network only) — who can open it, whether access is attributable, how to revoke, lifetime, where links leak — and Stack C private-key handling, see [viewer-sharing.md](viewer-sharing.md) (Korean).
+- For each sharing path (download, S3 signed URL, Stack C, Identity Center, internal network only) — who can open it, whether access is attributable, how to revoke, lifetime, where links leak — and Stack C private-key handling, see [Ways to share the diagram](viewer-sharing.en.md).
 
 ### Optional hardening
 
