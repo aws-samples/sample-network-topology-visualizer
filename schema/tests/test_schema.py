@@ -1,10 +1,12 @@
-"""topology.schema.json 의 대조군.
+"""The checks that `topology.schema.json` cannot express on its own.
 
-JSON Schema 는 배열 순서와 참조 정합성을 표현할 수 없다. 그런데 그 두 가지가 각각
-불변식 ②(결정론)와 ③(엔진·렌더 경계)의 실제 내용이므로 여기서 강제한다.
+JSON Schema cannot describe the order of an array or whether a reference
+resolves, yet those are what determinism and the boundary between the engine and
+the renderer come down to, so they are enforced here.
 
-모든 양성 어서션에는 **반드시 실패하는 짝**을 둔다. 실패할 수 없는 어서션은 통과가 아니라
-미측정이다. 이 파일에서 `_detects_` 로 끝나는 테스트가 그 짝이다.
+Every positive assertion has a **counterpart that must fail**. An assertion that
+cannot fail is not a passing test but an unmeasured one; the tests whose names
+end in `_detects_` are those counterparts.
 """
 
 from __future__ import annotations
@@ -43,20 +45,24 @@ def unsorted_ids(items: list[dict]) -> bool:
 
 
 def coverage_sort_key(entry: dict) -> tuple[str, str, str]:
-    """coverage 정렬 키. region 이 null 일 수 있으므로 정규화한다.
+    """The coverage sort key, normalised because the Region may be null.
 
-    스키마는 `coverage_entry.region` 에 null 을 허용한다(2차의 글로벌 리소스용). 튜플에 None 을
-    그대로 넣으면 `sorted` 가 `None < str` 비교에서 TypeError 로 죽는다 — 정렬 위반을 잡아야 할
-    테스트가 크래시로 끝나 무엇이 틀렸는지 알려주지 못한다. null 은 리전 없음이므로 맨 앞에 둔다.
+    The schema allows `coverage_entry.region` to be null, for a global resource.
+    Leaving `None` in the tuple makes `sorted` raise a TypeError when it compares
+    `None` with a string, so a test meant to report a sorting violation would
+    crash instead of reporting what was wrong. Null means no Region,
+    so it sorts first.
     """
     return (entry["account_id"], entry["region"] or "", entry["resource_type"])
 
 
 def type_prefix_mismatches(doc: dict) -> list[str]:
-    """id 의 첫 구획과 type 이 어긋난 노드.
+    """Nodes whose first id segment disagrees with their type.
 
-    id 형식이 `<type>/<account_id>/…` 라는 것은 스키마 description 에만 있고 pattern 은 첫 구획이
-    무엇이든 통과시킨다. 어긋나면 렌더러가 id 접두어로 타입을 추론하는 순간 조용히 틀린다.
+    The schema states the id form `<type>/<account_id>/…` only in a description,
+    and the pattern accepts any first segment. When they
+    disagree, anything that infers the type from the id prefix, as the renderer
+    does, is quietly wrong.
     """
     return [
         f"{n['id']} vs type={n['type']}"
@@ -92,10 +98,12 @@ def missing_coverage(doc: dict) -> list[str]:
 
 
 def unrequested_coverage(doc: dict) -> list[str]:
-    """scope 에 없는데 coverage 에 있는 항목. missing_coverage 의 반대 방향이다.
+    """Entries in coverage that are not in scope, the opposite direction from
+    `missing_coverage`.
 
-    요청하지 않은 것을 수집했다는 뜻이므로 scope 가 산출물의 입력을 정확히 반영하지 못한 상태다
-    (스키마 `$defs/scope` description: 요청과 결과를 섞지 마라).
+    It means something was collected that was never requested, so scope no longer
+    describes what the collection was asked to do (see the `$defs/scope`
+    description in the schema: do not mix the request with the result).
     """
     scope = doc["scope"]
     combos = set(
@@ -110,11 +118,11 @@ def unrequested_coverage(doc: dict) -> list[str]:
 
 @pytest.fixture
 def doc() -> dict:
-    """minimal.json 사본. 음성 테스트는 여기서 한 곳만 망가뜨린다."""
+    """A copy of minimal.json. A negative test breaks exactly one thing in it."""
     return load(FIXTURE_DIR / "minimal.json")
 
 
-# ---- 스키마 자체 --------------------------------------------------------------
+# ---- The schema itself ------------------------------------------------------
 
 
 def test_schema_itself_is_a_valid_json_schema():
@@ -122,23 +130,29 @@ def test_schema_itself_is_a_valid_json_schema():
 
 
 def test_fixture_dir_is_not_empty():
-    # 픽스처가 0개면 아래 파라미터화 테스트 전부가 조용히 통과한다(미측정).
-    assert FIXTURES, "fixtures/*.json 이 하나도 없다"
+    # With no fixtures, every parametrised test below would pass silently while
+    # measuring nothing.
+    assert FIXTURES, "there is not a single fixtures/*.json"
 
 
 def test_resource_type_is_node_type_minus_containers():
-    """두 열거를 손으로 중복 유지하고 있으므로 어긋남을 여기서 잡는다.
+    """The two enumerations are kept in step by hand, so a mismatch is caught
+    here.
 
-    JSON Schema 에 집합 차집합이 없어 `resource_type` 은 `node_type` 의 부분집합을 다시 적는다.
-    2차 리소스를 node_type 에만 넣고 resource_type 을 잊으면 '노드로는 존재하는데 수집 요청은
-    못 하는' 타입이 생긴다.
+    JSON Schema has no set difference, so `resource_type` restates a subset of
+    `node_type`. Add a resource to `node_type` and forget `resource_type` and you
+    create a type that exists as a node but cannot be requested for collection.
     """
     node_types = set(SCHEMA["$defs"]["node_type"]["enum"])
     resource_types = set(SCHEMA["$defs"]["resource_type"]["enum"])
-    # 🔵 파생 노드 2종(2.7.0 · LB 대상 해소가 짓는다 — 목록 API 가 없다)은 수집 요청·coverage 의 단위가 아니다.
-    #    이 집합을 넓히지 마라 — 넓히면 「노드로는 있는데 수집 요청은 못 하는」 타입이 조용히 늘어난다.
-    # 🔵 배치 D(2.10.0) — `api_gateway_v2` 는 노드 종류가 아니라 **수집 종류만**이다(HTTP·WebSocket API 도 노드는 `api_gateway` · 목록 API 가 달라
-    #    거부가 따로 보이게 수집 종류를 나눴다). 이 집합도 넓히지 마라
+    # The two derived node types are built while resolving load balancer targets,
+    # because no list API returns them, so they are not units of a collection
+    # request or of coverage. Do not widen this set: widening it quietly adds
+    # types that exist as nodes but cannot be requested.
+    # `api_gateway_v2` is the other direction: a collection type that is not a
+    # node type. HTTP and WebSocket APIs are also `api_gateway` nodes, but their
+    # list API differs, so the collection type was split to make a denial visible
+    # on its own. Do not widen this set either.
     assert (
         resource_types
         == (node_types - {"account", "region"} - DERIVED_NODE_TYPES)
@@ -146,18 +160,21 @@ def test_resource_type_is_node_type_minus_containers():
     )
 
 
-# 파생 노드(2.7.0) — `engine/src/nettopo/model.py` 의 `DERIVED_TYPES` 와 같아야 한다(엔진 테스트가 그 짝을 잰다).
-# 🔵 2.8.0(P2-6) — `lambda_function` 은 수집 종류가 됐다(수집하지 않으면 LB 대상 해소가 여전히 짓는다 — `DERIVABLE_TYPES`)
-# 수집 종류이지만 노드 종류는 다른 종류의 것(배치 D · `api_gateway_v2` → 노드 `api_gateway`)
-# 2.12.0(ADR 0014) — `waf_web_acl_global`(CloudFront 범위) → 노드 `waf_web_acl`
+# Collection types whose nodes are of another type: `api_gateway_v2` becomes an
+# `api_gateway` node, and `waf_web_acl_global` (the CloudFront scope) becomes a
+# `waf_web_acl` node.
 RESOURCE_ONLY_TYPES = {"api_gateway_v2", "waf_web_acl_global"}
+# Derived nodes; this set has to match `DERIVED_TYPES` in
+# `engine/src/nettopo/model.py`, and an engine test checks that side.
+# `lambda_function` is no longer here because it became a collection type;
+# resolving load balancer targets still builds one when it is not collected.
 DERIVED_NODE_TYPES = {
     "external_ip",
     "s3_bucket",
-}  # s3_bucket = CloudFront S3 원본(2.8.0 · P2-3)
+}  # s3_bucket is a CloudFront S3 origin
 
 
-# ---- 픽스처는 계약을 만족한다 -------------------------------------------------
+# ---- The fixtures satisfy the contract --------------------------------------
 
 
 @pytest.mark.parametrize("path", FIXTURES, ids=lambda p: p.name)
@@ -173,12 +190,13 @@ def test_node_ids_are_unique(path: Path):
 
 @pytest.mark.parametrize("path", FIXTURES, ids=lambda p: p.name)
 def test_arrays_are_sorted(path: Path):
-    """불변식 ②. 정렬이 흔들리면 같은 입력에서 다른 바이트가 나온다."""
+    """Determinism: unstable ordering means the same input produces different
+    bytes."""
     d = load(path)
-    assert not unsorted_ids(d["nodes"]), "nodes 가 id 오름차순이 아니다"
-    assert not unsorted_ids(d["edges"]), "edges 가 id 오름차순이 아니다"
+    assert not unsorted_ids(d["nodes"]), "nodes is not in ascending id order"
+    assert not unsorted_ids(d["edges"]), "edges is not in ascending id order"
     cov = [coverage_sort_key(c) for c in d["coverage"]]
-    assert cov == sorted(cov), "coverage 정렬이 (계정, 리전, 종류) 순이 아니다"
+    assert cov == sorted(cov), "coverage is not sorted by (account, Region, type)"
 
 
 @pytest.mark.parametrize("path", FIXTURES, ids=lambda p: p.name)
@@ -190,19 +208,22 @@ def test_references_resolve(path: Path):
 
 @pytest.mark.parametrize("path", FIXTURES, ids=lambda p: p.name)
 def test_node_id_prefix_matches_type(path: Path):
-    """id 형식 `<type>/…` 은 스키마 pattern 이 강제하지 못한다. 여기서 강제한다."""
+    """The schema pattern cannot enforce the `<type>/…` id form, so it is
+    enforced here."""
     assert type_prefix_mismatches(load(path)) == []
 
 
 @pytest.mark.parametrize("path", FIXTURES, ids=lambda p: p.name)
 def test_every_requested_combination_is_accounted_for(path: Path):
-    """불변식 ④. 요청했는데 coverage 에 없으면 그 영역은 조용히 사라진 것이다."""
+    """Something requested but absent from coverage is an area that quietly
+    disappeared."""
     assert missing_coverage(load(path)) == []
 
 
 @pytest.mark.parametrize("path", FIXTURES, ids=lambda p: p.name)
 def test_coverage_does_not_exceed_scope(path: Path):
-    """반대 방향. 요청하지 않은 것이 coverage 에 있으면 scope 가 입력을 반영하지 못한 것이다."""
+    """The opposite direction: something unrequested in coverage means scope no
+    longer reflects the inputs."""
     assert unrequested_coverage(load(path)) == []
 
 
@@ -212,7 +233,7 @@ def test_collected_at_is_rfc3339(path: Path):
     datetime.fromisoformat(raw.replace("Z", "+00:00"))
 
 
-# ---- 계약 위반은 거부된다 -----------------------------------------------------
+# ---- A violation of the contract is rejected --------------------------------
 
 
 def test_unknown_top_level_key_rejected(doc):
@@ -221,47 +242,52 @@ def test_unknown_top_level_key_rejected(doc):
 
 
 def test_display_field_on_node_rejected(doc):
-    """불변식 ③. 렌더러가 표시용 필드를 몰래 끼워넣지 못하게 한다."""
+    """Keeps the renderer from slipping a presentation field into the
+    contract."""
     doc["nodes"][0]["fill_color"] = "#ff0000"
     assert errors(doc)
 
 
 def test_nested_attribute_object_rejected(doc):
-    """attributes 가 임의 중첩을 허용하면 계약이 사실상 사라진다."""
+    """Allowing arbitrary nesting under attributes would effectively remove the
+    contract."""
     doc["nodes"][0]["attributes"]["nested"] = {"deep": 1}
     assert errors(doc)
 
 
 def test_unknown_node_type_rejected(doc):
-    # direct_connect_gateway 는 2.1.0 에서 계약에 들어왔다 — 아직 없는 2차 타입으로 잰다.
-    doc["nodes"][0]["type"] = (
-        "vpc_lattice_service_network"  # 배치 D 가 global_accelerator 를 들였다 — 아직 없는 종류로 잰다
-    )
+    # Checked with a type that is not in the contract yet; the ones used before
+    # (direct_connect_gateway, global_accelerator) have since been added.
+    doc["nodes"][0]["type"] = "vpc_lattice_service_network"
     assert errors(doc)
 
 
 def test_second_tier_resource_type_is_not_in_scope_enum(doc):
-    """2차 리소스 추가는 스키마 PR(승인 2명)이다. 지금은 통과하면 안 된다."""
+    """Adding a resource type is a schema change that goes through its own
+    review, so it must not pass yet."""
     doc["scope"]["resource_types"].append("site_to_site_vpn")
     assert errors(doc)
 
 
 @pytest.mark.parametrize("container", ["account", "region"])
 def test_container_type_in_scope_rejected(doc, container):
-    """컨테이너는 엔진이 합성하는 노드다 — 수집하라고 요청할 수 있는 대상이 아니다."""
+    """A container is a node the engine synthesises, not something that can be
+    requested for collection."""
     doc["scope"]["resource_types"].append(container)
     assert errors(doc)
 
 
 @pytest.mark.parametrize("container", ["account", "region"])
 def test_container_type_in_coverage_rejected(doc, container):
-    """컨테이너에는 수집 성공·실패라는 사실이 없으므로 coverage 에 나타날 수 없다."""
+    """A container has no collection outcome, so it cannot appear in
+    coverage."""
     doc["coverage"][0]["resource_type"] = container
     assert errors(doc)
 
 
 def test_node_without_partial_rejected(doc):
-    """불변식 ③·④. 생략을 허용하면 엔진·렌더러가 각자 false 를 하드코딩해야 한다."""
+    """Allowing it to be omitted would make the engine and the renderer each
+    hard-code their own default of false."""
     del doc["nodes"][0]["partial"]
     assert errors(doc)
 
@@ -272,13 +298,15 @@ def test_edge_without_partial_rejected(doc):
 
 
 def test_edge_without_directed_rejected(doc):
-    """생략하면 화살표 방향이 계약 밖 기본값에 의존한다."""
+    """If it is omitted, the arrow direction depends on a default outside the
+    contract."""
     del doc["edges"][0]["directed"]
     assert errors(doc)
 
 
 def test_coverage_without_item_count_rejected(doc):
-    """'부재'는 0 도 null 도 아닌 계약에 없는 제3의 상태다(ADR 0001 결정 3)."""
+    """Absence would be a third state, neither 0 nor null, that the contract does
+    not define."""
     del doc["coverage"][0]["item_count"]
     assert errors(doc)
 
@@ -308,7 +336,8 @@ def test_subnet_without_availability_zone_rejected(doc):
 
 
 def test_partial_without_reason_rejected(doc):
-    """사유 없는 partial 은 '확인하지 못했다'를 표시할 근거를 주지 않는다."""
+    """A partial with no reason gives the screen nothing to show for "could not
+    be confirmed"."""
     doc["nodes"][0]["partial"] = True
     assert errors(doc)
 
@@ -326,12 +355,13 @@ def test_missing_coverage_rejected(doc):
 
 @pytest.mark.parametrize("bad", ["1.0.0", "3.0.0", "2.0", "2.0.0-rc1"])
 def test_wrong_schema_version_rejected(doc, bad):
-    """1.0.0 도 거부 대상이다 — partial·directed·item_count 생략이 허용됐던 버전이다."""
+    """1.0.0 is rejected too: it was the version that allowed partial, directed
+    and item_count to be omitted."""
     doc["schema_version"] = bad
     assert errors(doc)
 
 
-# ---- 구조 검사의 판별력(이게 없으면 위 구조 테스트는 미측정) -------------------
+# ---- Discriminating power: without these, the tests above measure nothing ---
 
 
 def test_sort_check_detects_disorder(doc):
@@ -367,18 +397,20 @@ def test_type_prefix_check_detects_mismatch(doc):
 
 
 def test_coverage_sort_key_tolerates_null_region(doc):
-    """2차의 글로벌 리소스는 region 이 null 이다. 스키마상 합법이고 정렬도 되어야 한다."""
+    """A global resource has a null Region. That is legal under the schema, and it
+    still has to sort."""
     entry = dict(doc["coverage"][0], region=None)
     assert errors({**doc, "coverage": [entry]}) == [], (
-        "region: null 은 스키마상 합법이다"
+        "a null Region is legal under the schema"
     )
     keys = [coverage_sort_key(entry)] + [coverage_sort_key(c) for c in doc["coverage"]]
-    assert sorted(keys)[0] == coverage_sort_key(entry), "null 리전은 맨 앞에 온다"
+    assert sorted(keys)[0] == coverage_sort_key(entry), "a null Region sorts first"
 
 
 def test_naive_sort_key_would_crash_on_null_region(doc):
-    """위 테스트가 막고 있는 것을 고정한다. 정규화를 되돌리면 TypeError 로 죽는다 —
-    정렬 위반을 보고해야 할 테스트가 크래시로 끝나면 원인을 알려주지 못한다."""
+    """Pins what the test above is preventing: undo the normalisation and this
+    crashes with a TypeError, so a test meant to report a sorting violation would
+    end in a crash and say nothing about the cause."""
     naive = [
         (c["account_id"], c["region"], c["resource_type"]) for c in doc["coverage"]
     ]
@@ -392,13 +424,15 @@ def test_collected_at_check_detects_garbage():
         datetime.fromisoformat("2026-13-45T99:99:99Z".replace("Z", "+00:00"))
 
 
-# ---- LB 등록 대상 수(사용자 결정 2026-10-16 · ADR 0006 「W3② LB 대상 상태」 개정) ----------------
+# ---- Registered load balancer target counts ---------------------------------
 
 
 def registered_count_mismatches(doc: dict) -> list[str]:
-    """그룹별 수가 `target_groups` 와 자리 수가 같은가 · 합이 있으면 null 이 없고 합이 맞는가.
+    """Whether the per-group counts have as many entries as `target_groups`, and
+    whether a total, when present, has no nulls under it and adds up.
 
-    JSON Schema 는 두 배열의 길이·합을 비교하지 못한다 — 스키마 `$comment` 가 이 함수를 지목한다.
+    JSON Schema cannot compare the lengths of two arrays or add them up, and the
+    schema's `$comment` points at this function.
     """
     bad = []
     for n in doc["nodes"]:
@@ -408,25 +442,31 @@ def registered_count_mismatches(doc: dict) -> list[str]:
         per = a.get("target_group_registered_target_counts")
         if per is None:
             if "registered_target_count" in a:
-                bad.append(f"{n['id']}: 합만 있고 그룹별 수가 없다")
+                bad.append(f"{n['id']}: a total with no per-group counts")
             continue
         if len(per) != len(a.get("target_groups") or []):
             bad.append(
-                f"{n['id']}: 그룹별 수 {len(per)}자리 ≠ 대상 그룹 {len(a.get('target_groups') or [])}개"
+                f"{n['id']}: {len(per)} per-group counts for "
+                f"{len(a.get('target_groups') or [])} target groups"
             )
         total = a.get("registered_target_count")
         if total is not None and (None in per or sum(per) != total):
             bad.append(
-                f"{n['id']}: 합 {total} ≠ 그룹별 {per}(못 읽은 그룹이 있으면 합은 없어야 한다)"
+                f"{n['id']}: total {total} does not match the per-group {per} "
+                "(with an unreadable group there should be no total)"
             )
     return bad
 
 
 def _lb(doc: dict) -> dict:
     found = [n for n in doc["nodes"] if n["type"] == "load_balancer"]
-    assert found, "minimal.json 에 LB 가 없다 — 아래 음성 테스트가 미측정이 된다"
+    assert found, (
+        "minimal.json has no load balancer, which would leave the negative tests "
+        "below measuring nothing"
+    )
     assert "registered_target_count" in found[0]["attributes"], (
-        "minimal.json LB 에 등록 수가 없다(미측정)"
+        "the load balancer in minimal.json has no registered counts, so this "
+        "measures nothing"
     )
     return found[0]
 
@@ -458,12 +498,14 @@ def test_registered_total_without_per_group_counts_rejected(doc):
 
 def test_registered_count_checker_detects_a_wrong_total_and_a_short_row(doc):
     lb = _lb(doc)
-    assert registered_count_mismatches(doc) == []  # 대조군
+    assert registered_count_mismatches(doc) == []  # control case
     lb["attributes"]["registered_target_count"] += 1
     assert registered_count_mismatches(doc)
     lb["attributes"]["registered_target_count"] -= 1
     lb["attributes"]["target_group_registered_target_counts"] = [None, 2]
-    assert registered_count_mismatches(doc)  # 못 읽은 그룹이 있는데 합이 있다
+    assert registered_count_mismatches(doc)  # a total despite an unreadable group
     lb["attributes"]["target_group_registered_target_counts"] = [2]
     del lb["attributes"]["registered_target_count"]
-    assert registered_count_mismatches(doc)  # 자리 수가 대상 그룹 수와 다르다
+    assert registered_count_mismatches(
+        doc
+    )  # the number of entries differs from the number of target groups
