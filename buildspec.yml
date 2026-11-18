@@ -1,11 +1,18 @@
-# 수집기 CodeBuild 의 빌드 명세 — 배포 패키지(nettopo-source.zip) 루트에 실린다. 스택 A 의 CollectorProject 가
-# `BuildSpec: buildspec.yml` 로 이 파일을 읽는다(템플릿 본문 한도 51,200 B 밖으로 뺐다 · 2026-10-27).
-# 환경변수(ARTIFACT_BUCKET · TARGET_ACCOUNTS · TARGET_REGIONS · MEMBER_ROLE_NAME · LIVE_CHANNEL)는 템플릿이 준다.
+# The build spec for the collector CodeBuild project. It rides at the root of the
+# deployment package (nettopo-source.zip), and stack A's CollectorProject reads
+# this file through `BuildSpec: buildspec.yml`. It lives here, outside the
+# template, to keep the template body under the 51,200 byte limit.
+# The template supplies the environment variables: ARTIFACT_BUCKET,
+# TARGET_ACCOUNTS, TARGET_REGIONS, MEMBER_ROLE_NAME and LIVE_CHANNEL.
 version: 0.2
 env:
   variables:
-    # 빌드 안에서 새로 만드는 가상환경 — 이미지에 깔린 패키지와 섞이지 않는다(옛 판 설치 정보가 남지 않는다 · 2026-10-27).
-    # 🔴 이후 명령은 셸이 달라도 같은 환경을 쓰도록 전부 이 절대 경로로 부른다(`$VENV/bin/python` · `$VENV/bin/nettopo`).
+    # A virtual environment created fresh inside the build, so nothing mixes with
+    # the packages already in the image and no installation metadata from an older
+    # version survives.
+    # Every later command calls through this absolute path (`$VENV/bin/python`,
+    # `$VENV/bin/nettopo`), so that a different shell still uses the same
+    # environment.
     VENV: /tmp/nettopo-venv
 phases:
   install:
@@ -35,7 +42,9 @@ phases:
           REGION_ARGS="$REGION_ARGS --region $r"
         done
         printf '%s' "$REGION_ARGS" > /tmp/region-args
-        # 멤버 역할이 sts:ExternalId 조건을 걸었을 때만(스택 A MemberExternalId = 스택 B ExternalId) — 비우면 넘기지 않는다
+        # Only when the member role carries an sts:ExternalId condition, where
+        # stack A's MemberExternalId equals stack B's ExternalId. Left empty, it
+        # is not passed.
         if [ -n "${MEMBER_EXTERNAL_ID:-}" ]; then
           printf '%s' "--external-id $MEMBER_EXTERNAL_ID" > /tmp/external-id-arg
         else
