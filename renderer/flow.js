@@ -15,7 +15,7 @@
     const j = JSON.parse(el.textContent)
     if (!j || j.v !== 1 || !j.topo || !Array.isArray(j.topo.nodes) || !Array.isArray(j.marks) ||
       (j.focus != null && (!Array.isArray(j.focus.marks) || !Array.isArray(j.focus.seats)))) {
-      throw new Error('nettopo-cmp: 설정 모양이 틀렸다')
+      throw new Error(NT_T('nettopo-cmp: 설정 모양이 틀렸다'))
     }
     return j
   })()
@@ -47,43 +47,43 @@
   // §13-56: 빈·에러·지연 문구는 **미리 정한 설계물**이다. 그때그때 만들면 화면마다 다른 말을
   // 한다 → 이 상수 셋 밖의 안내 문구를 쓰지 마라(검사 56).
   const COPY = {
-    empty: '조건에 맞는 리소스가 없습니다. 필터를 지우거나 조건을 넓혀 보세요.',
-    error: '조건을 해석할 수 없습니다 — 예: type=ec2_instance AND NOT environment=prod',
+    empty: NT_T('조건에 맞는 리소스가 없습니다. 필터를 지우거나 조건을 넓혀 보세요.'),
+    error: NT_T('조건을 해석할 수 없습니다 — 예: type=ec2_instance AND NOT environment=prod'),
     // §3k: 소요 시간은 사양 문장이다 → 개발 설명(`slowDev`)으로 옮겼다. 화면은 출처만 말한다.
-    slow: '이 화면은 마지막 수집 결과입니다',
-    slowDev: '수집은 계정·리전 수에 따라 약 20분이 걸린다',
+    slow: NT_T('이 화면은 마지막 수집 결과입니다'),
+    slowDev: NT_T('수집은 계정·리전 수에 따라 약 20분이 걸린다'),
     // 검색 `상태:` 원자(§17.26 C-8) — 모니터링이 꺼져 있으면 아무것도 맞지 않고 **그 사실을 말한다**(조용한 0건 금지 · §13-56)
-    monOff: '상태 조건은 모니터링을 켰을 때만 맞는 리소스가 있습니다 — 지금은 모니터링이 꺼져 있거나 상태 정보가 없습니다'
+    monOff: NT_T('상태 조건은 모니터링을 켰을 때만 맞는 리소스가 있습니다 — 지금은 모니터링이 꺼져 있거나 상태 정보가 없습니다')
   }
   // §3k K3 — 못 읽은 이유는 **사람 말**로 쓴다. 원문 코드·AWS 메시지는 `title`(마우스를 올렸을 때)과 배너
   // 개발 설명에만 간다(검사 115 ③). 🔴 표에 없는 코드를 화면 글자로 내지 않는다 — 「읽지 못했다」로 말한다.
   const REASON_WORD = {
-    access_denied: '권한이 없어 읽지 못했습니다',
-    throttled: 'AWS 가 요청량 초과로 거절했습니다 — 다음 수집 때 다시 읽습니다',
-    unsupported_region: '이 리전에서는 해당 서비스를 사용할 수 없습니다',
-    api_error: 'AWS 가 오류를 반환했습니다',
-    timeout: 'AWS 응답 시간이 초과됐습니다',
-    pagination_truncated: '목록이 길어 끝까지 읽지 못했습니다',
-    credentials_unavailable: '해당 계정에 접근하지 못했습니다'
+    access_denied: NT_T('권한이 없어 읽지 못했습니다'),
+    throttled: NT_T('AWS 가 요청량 초과로 거절했습니다 — 다음 수집 때 다시 읽습니다'),
+    unsupported_region: NT_T('이 리전에서는 해당 서비스를 사용할 수 없습니다'),
+    api_error: NT_T('AWS 가 오류를 반환했습니다'),
+    timeout: NT_T('AWS 응답 시간이 초과됐습니다'),
+    pagination_truncated: NT_T('목록이 길어 끝까지 읽지 못했습니다'),
+    credentials_unavailable: NT_T('해당 계정에 접근하지 못했습니다')
   }
   // `reason` 없이 커버리지 `status` 가 코드 자리에 온 경우도 같은 표로 옮긴다(§3k K3).
   const STATUS_REASON = { denied: 'access_denied', unsupported: 'unsupported_region', error: 'api_error' }
   // 🆕 왼쪽 아래 「!」 상자의 이유 문장(§17.26 C-3 표가 정본 · 사용자 결정 2026-10-20) — **고객 말**(합니다체 · 할 일까지).
   //    위 `REASON_WORD`(했다체)는 정보창·독·캔버스 `title` 자리에 그대로다. 🔴 「스택 B」 같은 내부 이름 대신 설치 안내의 단계를 댄다.
   const POP_REASON = {
-    access_denied: '권한이 없어 읽지 못했습니다. 읽기 전용 역할(설치 안내 4단계)의 권한을 확인하면 다음 수집부터 표시됩니다.',
-    throttled: '요청량 초과로 AWS 가 거절했습니다. 다음 수집 때 다시 읽습니다.',
-    unsupported_region: '이 리전에서는 해당 서비스를 사용할 수 없습니다. 별도 조치는 필요 없습니다.',
-    api_error: 'AWS 가 오류를 반환했습니다. 다음 수집 때 다시 읽습니다.',
-    timeout: 'AWS 응답 시간이 초과됐습니다. 다음 수집 때 다시 읽습니다.',
-    pagination_truncated: '목록이 너무 길어 끝까지 읽지 못했습니다. 캔버스에는 읽은 부분까지만 표시됩니다.',
-    credentials_unavailable: '해당 계정에 접근하지 못했습니다. 해당 계정에 읽기 전용 역할(설치 안내 4단계)이 있는지 확인하세요.',
-    skipped: '수집하지 않도록 설정된 영역입니다.'
+    access_denied: NT_T('권한이 없어 읽지 못했습니다. 읽기 전용 역할(설치 안내 4단계)의 권한을 확인하면 다음 수집부터 표시됩니다.'),
+    throttled: NT_T('요청량 초과로 AWS 가 거절했습니다. 다음 수집 때 다시 읽습니다.'),
+    unsupported_region: NT_T('이 리전에서는 해당 서비스를 사용할 수 없습니다. 별도 조치는 필요 없습니다.'),
+    api_error: NT_T('AWS 가 오류를 반환했습니다. 다음 수집 때 다시 읽습니다.'),
+    timeout: NT_T('AWS 응답 시간이 초과됐습니다. 다음 수집 때 다시 읽습니다.'),
+    pagination_truncated: NT_T('목록이 너무 길어 끝까지 읽지 못했습니다. 캔버스에는 읽은 부분까지만 표시됩니다.'),
+    credentials_unavailable: NT_T('해당 계정에 접근하지 못했습니다. 해당 계정에 읽기 전용 역할(설치 안내 4단계)이 있는지 확인하세요.'),
+    skipped: NT_T('수집하지 않도록 설정된 영역입니다.')
   }
   const popReason = (c) => POP_REASON[STATUS_REASON[c] || c] || POP_REASON_ELSE
-  const POP_REASON_ELSE = '읽지 못했습니다.'
+  const POP_REASON_ELSE = NT_T('읽지 못했습니다.')
 
-  const reasonWord = (c) => (c === 'skipped' ? '건너뛰었습니다' : REASON_WORD[STATUS_REASON[c] || c] || '읽지 못했습니다')
+  const reasonWord = (c) => (c === 'skipped' ? NT_T('건너뛰었습니다') : REASON_WORD[STATUS_REASON[c] || c] || NT_T('읽지 못했습니다'))
   // §13-58: 타입별 콘솔 경로. 리전이 빠지면 엉뚱한 리전을 연다(전역 규칙: 리전 항상 명시).
   // 경로가 타입마다 달라야 딥링크가 의미를 갖는다(검사 58이 경로 중복 0을 잰다).
   const CONSOLE_PATH = {
@@ -261,7 +261,7 @@
   const mss = (ms) => { const t = Math.max(0, Math.floor(ms / 1000)); return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}` }
   const aboutMin = (ms) => {
     const m = Math.max(1, Math.round(ms / 60e3))
-    return m < 60 ? `약 ${m}분` : `약 ${Math.floor(m / 60)}시간${m % 60 ? ` ${m % 60}분` : ''}`
+    return m < 60 ? NT_T('약 {0}분', [m]) : NT_T('약 {0}시간{1}', [Math.floor(m / 60), m % 60 ? NT_T(' {0}분', [m % 60]) : ''])
   }
   // ISO → `YYYY-MM-DD HH:MM:SS KST`. 못 읽는 값은 **원문 그대로** 둔다 — 지우면 무엇을 못 읽었는지 사라진다.
   const kstAt = (iso) => {
@@ -317,7 +317,7 @@
   const acctShow = (num, name) => (name ? `${name} (${acctMask(num)})` : acctMask(num))
   const acctByNum = new Map(accounts.map((a) => [acctNumOf(a), a]))
   const acctText = (num) => acctShow(num, acctNameOf(acctByNum.get(String(num))))
-  const acctLabel = (i) => (accounts[i] ? acctShow(acctNumOf(accounts[i]), acctNameOf(accounts[i])) : `계정 ${i + 1}`)
+  const acctLabel = (i) => (accounts[i] ? acctShow(acctNumOf(accounts[i]), acctNameOf(accounts[i])) : NT_T('계정 {0}', [i + 1]))
 
   // ---------------- §3g 범위 축 — 판정 (대장 93 · 사용자 요구 2026-09-20) ----------
   // 범위는 사실이므로 **모델 조상만** 본다(`mById`).
@@ -494,12 +494,12 @@
   // 짝이 어긋났을 때 사람이 할 일. 🔴 둘을 섞지 마라 — 지문이 다른 경우에 「수집기가 다시 굽는다」고
   //    말하면 사람은 기다리고, 수집기는 이미 새 판을 구워 두었으므로 영영 안 풀린다.
   const pairFix = (p) => p.by !== 'digest'
-    ? '수집기가 짝이 맞는 두 파일을 다시 만들면 해결됩니다'
+    ? NT_T('수집기가 짝이 맞는 두 파일을 다시 만들면 해결됩니다')
     : p.newer === 'page'
-      ? '이 구성도가 더 최신입니다 — 새 구성으로 상태를 다시 측정하고 있습니다(보통 몇 분) · 기다리면 자동으로 표시됩니다'
+      ? NT_T('이 구성도가 더 최신입니다 — 새 구성으로 상태를 다시 측정하고 있습니다(보통 몇 분) · 기다리면 자동으로 표시됩니다')
       : p.newer === 'obs' && canGoLatest()
-        ? '상단 «최신 화면 열기»를 누르면 새 구성으로 그린 화면이 이 탭에 열리고 모니터링이 이어집니다'
-        : '최신 화면 파일(index.html)을 다시 받아 주세요 — 최신 수집 결과로 그려지고 상태가 다시 표시됩니다'
+        ? NT_T('상단 «최신 화면 열기»를 누르면 새 구성으로 그린 화면이 이 탭에 열리고 모니터링이 이어집니다')
+        : NT_T('최신 화면 파일(index.html)을 다시 받아 주세요 — 최신 수집 결과로 그려지고 상태가 다시 표시됩니다')
   let OBS_PAIR = null
   let OBS_PAIRING = { stale: false, by: null }
   let OBS_STALE = false
@@ -535,15 +535,15 @@
   // 🔴 `unit` 은 **리소스 종류 축이 아니다**(ADR 0009 D2-3) — `TYPE_LABEL` 을 재사용하면 축이
   //    섞이고, 종류에 없는 단위(`ecs_cluster`·`resolver_endpoint`)가 raw 로 새어 나온다.
   const SRC_LABEL = {
-    vpc_flow_log: 'VPC 흐름 로그', tgw_flow_log: 'TGW 흐름 로그',
-    log_delivery: '로그 전달 배선', container_insights: 'Container Insights',
-    eks_network_policy_log: 'EKS 네트워크 정책 로그', ec2_detailed_monitoring: 'EC2 상세 모니터링',
-    vpn_tunnel_bgp_log: 'VPN 터널·BGP 로그', resolver_target_ns_metrics: 'Resolver 대상 NS 지표'
+    vpc_flow_log: NT_T('VPC 흐름 로그'), tgw_flow_log: NT_T('TGW 흐름 로그'),
+    log_delivery: NT_T('로그 전달 배선'), container_insights: 'Container Insights',
+    eks_network_policy_log: NT_T('EKS 네트워크 정책 로그'), ec2_detailed_monitoring: NT_T('EC2 상세 모니터링'),
+    vpn_tunnel_bgp_log: NT_T('VPN 터널·BGP 로그'), resolver_target_ns_metrics: NT_T('Resolver 대상 NS 지표')
   }
   const SRC_UNIT = {
-    vpc: 'VPC', transit_gateway: 'TGW', ecs_cluster: 'ECS 클러스터',
-    eks_cluster: 'EKS 클러스터', ec2_instance: 'EC2 인스턴스',
-    vpn_connection: 'VPN 연결', resolver_endpoint: 'Resolver 엔드포인트'
+    vpc: 'VPC', transit_gateway: 'TGW', ecs_cluster: NT_T('ECS 클러스터'),
+    eks_cluster: NT_T('EKS 클러스터'), ec2_instance: NT_T('EC2 인스턴스'),
+    vpn_connection: NT_T('VPN 연결'), resolver_endpoint: NT_T('Resolver 엔드포인트')
   }
   const srcLabel = (s) => (SRC_LABEL[s.kind] || s.kind) +
     // 「3/7 VPC」는 켜진 범위다. 🔴 없으면 **적지 않는다** — 분모를 못 믿거나 못 읽은 자리다
@@ -558,24 +558,24 @@
   //    고객이 할 일이 없다. 🔴 `access_denied` 는 파라미터 이름을 적지 않는다(U9 전) — 엔진 문장이 목적지별 이름을
   //    담고 있고 그것은 줄의 `title` 로 간다. 코드는 화면 글자로 내지 않는다(표에 없으면 「읽지 못했다」).
   const FLOW_WHY = {
-    format_parquet: 'Parquet 형식은 아직 읽지 않습니다',
-    reader_pending_tgw: '이 도구는 아직 TGW 흐름 로그를 읽지 않습니다',
-    format_v2: '이 로그에 경로 필드가 없습니다 — 사용자 지정 형식이 필요합니다',
-    fields_missing: '이 로그에 경로 필드가 없습니다 — 사용자 지정 형식이 필요합니다',
-    access_denied: '읽기 권한이 없습니다 — 스택 파라미터로 이 로그 읽기를 허용하세요',
-    kms: '로그를 푸는 키 권한이 없습니다 — 스택 파라미터로 그 키의 복호화를 허용하세요(S3 버킷)',
-    log_class_infrequent: '드문 접근 등급 로그 그룹이라 읽을 수 없습니다',
-    destination_firehose: 'Firehose 로 보내는 로그는 읽을 수 없습니다',
-    traffic_reject_only: '거부 기록만 남기는 로그입니다',
-    not_found: '로그 목적지가 없습니다',
-    throttled: 'AWS 가 요청량 초과로 거절했습니다',
-    capped: '읽기 한도에 닿아 일부만 읽었습니다',
-    subnet_unattributable: '서브넷을 구분할 필드가 없습니다',
-    shared_participant: '공유 VPC 의 다른 계정 로그입니다',
-    format_mismatch: '로그 형식이 설정과 다릅니다',
-    read_error: '읽는 중 예상하지 못한 오류가 발생했습니다'
+    format_parquet: NT_T('Parquet 형식은 아직 읽지 않습니다'),
+    reader_pending_tgw: NT_T('이 도구는 아직 TGW 흐름 로그를 읽지 않습니다'),
+    format_v2: NT_T('이 로그에 경로 필드가 없습니다 — 사용자 지정 형식이 필요합니다'),
+    fields_missing: NT_T('이 로그에 경로 필드가 없습니다 — 사용자 지정 형식이 필요합니다'),
+    access_denied: NT_T('읽기 권한이 없습니다 — 스택 파라미터로 이 로그 읽기를 허용하세요'),
+    kms: NT_T('로그를 푸는 키 권한이 없습니다 — 스택 파라미터로 그 키의 복호화를 허용하세요(S3 버킷)'),
+    log_class_infrequent: NT_T('드문 접근 등급 로그 그룹이라 읽을 수 없습니다'),
+    destination_firehose: NT_T('Firehose 로 보내는 로그는 읽을 수 없습니다'),
+    traffic_reject_only: NT_T('거부 기록만 남기는 로그입니다'),
+    not_found: NT_T('로그 목적지가 없습니다'),
+    throttled: NT_T('AWS 가 요청량 초과로 거절했습니다'),
+    capped: NT_T('읽기 한도에 닿아 일부만 읽었습니다'),
+    subnet_unattributable: NT_T('서브넷을 구분할 필드가 없습니다'),
+    shared_participant: NT_T('공유 VPC 의 다른 계정 로그입니다'),
+    format_mismatch: NT_T('로그 형식이 설정과 다릅니다'),
+    read_error: NT_T('읽는 중 예상하지 못한 오류가 발생했습니다')
   }
-  const flowWhy = (c) => FLOW_WHY[c] || '읽지 못했습니다'
+  const flowWhy = (c) => FLOW_WHY[c] || NT_T('읽지 못했습니다')
   const flowLogTitle = (r) => [r.why_code, r.why, r.detail].filter(Boolean).join('\n')
   // 캔버스가 아는 이름 → 없으면 id 의 마지막 조각(계정·리전 접두는 화면에 내지 않는다).
   const nameOfId = (id) => { const n = id ? byId.get(id) : null; return (n && n.name) || String(id || '').split('/').pop() }
@@ -714,7 +714,7 @@
   //    「흐름 없음」으로도 만들지 않는다 — 「기록이 없다」는 「흐름이 없다」가 아니다(짧은 창·집계 간격·샘플 없음).
   //    재료 = 그 서브넷 또는 그 VPC 에 **붙은** VPC 흐름 로그. ENI 단위 로그는 어느 서브넷을 덮는지 모른다 → 쓰지 않는다.
   //    우선순위: 하나라도 다 읽었으면 「읽었다」 > 일부만 읽은 것 > 못 읽은 것. 붙은 로그가 없으면 `null`(말할 재료가 없다).
-  const FLOW_READ = '읽었습니다 — 이 창에 이 서브넷의 왕복 기록 없음(흐름이 없다는 뜻은 아닙니다)'
+  const FLOW_READ = NT_T('읽었습니다 — 이 창에 이 서브넷의 왕복 기록 없음(흐름이 없다는 뜻은 아닙니다)')
   const flowLogNote = (w) => {
     if (!S.monitor || !w || !w.obsIds || !w.obsFrom) return null
     const row = wireRow(w)
@@ -737,7 +737,7 @@
     const done = logs.find((r) => r.used === true && !r.why_code)
     if (done) return { t: FLOW_READ, title: done.id }
     const r = logs.find(partialLog) || logs[0]
-    return { t: `${partialLog(r) ? '일부만 읽음' : '켜져 있지만 못 읽음'} — ${flowWhy(r.why_code)}`,
+    return { t: `${partialLog(r) ? NT_T('일부만 읽음') : NT_T('켜져 있지만 못 읽음')} — ${flowWhy(r.why_code)}`,
       title: `${r.id}\n${flowLogTitle(r)}` }
   }
   // 🔴 「이 구간을 **쟀나**」의 유일한 판별식. 계약상 `live` 는 `evidence.metric` + `datapoints ≥ 1`
@@ -814,13 +814,13 @@
   //    등급을 `status` 로 분기하지 않고 **행이 들고 온 키로** 정한다(`observed_on`·`path_ok`):
   //    추론을 데이터에 적게 한 뒤 그것만 읽는 것이 불변식 ③ 을 지키는 유일한 방법이다.
   const GRADE = {
-    A: { badge: '직접 측정', why: '이 구간 자체의 지표로 흐름을 측정했습니다' },
-    B: { badge: '연역', why: '인접 리소스의 지표가 이 구간을 지나야만 나올 수 있는 값을 보였습니다' },
-    C: { badge: '경로 성립', why: '흐름은 측정하지 못했지만 흐를 수 있는 조건을 모두 확인했고 모두 충족했습니다 — 흐른다는 뜻은 아닙니다' },
-    D: { badge: '차단', why: '흐를 수 없는 조건을 확인했거나 차단 지표에 값이 있습니다' },
-    E: { badge: '판단 불가', why: '판정에 필요한 정보 중 하나 이상을 읽지 못했습니다' },
+    A: { badge: NT_T('직접 측정'), why: NT_T('이 구간 자체의 지표로 흐름을 측정했습니다') },
+    B: { badge: NT_T('연역'), why: NT_T('인접 리소스의 지표가 이 구간을 지나야만 나올 수 있는 값을 보였습니다') },
+    C: { badge: NT_T('경로 성립'), why: NT_T('흐름은 측정하지 못했지만 흐를 수 있는 조건을 모두 확인했고 모두 충족했습니다 — 흐른다는 뜻은 아닙니다') },
+    D: { badge: NT_T('차단'), why: NT_T('흐를 수 없는 조건을 확인했거나 차단 지표에 값이 있습니다') },
+    E: { badge: NT_T('판단 불가'), why: NT_T('판정에 필요한 정보 중 하나 이상을 읽지 못했습니다') },
     // 🆕 W3④(ADR 0008 「D1 개정」 2026-10-02): 쟀고 0 — 옛 판은 이 행을 E 로 떨궈 근거 줄(「흐름 없음」)과 반대말을 했다.
-    A0: { badge: '측정: 흐름 없음', why: '이 구간 자체를 창 내내 측정했고 지나간 트래픽이 없었습니다 — 끊겼다는 뜻은 아닙니다' }
+    A0: { badge: NT_T('측정: 흐름 없음'), why: NT_T('이 구간 자체를 창 내내 측정했고 지나간 트래픽이 없었습니다 — 끊겼다는 뜻은 아닙니다') }
   }
   // 🔴 인자는 **행 하나**다. 「어느 대상으로 보나」를 밖에서 받으면 같은 행이 호출자마다 다른 등급을
   //    받을 수 있고, 그건 계약이 아니라 호출 습관이 등급을 정하는 것이다. 엔진은 `observed_on` 을
@@ -848,30 +848,30 @@
   //   같은 ENI 로 돌아온 답을 짝지은 수라서 「데이터포인트」로 적으면 지표처럼 읽힌다. 창은 분으로 적는다.
   //   어느 서브넷에서 봤나: 라우트 선은 그 선의 서브넷(`subnetRow` 가 붙인 것), 카드·피어링 행은 `observed_on`.
   //   🆕 W3③: 「흐름 없음」 항목(`subnetRow` 가 `quiet` 를 붙인 것)은 그 문장 · TGW 어태치먼트 행은 「TGW 흐름 로그」.
-  const FLOW_QUIET = '이 창에 흐름 없음 — 이 서브넷의 모든 ENI 가 기록 없음(NODATA)'
+  const FLOW_QUIET = NT_T('이 창에 흐름 없음 — 이 서브넷의 모든 ENI 가 기록 없음(NODATA)')
   const flowLogLine = (ev, subnetId, row) => {
     const ws = ev.window_seconds
     const n = ev.datapoints === null || ev.datapoints === undefined ? '?' : ev.datapoints
     const tgw = !!(row && /^attachment\|transit_gateway_attachment\//.test(row.target_id || ''))
-    const bits = [row && row.quiet ? FLOW_QUIET : `${tgw ? 'TGW ' : ''}흐름 로그 왕복 기록 ${n}건`]
-    if (ws) bits.push(ws % 60 ? `창 ${ws}초` : `창 ${ws / 60}분`)
+    const bits = [row && row.quiet ? FLOW_QUIET : NT_T('{0}흐름 로그 왕복 기록 {1}건', [tgw ? 'TGW ' : '', n])]
+    if (ws) bits.push(ws % 60 ? NT_T('창 {0}초', [ws]) : NT_T('창 {0}분', [ws / 60]))
     const on = row && row.quiet ? row.quiet : [subnetId || ev.observed_on].filter(Boolean)
-    if (on.length) bits.push(`본 곳 ${on.map(nameOfId).join(', ')}`)
+    if (on.length) bits.push(NT_T('본 곳 {0}', [on.map(nameOfId).join(', ')]))
     return bits.join(' · ')
   }
   const evidenceLine = (row) => {
     const ev = (row && row.evidence) || null
-    if (!ev) return '근거 항목 없음'
+    if (!ev) return NT_T('근거 항목 없음')
     if (ev.metric === 'flow_log') return flowLogLine(ev, row.subnet_id, row)
     const bits = [ev.api]
-    if (ev.metric) bits.push(`지표 ${ev.metric}`)
-    if (ev.window_seconds) bits.push(`창 ${ev.window_seconds}초`)
+    if (ev.metric) bits.push(NT_T('지표 {0}', [ev.metric]))
+    if (ev.window_seconds) bits.push(NT_T('창 {0}초', [ev.window_seconds]))
     // 🔴 점 수는 **지표 근거에만** 말한다(#31·#32 리뷰 후속). 구성·상태 API 로 판정한 행(`metric: null`
     //    — 경로 성립·헬스·상태 조회)에 「못 셈(안 쟀다)」을 붙이면 **읽은 것을 안 쟀다고** 말한다.
-    if (!ev.metric) bits.push('지표 아님 — API 응답으로 판정')
-    else if (ev.datapoints === null || ev.datapoints === undefined) bits.push('0 아닌 점 못 셈(측정하지 않음)')
-    else bits.push(`0 아닌 점 ${ev.datapoints}개`)
-    if (ev.observed_on) bits.push(`잰 대상 ${ev.observed_on}`)
+    if (!ev.metric) bits.push(NT_T('지표 아님 — API 응답으로 판정'))
+    else if (ev.datapoints === null || ev.datapoints === undefined) bits.push(NT_T('0 아닌 점 못 셈(측정하지 않음)'))
+    else bits.push(NT_T('0 아닌 점 {0}개', [ev.datapoints]))
+    if (ev.observed_on) bits.push(NT_T('잰 대상 {0}', [ev.observed_on]))
     return bits.join(' · ')
   }
   // 🔴 **캔버스에 글자로 찍는 등급은 B·C·D 뿐이다**(S2-3 · 사용자 배지 문구 승인 2026-09-25).
@@ -920,7 +920,7 @@
     const lt = lineTargets(w)
     // 자리가 없을 때의 짧은 글(2.8.0) — 등급 글자(E·D)로 줄이면 LB 선에서 뜻이 없다(이 선의 등급은 흐름이 아니라 헬스다) → `h/M` · `꺼짐` · `?`
     //   `short` = 자리가 없을 때의 줄인 글자(§17.27 · 2026-10-20) — 등급 글자(D·E)는 이 선에서 아무것도 말하지 않는다 → 정상 수/분모만
-    if (lt && lt.unread) return { g, label: '대상 상태 ?', short: '?' }
+    if (lt && lt.unread) return { g, label: NT_T('대상 상태 ?'), short: '?' }
     if (lt) {
       // 분모 M = 헬스 체크가 판정하는 대상 = 전체 − 헬스 체크 꺼짐(§17.27 「배지 분모」 · 사용자 결정 2026-10-22 — 꺼짐 Lambda 선의 「정상 0/1」이 고장으로 읽혔다).
       //   `health_check_off` 는 다섯 갈래가 **모든 행에 있을 때만** 남는다(`lineTargets`) → 옛 문서·섞인 합친 선 = 0 = 옛 `정상 h/t`.
@@ -928,12 +928,12 @@
       const off = Number.isInteger(lt.health_check_off) ? lt.health_check_off : 0
       const m = lt.total - off
       // 전부 꺼짐 = 정보창 「대상」 줄과 같은 낱말(「정상 0/0」은 등록 0 선과 같은 글자다)
-      if (lt.total && !m) return { g, label: '헬스 체크 꺼짐', short: '꺼짐' }
-      return { g, label: `정상 ${lt.healthy}/${m}` + (lt.unhealthy ? ` · 비정상 ${lt.unhealthy}` : ''), short: `${lt.healthy}/${m}` }
+      if (lt.total && !m) return { g, label: NT_T('헬스 체크 꺼짐'), short: NT_T('꺼짐') }
+      return { g, label: NT_T('정상 {0}/{1}', [lt.healthy, m]) + (lt.unhealthy ? NT_T(' · 비정상 {0}', [lt.unhealthy]) : ''), short: `${lt.healthy}/${m}` }
     }
     const bits = []
     if (g === 'B' || g === 'C' || g === 'D' || g === 'A0') bits.push(GRADE[g].badge)
-    if (row && (row.drops || 0) > 0) bits.push(`드롭 ${row.drops}`)
+    if (row && (row.drops || 0) > 0) bits.push(NT_T('드롭 {0}', [row.drops]))
     return bits.length ? { g, label: bits.join(' · ') } : null
   }
   // 화면이 말하는 숫자와 하네스가 재는 숫자를 **한 출처**로 묶는다. 🔴 「관측 N건」은 아무것도
@@ -1069,11 +1069,11 @@
   const tagsOf = (n) => n.tags || {}
   // `상태:<갈래>`(§17.26 C-8) — 「!」 상자 「모니터링 이상」 절과 **같은 판정**(`monKind`). 모니터링이 꺼져 있으면 아무것도 맞지 않는다
   //   (그 사실은 필터 줄이 말한다 — `COPY.monOff` · `syncFbar`). 모르는 값 = 해석 실패(화면 불변 · 검사 62 와 같은 규칙)
-  const MON_Q = { 이상: 'down', 일부못읽음: 'partial', 관측불가: 'none' }
-  const MON_Q_RE = /(?:^|\s|-)상태:/
+  const MON_Q = { 이상: 'down', 일부못읽음: 'partial', 관측불가: 'none', down: 'down', partial: 'partial', none: 'none' }   // the English UI also accepts `status:down`
+  const MON_Q_RE = /(?:^|\s|-)(?:상태|status):/
   function atomFn (tok) {
-    if (tok.startsWith('상태:')) {
-      const want = MON_Q[tok.slice(3)]
+    if (tok.startsWith('상태:') || tok.startsWith('status:')) {
+      const want = MON_Q[tok.slice(tok.indexOf(':') + 1)]
       if (!want) throw new Error('state')
       return (n) => monKind(n.id) === want
     }
@@ -1149,7 +1149,7 @@
       }
     }
     return TAG_BUCKETS.map((b) => b === 'Untagged'
-      ? { bucket: b, keys: [{ key: '(태그 없음)', n: untagged }], n: untagged }
+      ? { bucket: b, keys: [{ key: NT_T('(태그 없음)'), n: untagged }], n: untagged }
       : { bucket: b, n: [...m.get(b).values()].reduce((s, v) => s + v, 0),
         keys: [...m.get(b).entries()].sort((p, q) => p[0].localeCompare(q[0]))
           .map(([key, n]) => ({ key, n })) })
@@ -1179,60 +1179,60 @@
   //    네 필드를 required 로 둔 이유가 바로 그것이다(`schema/observation.schema.json:131-152`:
   //    「`up` 만 적으면 2층 실패가 사라진다」·「사유 없는 `?` 는 장식이다」). 카드 한 장의 사정은
   //    배너에 쓸 수 없으니(107장이다) **패널이 말한다** — 캔버스는 글리프 1자까지만 쓴다(§8.3).
-  const OBS_WORD = { live: '지금 트래픽이 흐르고 있습니다', up: '정상입니다(구조 조회 기준)',
-    down: '이상입니다', none: 'AWS 가 관측 수단을 제공하지 않습니다' }
+  const OBS_WORD = { live: NT_T('지금 트래픽이 흐르고 있습니다'), up: NT_T('정상입니다(구조 조회 기준)'),
+    down: NT_T('이상입니다'), none: NT_T('AWS 가 관측 수단을 제공하지 않습니다') }
   // 지우는 중(관측 1.12.0 `deleting` · 사용자 결정 2026-10-21 QA C) — `none` 이지만 「관측 수단이 없다」가 아니다. 판정 말만 바꾼다
-  const OBS_DELETING = '삭제 중 — AWS가 이 리소스를 삭제하고 있습니다(이상으로 판정하지 않습니다)'
+  const OBS_DELETING = NT_T('삭제 중 — AWS가 이 리소스를 삭제하고 있습니다(이상으로 판정하지 않습니다)')
   // 새 도식에서 판정할 행이 없는 선(§17.20) — 이유는 선 모양(`w.kind`·`w.feed`)과 실은 관계의 종류(엔진 엣지 id 의 첫 칸)로 가른다
-  const LINE_UNMEASURED = '측정할 수 없음'
+  const LINE_UNMEASURED = NT_T('측정할 수 없음')
   const METRIC_ONLY = new Set(['attachment', 'endpoint_connection', 'load_balancer_placement'])
   const lineNoRowWhy = (w) => {
-    if (w.kind === 'inet') return '인터넷 쪽 구간을 측정하는 관측이 없습니다 — IGW 는 통과량 지표를 제공하지 않습니다(흐름은 서브넷 → IGW 선에 표시됩니다)'
-    if (w.feed) return 'LB 서브넷의 라우트를 LB 앞에 다시 그린 선입니다 — 흐름은 그 서브넷의 IGW 선에 표시됩니다'
+    if (w.kind === 'inet') return NT_T('인터넷 쪽 구간을 측정하는 관측이 없습니다 — IGW 는 통과량 지표를 제공하지 않습니다(흐름은 서브넷 → IGW 선에 표시됩니다)')
+    if (w.feed) return NT_T('LB 서브넷의 라우트를 LB 앞에 다시 그린 선입니다 — 흐름은 그 서브넷의 IGW 선에 표시됩니다')
     const ty = (w.obsIds || []).map((id) => String(id).split('|')[0])
-    if (!ty.length) return '이 선에 연결된 관계가 없습니다 — 측정할 대상이 없습니다'
-    if (ty.includes('peering')) return '흐름 로그에서 이 피어링을 지난 왕복 기록을 찾지 못했습니다(흐름이 없다는 뜻은 아닙니다)'
-    if (ty.every((t) => METRIC_ONLY.has(t))) return '이 구간의 지표 응답이 없습니다'
-    if (ty.every((t) => t === 'origin')) return 'CloudFront 는 오리진마다 상태·지표를 제공하지 않습니다 — 이 선은 구성만 나타냅니다'
-    return '이 관계의 상태는 측정하지 않았습니다'
+    if (!ty.length) return NT_T('이 선에 연결된 관계가 없습니다 — 측정할 대상이 없습니다')
+    if (ty.includes('peering')) return NT_T('흐름 로그에서 이 피어링을 지난 왕복 기록을 찾지 못했습니다(흐름이 없다는 뜻은 아닙니다)')
+    if (ty.every((t) => METRIC_ONLY.has(t))) return NT_T('이 구간의 지표 응답이 없습니다')
+    if (ty.every((t) => t === 'origin')) return NT_T('CloudFront 는 오리진마다 상태·지표를 제공하지 않습니다 — 이 선은 구성만 나타냅니다')
+    return NT_T('이 관계의 상태는 측정하지 않았습니다')
   }
   // 선의 「사유」 줄(§17.20 「선의 사유」 표 · #150) — 엔진 엣지 행의 `why` 를 **고객 말**(「~합니다」)로 바꾼다. 원문은 그 칸의 `title`.
   //   🔴 원문을 화면 글자로 내지 않는다 — 지표 이름 · `(창 900초)` · `(개발)` · `blackhole` 같은 개발 말이 섞인다(K3 「원문은 title 에만」과 같은 규율).
   //   갈래 = 판정 × 관계 종류(엔진 엣지 id 첫 칸) × 원문 꼴. 표에 없는 원문은 **판정으로** 떨어진다 — 원인을 지어내지 않는다.
-  const LINE_WHY_DEV = '이 연결의 상태를 판정하지 못했습니다 — 이 도구의 처리 문제이며 AWS 구성의 문제가 아닙니다'
+  const LINE_WHY_DEV = NT_T('이 연결의 상태를 판정하지 못했습니다 — 이 도구의 처리 문제이며 AWS 구성의 문제가 아닙니다')
   const LINE_WHY_METRIC = [
-    [/^통과량 0 · /, '이 구간에서 트래픽이 막혀 있습니다 — 측정 구간 동안 통과량이 없고 차단으로 버려진 패킷이 기록되었습니다'],
-    [/ = 0 \(창 \d+초\)$/, '이 구간의 상태 지표가 0입니다 — 이 구간으로 트래픽을 전달하지 못합니다'],
-    [/들어왔지만 나간 통과량이 없고/, '들어온 트래픽은 있지만 나간 트래픽이 없습니다 — 차단 여부를 측정하지 못해 전달되었는지 알 수 없습니다'],
-    [/값이 0 이면 발행되지 않는 지표입니다/, '측정 구간 동안 지표 데이터가 없습니다 — 트래픽이 없었는지 측정하지 못했는지 구별할 수 없습니다'],
-    [/값 0 도 발행하는 지표인데/, '측정 구간 동안 지표 데이터가 없습니다 — 트래픽이 없어도 값을 보내는 지표라 수집 설정을 확인해야 합니다']
+    [/^통과량 0 · /, NT_T('이 구간에서 트래픽이 막혀 있습니다 — 측정 구간 동안 통과량이 없고 차단으로 버려진 패킷이 기록되었습니다')],
+    [/ = 0 \(창 \d+초\)$/, NT_T('이 구간의 상태 지표가 0입니다 — 이 구간으로 트래픽을 전달하지 못합니다')],
+    [/들어왔지만 나간 통과량이 없고/, NT_T('들어온 트래픽은 있지만 나간 트래픽이 없습니다 — 차단 여부를 측정하지 못해 전달되었는지 알 수 없습니다')],
+    [/값이 0 이면 발행되지 않는 지표입니다/, NT_T('측정 구간 동안 지표 데이터가 없습니다 — 트래픽이 없었는지 측정하지 못했는지 구별할 수 없습니다')],
+    [/값 0 도 발행하는 지표인데/, NT_T('측정 구간 동안 지표 데이터가 없습니다 — 트래픽이 없어도 값을 보내는 지표라 수집 설정을 확인해야 합니다')]
   ]
   const LINE_WHY_BY_STATUS = {
-    down: 'AWS 가 이 연결을 이상으로 보고했습니다',
-    none: 'AWS 가 이 연결의 상태를 제공하지 않아 판정하지 않았습니다'
+    down: NT_T('AWS 가 이 연결을 이상으로 보고했습니다'),
+    none: NT_T('AWS 가 이 연결의 상태를 제공하지 않아 판정하지 않았습니다')
   }
   const lineWhy = (o) => {
     if (!o || !o.why) return null
     const raw = String(o.why); const ty = String(o.target_id).split('|')[0]
     if (/\(개발\)$/.test(raw)) return { t: LINE_WHY_DEV, title: raw }
     if (ty === 'route' && o.status === 'down') {
-      return { t: '라우트의 대상을 사용할 수 없어 이 경로로 가는 트래픽이 버려집니다(블랙홀) — 대상이 삭제되었거나 분리되었는지 확인하세요', title: raw }
+      return { t: NT_T('라우트의 대상을 사용할 수 없어 이 경로로 가는 트래픽이 버려집니다(블랙홀) — 대상이 삭제되었거나 분리되었는지 확인하세요'), title: raw }
     }
     if (ty === 'load_balancer_target' && o.status === 'down') {
-      return { t: '헬스 체크를 통과한 대상이 없습니다 — 이 선으로 들어온 요청을 처리할 대상이 없습니다', title: raw }
+      return { t: NT_T('헬스 체크를 통과한 대상이 없습니다 — 이 선으로 들어온 요청을 처리할 대상이 없습니다'), title: raw }
     }
     for (const [re, t] of LINE_WHY_METRIC) if (re.test(raw)) return { t, title: raw }
-    return { t: LINE_WHY_BY_STATUS[o.status] || '이 연결의 상태에 참고할 내용이 있습니다 — 원문은 이 줄에 마우스를 올리면 표시됩니다', title: raw }
+    return { t: LINE_WHY_BY_STATUS[o.status] || NT_T('이 연결의 상태에 참고할 내용이 있습니다 — 원문은 이 줄에 마우스를 올리면 표시됩니다'), title: raw }
   }
   // DX VIF 의 BGP 피어 수(관측 `bgp` · 스키마 1.6.0 · §17.11 DX 행) → VIF 줄의 글. 키가 없으면 `null`(옛 문서 · 수명주기로 판정한 VIF —
   //   부르는 쪽이 판정 말로 떨어진다). 🔴 판정은 엔진이 접은 값 그대로다 — 여기서는 「몇 개 중 몇 개」를 이름으로 말할 뿐이다
   const obsBgp = (o) => {
     const g = o && o.bgp
     if (!g) return null
-    if (!g.total) return { t: 'BGP 피어 없음', cls: 'wn' }
+    if (!g.total) return { t: NT_T('BGP 피어 없음'), cls: 'wn' }
     if (g.up === g.total) return { t: `BGP up ${g.up}/${g.total}`, cls: '' }
-    if (!g.up) return { t: `BGP 전부 down 0/${g.total} — 이 VIF 로는 온프레미스 경로가 없습니다`, cls: 'bh' }
-    return { t: `BGP 일부 down ${g.up}/${g.total} — 나머지 피어로 연결됩니다`, cls: 'wn' }
+    if (!g.up) return { t: NT_T('BGP 전부 down 0/{0} — 이 VIF 로는 온프레미스 경로가 없습니다', [g.total]), cls: 'bh' }
+    return { t: NT_T('BGP 일부 down {0}/{1} — 나머지 피어로 연결됩니다', [g.up, g.total]), cls: 'wn' }
   }
   // 「상태」 칸의 줄 — 새 도식 정보창(§17.20, aws-canvas.js 가 DOM textContent 로 넣는다)이 쓴다
   function obsRows (n, b) {
@@ -1240,35 +1240,35 @@
     const o = obsOf(n, b)
     if (!o) return null
     const r = []
-    r.push(['판정', o.deleting === true ? OBS_DELETING : OBS_WORD[o.status] || o.status])
+    r.push([NT_T('판정'), o.deleting === true ? OBS_DELETING : OBS_WORD[o.status] || o.status])
     // 🔴 `partial` 은 판정을 바꾸지 않으므로(계약: `up` + `partial`) **글로 말하지 않으면 사라진다.**
     if (o.partial) {
       // §3k K3: 이유는 사람 말로 — 원문 코드·AWS 메시지는 `title` 에만 둔다(검사 115 ③).
       const rs = (o.partial_reasons || []).filter((x) => x && (x.code || x.message))
       const word = [...new Set(rs.map((x) => reasonWord(x.code)))].slice(0, 3).join(' · ')
       const raw = rs.map((x) => [x.code, x.message].filter(Boolean).join(' — ')).join(' / ')
-      r.push(['부분 실패', '근거의 일부를 읽지 못한 상태로 판정했습니다 — 「정상」과 같게 보지 마세요' + (word ? ' · ' + word : ''), raw])
+      r.push([NT_T('부분 실패'), NT_T('근거의 일부를 읽지 못한 상태로 판정했습니다 — 「정상」과 같게 보지 마세요') + (word ? ' · ' + word : ''), raw])
     }
     // 🔴 `0`(에러 없음)과 `null`(세지 못했다)은 다른 사실이다(계약 `error_count`) → 갈라 적는다.
-    if (o.error_count) r.push(['오류 수', String(o.error_count)])
-    else if (o.error_count === null) r.push(['오류 수', '세지 못했습니다(0 이 아닙니다)'])
-    if (o.why) r.push(['사유', o.why])
+    if (o.error_count) r.push([NT_T('오류 수'), String(o.error_count)])
+    else if (o.error_count === null) r.push([NT_T('오류 수'), NT_T('세지 못했습니다(0 이 아닙니다)')])
+    if (o.why) r.push([NT_T('사유'), o.why])
     // LB 대상 수(계약 `targets` · ADR 0006 W3②). 🔴 키가 없으면 줄도 없다 — 못 읽은 것을 「0개」로 적으면
     // 「대상이 없는 LB」가 된다(그 사유는 위 「부분 실패」 줄이 말한다). 등록 중·빼는 중은 어느 쪽에도 안 센다.
     const t = o.targets
     if (t) {
-      r.push(['대상', t.total ? `${t.total}개 중 ${t.healthy}개 정상` + (t.unhealthy ? ` · 비정상 ${t.unhealthy}개` : '') : '대상 없음(확인함)'])
+      r.push([NT_T('대상'), t.total ? NT_T('{0}개 중 {1}개 정상', [t.total, t.healthy]) + (t.unhealthy ? NT_T(' · 비정상 {0}개', [t.unhealthy]) : '') : NT_T('대상 없음(확인함)')])
     }
     const e = o.evidence
     if (e && e.metric === 'flow_log') {
       // 흐름 로그로 증명한 카드(IGW — 서브넷 선 하나가 증명되면 B). 지표 줄의 「데이터포인트」로 적지 않는다.
-      r.push(['근거', flowLogLine(e, null)])
+      r.push([NT_T('근거'), flowLogLine(e, null)])
     } else if (e) {
-      r.push(['근거 API', e.api])
+      r.push([NT_T('근거 API'), e.api])
       if (e.metric) {
-        r.push(['지표', e.metric +
-          (e.datapoints !== null && e.datapoints !== undefined ? ` · 0 아닌 데이터포인트 ${e.datapoints}개` : '') +
-          (e.window_seconds ? ` · 구간 ${e.window_seconds}초` : '')])
+        r.push([NT_T('지표'), e.metric +
+          (e.datapoints !== null && e.datapoints !== undefined ? NT_T(' · 0 아닌 데이터포인트 {0}개', [e.datapoints]) : '') +
+          (e.window_seconds ? NT_T(' · 구간 {0}초', [e.window_seconds]) : '')])
       }
     }
     return r
@@ -1293,18 +1293,18 @@
     if (!S.monitor || OBS_STALE) return []
     const row = wireRow(w)
     const g = gradeOf(row)
-    const out = [['판정 등급', `${g} · ${GRADE[g].badge} — ${GRADE[g].why}`, 'flowgrade']]
+    const out = [[NT_T('판정 등급'), `${g} · ${GRADE[g].badge} — ${GRADE[g].why}`, 'flowgrade']]
     // 🔴 「양 끝만 흐른다」를 **여기서 말한다.** 이 줄이 없으면 회색 선을 본 사람은 고장을
     //    의심하고, 실제 사실(그 구간을 아무도 재지 않았다)은 화면 어디에도 없다.
     if (endsOnly(w, L)) {
-      out.push(['초록이 아닌 이유', '양 끝 리소스는 흐르지만 이 구간 자체를 측정한 근거가 없습니다 — ' +
-        '양 끝의 트래픽이 이 경로로 갔다는 보장이 없어 초록으로 표시하지 않습니다', 'flowends'])
+      out.push([NT_T('초록이 아닌 이유'), NT_T('양 끝 리소스는 흐르지만 이 구간 자체를 측정한 근거가 없습니다 — ') +
+        NT_T('양 끝의 트래픽이 이 경로로 갔다는 보장이 없어 초록으로 표시하지 않습니다'), 'flowends'])
     }
-    out.push(['판정 근거', row ? evidenceLine(row) : '이 경로의 관측 항목이 없습니다', 'flowobs'])
+    out.push([NT_T('판정 근거'), row ? evidenceLine(row) : NT_T('이 경로의 관측 항목이 없습니다'), 'flowobs'])
     // 근거 없는 IGW·피어링 라우트 선 — 흐름 로그를 읽었는지·못 읽었는지(§6 규칙 10 ⓓ). 로그 id·코드는 `title` 에만.
     const fln = flowLogNote(w)
-    if (fln) out.push(['흐름 로그', fln.t, 'flowlog', fln.title])
-    if (row && (row.drops || 0) > 0) out.push(['드롭', `${row.drops}`, 'flowdrops'])
+    if (fln) out.push([NT_T('흐름 로그'), fln.t, 'flowlog', fln.title])
+    if (row && (row.drops || 0) > 0) out.push([NT_T('드롭'), `${row.drops}`, 'flowdrops'])
     return out
   }
 
@@ -1327,8 +1327,8 @@
   //    방어용 문구다 — 타입과 티어를 **둘 다** 넣는다(하나만 쓰면 개발자가 엉뚱한 곳을 고친다).
   // 🔴 필터(§13-49)·편집 숨김(§13-63)은 잔차가 **아니다**. 사람이 의도한 제거이고 자기 어휘
   //    (확인 모달·스냅샷 배지)를 이미 갖는다 — 섞으면 필터 한 번에 수백 줄이 쏟아진다.
-  const WHY_RULE = '그리지 않는 종류'
-  const WHY_NONE = '아직 그리지 못하는 종류'
+  const WHY_RULE = NT_T('그리지 않는 종류')
+  const WHY_NONE = NT_T('아직 그리지 못하는 종류')
   const ancTypeOf = (n, t) => {
     let c = byId.get(n.parent_id)
     while (c) { if (c.type === t) return c; c = byId.get(c.parent_id) }
@@ -1366,9 +1366,9 @@
       const v = ancTypeOf(n, 'vpc'); const r = ancTypeOf(n, 'region')
       out.push({ id: n.id, type: n.type, name: n.name || '', vpc: v ? v.name : '—',
         region: r ? r.name : (n.region || '—'),
-        detail: '부모 «' + (n.parent_id || '없다') +
-          (n.parent_id && !byId.has(n.parent_id) ? ' — 모델에 없다»' : '»'),
-        why: (L.awsWhy && L.awsWhy.get(n.id)) || `${WHY_NONE} — 타입 «${n.type}» · 티어 «${n.tier || '없다'}»` })
+        detail: NT_T('부모 «') + (n.parent_id || NT_T('없다')) +
+          (n.parent_id && !byId.has(n.parent_id) ? NT_T(' — 모델에 없다»') : '»'),
+        why: (L.awsWhy && L.awsWhy.get(n.id)) || NT_T('{0} — 타입 «{1}» · 티어 «{2}»', [WHY_NONE, n.type, n.tier || NT_T('없다')]) })
     }
     return out.sort((a, b) => a.id.localeCompare(b.id))   // 불변식 ②: 순서는 id 로 고정한다
   }
@@ -1383,12 +1383,12 @@
       // 🔴 `a`·`b` 는 표 열이 아니다(LIST_COLS 밖) — 하네스가 **끝점으로** 맞춰 보기 위한 값이다.
       //    엣지 id 는 어댑터가 순번으로 붙이므로 하네스가 예측할 수 없다.
       return { id: e.id, a: e.source, b: e.target,
-        type: `관계 «${e.kind}»`, name: `${nm(e.source)} → ${nm(e.target)}`,
+        type: NT_T('관계 «{0}»', [e.kind]), name: `${nm(e.source)} → ${nm(e.target)}`,
         vpc: (src && ancTypeOf(src, 'vpc') ? ancTypeOf(src, 'vpc').name : '—'),
         region: r ? r.name : ((src || {}).region || '—'),
-        detail: `출발 «${e.source}» → 도착 «${e.target}»`,
-        why: why || `${WHY_NONE} — ` + [e.fallback ? `엣지 종류 «${e.kind}»` : null,
-          dead ? `끝점이 ${dead}` : null].filter(Boolean).join(' · ') }
+        detail: NT_T('출발 «{0}» → 도착 «{1}»', [e.source, e.target]),
+        why: why || `${WHY_NONE} — ` + [e.fallback ? NT_T('엣지 종류 «{0}»', [e.kind]) : null,
+          dead ? NT_T('끝점이 {0}', [dead]) : null].filter(Boolean).join(' · ') }
     }).sort((a, b) => a.id.localeCompare(b.id))
   }
 
@@ -1397,29 +1397,29 @@
   //    표에도 원에도 없다(사용자 결정 2026-10-20 갱신). 「아직 그리지 못하는 종류」와 「그리지 않는 종류」를 섞지 않는 §3i I4 는 그대로다 —
   //    섞이던 자리(한 표)가 없어졌다. 사유 열 = 고객 말(`popWhy`) · 원래 사유(`why`)·내용(`detail`)은 그 칸의 `title`.
   // 종류 칸 = 사람 말(이력 줄과 같은 이름 · 모르는 종류는 원래 이름 그대로 — 이 화면이 모르는 것이라 지어 부르지 않는다) · 관계 = 「연결」
-  const LIST_COLS = [['kind', '종류'], ['id', 'ID'], ['name', '이름'],
-    ['vpc', 'VPC'], ['region', '리전'], ['say', '사유']]
+  const LIST_COLS = [['kind', NT_T('종류')], ['id', 'ID'], ['name', NT_T('이름')],
+    ['vpc', 'VPC'], ['region', NT_T('리전')], ['say', NT_T('사유')]]
   // 고객 말(§17.26 표가 정본). 🔴 표에 없는 사유는 「놓을 자리를 찾지 못했다」로 말한다 — 원문(개발 말)을 화면 글자로 내지 않는다.
   const POP_WHY = [
-    [(r) => /^관계 «/.test(r.type) && String(r.why).startsWith(WHY_NONE) && !/끝점/.test(r.why), '아직 그리지 못하는 연결 종류'],
-    [(r) => /^관계 «/.test(r.type) && /보기 범위 밖/.test(r.why), '보기 범위 밖과의 연결(「계정: 전체」에서 표시)'],
-    [(r) => /^관계 «/.test(r.type), '연결된 리소스가 캔버스에 없음'],
-    [(r) => String(r.why).startsWith(WHY_NONE), '아직 그리지 못하는 종류'],
-    [(r) => /구성 일부를 읽지 못해/.test(r.why), '구성 일부를 읽지 못해 위치를 알 수 없음'],
-    [(r) => /들어갈 (계정|리전|VPC) 상자가 없다|서브넷이 이 화면에 없다|VPC 가 이 화면에 없다|구성에 서브넷이 없다/.test(r.why), '속한 계정·리전·VPC·서브넷이 캔버스에 없음'],
+    [(r) => /^관계 «/.test(NT_T.ko(String(r.type))) && NT_T.ko(String(r.why)).startsWith(NT_T.ko(WHY_NONE)) && !/끝점/.test(NT_T.ko(String(r.why))), NT_T('아직 그리지 못하는 연결 종류')],
+    [(r) => /^관계 «/.test(NT_T.ko(String(r.type))) && /보기 범위 밖/.test(NT_T.ko(String(r.why))), NT_T('보기 범위 밖과의 연결(「계정: 전체」에서 표시)')],
+    [(r) => /^관계 «/.test(NT_T.ko(String(r.type))), NT_T('연결된 리소스가 캔버스에 없음')],
+    [(r) => NT_T.ko(String(r.why)).startsWith(NT_T.ko(WHY_NONE)), NT_T('아직 그리지 못하는 종류')],
+    [(r) => /구성 일부를 읽지 못해/.test(NT_T.ko(String(r.why))), NT_T('구성 일부를 읽지 못해 위치를 알 수 없음')],
+    [(r) => /들어갈 (계정|리전|VPC) 상자가 없다|서브넷이 이 화면에 없다|VPC 가 이 화면에 없다|구성에 서브넷이 없다/.test(NT_T.ko(String(r.why))), NT_T('속한 계정·리전·VPC·서브넷이 캔버스에 없음')],
     // 배치 D(2.10.0 · §17.34) — 탄력적 IP 는 카드가 아니라 주인의 정보창 줄이다. 연결이 있는데 주인을 못 찾으면 여기 선다(사유 = 고객 말 · 원래 사유는 title)
     //   🔁 연결 없는 EIP 는 여기 오지 않는다(사용자 결정 2026-10-21 오전 · 도식이 대리 상자로 대표시킨다)
-    [(r) => /^연결 대상을 찾지 못한 탄력적 IP/.test(r.why), '연결된 리소스를 찾지 못한 탄력적 IP'],
+    [(r) => /^연결 대상을 찾지 못한 탄력적 IP/.test(NT_T.ko(String(r.why))), NT_T('연결된 리소스를 찾지 못한 탄력적 IP')],
     // #129(2.11.0 · §17.38) — Connect 는 아이콘이 아니라 올라탄 어태치먼트 선 위의 점선이다. 그 어태치먼트가 이 화면에 없으면 여기 선다
-    [(r) => /^TGW Connect 어태치먼트 — 올라탄 어태치먼트/.test(r.why), '올라탄 어태치먼트가 캔버스에 없는 TGW Connect']
+    [(r) => /^TGW Connect 어태치먼트 — 올라탄 어태치먼트/.test(NT_T.ko(String(r.why))), NT_T('올라탄 어태치먼트가 캔버스에 없는 TGW Connect')]
   ]
-  const POP_WHY_ELSE = '표시할 위치 없음'
+  const POP_WHY_ELSE = NT_T('표시할 위치 없음')
   const popWhy = (r) => { const m = POP_WHY.find(([f]) => f(r)); return m ? m[1] : POP_WHY_ELSE }
   function listRows () {
     const c = S.listSort.col; const d = S.listSort.dir
     const rows = (T.listOnly || []).filter((r) => r.why && r.why !== WHY_RULE)
       .concat(S.unplaced || []).concat(S.unwired || []).concat(S.notes || []).map((r) => ({ ...r, say: r.fixedSay || popWhy(r),
-        kind: /^관계 «/.test(r.type) ? '연결' : (HIST_TYPE[r.type] || TYPE_LABEL[r.type] || r.type) }))
+        kind: /^관계 «/.test(NT_T.ko(String(r.type))) ? NT_T('연결') : (HIST_TYPE[r.type] || TYPE_LABEL[r.type] || r.type) }))
     return rows.sort((a, b) =>
       d * (String(a[c]).localeCompare(String(b[c])) || a.id.localeCompare(b.id)))
   }
@@ -1430,30 +1430,30 @@
   }
   // ---- 「모니터링 이상」 절(§17.26 C-8 · 사용자 결정 2026-10-28 · 검사 172) — 켰을 때만 · 갈래 = `monKind` ----
   //   줄 = 계정 · 리전 · VPC · 리소스 · 상태 · 사유. 상태 글은 **이미 화면에 있는 다섯 곳**에서만 가져온다(C-8 표 — 새로 짓지 않는다).
-  const MON_SHORT = { live: '흐름 있음', up: '정상', down: '이상', none: '관측 불가' }
+  const MON_SHORT = { live: NT_T('흐름 있음'), up: NT_T('정상'), down: NT_T('이상'), none: NT_T('관측 불가') }
   const MON_RAW = /^AWS 가 보고한 [\w.-]+ = '([^']*)'/
   const monState = (o) => {
     const g = o.bgp ? obsBgp(o) : null
     if (g) return g.t
     if (Array.isArray(o.tunnels) && o.tunnels.length) {
-      return `터널 ${o.tunnels.length}개 중 ${o.tunnels.filter((t) => /down/i.test(String(t && t.status))).length}개 Down`
+      return NT_T('터널 {0}개 중 {1}개 Down', [o.tunnels.length, o.tunnels.filter((t) => /down/i.test(String(t && t.status))).length])
     }
     if (o.targets && o.targets.total && window.NT_AWS && NT_AWS.targetsWord) return NT_AWS.targetsWord(o.targets)[0]
     const m = MON_RAW.exec(String(o.why || ''))
     if (m && window.NT_AWS && NT_AWS.stateKo) return NT_AWS.stateKo(m[1])
     return MON_SHORT[o.status] || o.status
   }
-  const MON_DEV = '이 리소스의 상태를 판정하지 못했습니다 — 이 도구의 처리 문제이며 AWS 구성의 문제가 아닙니다'
+  const MON_DEV = NT_T('이 리소스의 상태를 판정하지 못했습니다 — 이 도구의 처리 문제이며 AWS 구성의 문제가 아닙니다')
   const monWhy = (o, k) => {
     if (k === 'partial') {
       const rs = (o.partial_reasons || []).filter((x) => x && (x.code || x.message))
       const ws = [...new Set(rs.map((x) => reasonWord(x.code)))]   // 정보창 「부분 실패」 줄과 같은 말(§3k K3 — 원문은 title)
       const word = ws.slice(0, 3).join(' · ')
-      return { t: '근거의 일부를 읽지 못한 상태로 판정했습니다' + (word ? ' · ' + word : ''),
+      return { t: NT_T('근거의 일부를 읽지 못한 상태로 판정했습니다') + (word ? ' · ' + word : ''),
         title: rs.map((x) => [x.code, x.message].filter(Boolean).join(' — ')).join(' / ') }
     }
     if (o.why && /\(개발\)$/.test(String(o.why))) return { t: MON_DEV, title: String(o.why) }
-    if (o.why) return { t: String(o.why), title: String(o.why) }
+    if (o.why) return { t: NT_T(String(o.why)), title: String(o.why) }   // engine sentence — translated at display time, original kept in title
     return { t: k === 'none' ? OBS_WORD.none : OBS_WORD[o.status] || o.status, title: '' }
   }
   // 누르면 갈 자리 — 그 리소스(묶음 멤버 · 대표 상자 안이면 그 상자) → 없으면 들어 있는 VPC → 없으면 `null`(누를 데가 없다)
@@ -1484,18 +1484,18 @@
     for (const k in out) out[k].sort(by)
     return out
   }
-  const MON_COLS = [['acct', '계정'], ['region', '리전'], ['vpc', 'VPC'], ['name', '리소스'], ['state', '상태'], ['why', '사유']]
+  const MON_COLS = [['acct', NT_T('계정')], ['region', NT_T('리전')], ['vpc', 'VPC'], ['name', NT_T('리소스')], ['state', NT_T('상태')], ['why', NT_T('사유')]]
   // 🔴 `<table>` 을 쓰지 않는다 — 「캔버스에 없는 리소스」 표(`#probpop tbody tr`)를 세는 검사 88·89·146 이 이 줄까지 세면 두 목록이 섞인다
   const monTable = (k, rows) => `<div class="pmt" data-mon="${k}"><div class="pmh">` + MON_COLS.map(([, h]) => `<span>${h}</span>`).join('') + '</div>' +
-    rows.map((r) => `<div class="pmr${r.go ? ' lopen' : ''}" data-id="${esc(r.id)}"${r.go ? ` data-go="${esc(r.go)}"` : ''} title="${esc(r.go ? '눌러서 이 리소스로 이동' : '캔버스에 자리가 없는 리소스입니다')}">` +
+    rows.map((r) => `<div class="pmr${r.go ? ' lopen' : ''}" data-id="${esc(r.id)}"${r.go ? ` data-go="${esc(r.go)}"` : ''} title="${esc(r.go ? NT_T('눌러서 이 리소스로 이동') : NT_T('캔버스에 자리가 없는 리소스입니다'))}">` +
       MON_COLS.map(([c]) => `<span${c === 'why' && r.title ? ` title="${esc(r.title)}"` : ''}>${esc(r[c])}</span>`).join('') + '</div>').join('') + '</div>'
   function monSection (M, opened) {
-    const out = ['<div class="psec" data-sec="mon">', `<div class="pst" data-monh="down">모니터링 이상 ${M.down.length}개</div>`]
-    out.push(M.down.length ? monTable('down', M.down) : '<div class="pnote">이상으로 판정된 리소스가 없습니다.</div>')
+    const out = ['<div class="psec" data-sec="mon">', NT_T('<div class="pst" data-monh="down">모니터링 이상 {0}개</div>', [M.down.length])]
+    out.push(M.down.length ? monTable('down', M.down) : NT_T('<div class="pnote">이상으로 판정된 리소스가 없습니다.</div>'))
     // 「모름」 두 갈래는 접어 둔다(머리를 누르면 펼침) — 수가 많아도 이상 목록을 밀어내지 않는다.
     //   🔴 머리에 `data-kind` 를 달지 않는다 — 검사 115·146 이 `.pst[data-kind]` 를 배너 줄(`dump().bans`)과 맞춰 본다(이 절은 배너 줄이 아니다)
-    for (const [k, h] of [['partial', '일부 못 읽음'], ['none', '관측 불가']]) {
-      if (M[k].length) out.push(`<details class="pmd" data-mon="${k}"${opened && opened.has(k) ? ' open' : ''}><summary class="pst" data-monh="${k}">${h} ${M[k].length}개</summary>${monTable(k, M[k])}</details>`)
+    for (const [k, h] of [['partial', NT_T('일부 못 읽음')], ['none', NT_T('관측 불가')]]) {
+      if (M[k].length) out.push(NT_T('<details class="pmd" data-mon="{0}"{1}><summary class="pst" data-monh="{2}">{3} {4}개</summary>{5}</details>', [k, opened && opened.has(k) ? ' open' : '', k, h, M[k].length, monTable(k, M[k])]))
     }
     out.push('</div>')
     return out.join('')
@@ -1527,7 +1527,7 @@
     if (probsEl) {
       probsEl.hidden = !has
       probsEl.classList.toggle('on', S.listOn)
-      probsEl.title = '확인이 필요한 항목이 있습니다 — 눌러서 확인하세요'
+      probsEl.title = NT_T('확인이 필요한 항목이 있습니다 — 눌러서 확인하세요')
       probsEl.setAttribute('aria-expanded', S.listOn ? 'true' : 'false')
     }
     listEl.classList.toggle('on', S.listOn)
@@ -1538,20 +1538,20 @@
     const read = B.filter((r) => r.kind === 'deny').concat(B.filter((r) => r.kind === 'partial'))
     const und = B.find((r) => r.kind === 'undrawn')
     const rows = listRows()
-    const out = ['<div class="phd"><b>확인이 필요한 항목</b><span class="px" data-lclose title="닫기">✕</span></div>']
-    if (read.length) out.push('<div class="psec" data-sec="read"><div class="pst">확인하지 못한 영역</div>' + read.map(line).join('') + '</div>')
+    const out = [NT_T('<div class="phd"><b>확인이 필요한 항목</b><span class="px" data-lclose title="닫기">✕</span></div>')]
+    if (read.length) out.push(NT_T('<div class="psec" data-sec="read"><div class="pst">확인하지 못한 영역</div>') + read.map(line).join('') + '</div>')
     // 모니터링을 켰을 때만(§17.26 C-8) — 꺼져 있으면 절이 **없다**(상자는 옛 내용 그대로)
     const M = monRows()
     if (M) out.push(monSection(M, new Set([...listEl.querySelectorAll('details.pmd[open]')].map((d) => d.dataset.mon))))
     if (rows.length) {
       out.push('<div class="psec" data-sec="list">' +
         `<div class="pst" data-kind="undrawn">${esc(und ? und.text : '')}</div>` +
-        '<div class="pnote">아래 항목은 아키텍처에 그리지 못했습니다.</div>' +
-        '<div class="pacts"><span class="lbtn" data-csv>CSV 내려받기</span></div>' +
+        NT_T('<div class="pnote">아래 항목은 아키텍처에 그리지 못했습니다.</div>') +
+        NT_T('<div class="pacts"><span class="lbtn" data-csv>CSV 내려받기</span></div>') +
         '<div class="lwrap"><table><thead><tr>' +
         LIST_COLS.map(([k, lab]) => `<th data-col="${k}">${lab}${S.listSort.col === k ? (S.listSort.dir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('') +
         '</tr></thead><tbody>' + rows.map((r) =>
-          (r.open ? `<tr data-open="${esc(r.open)}" class="lopen" title="눌러서 정보창 열기">` : '<tr>') + LIST_COLS.map(([k]) => k === 'say'
+          (r.open ? NT_T('<tr data-open="{0}" class="lopen" title="눌러서 정보창 열기">', [esc(r.open)]) : '<tr>') + LIST_COLS.map(([k]) => k === 'say'
             ? `<td title="${esc([r.why, r.detail].filter(Boolean).join(' · '))}">${esc(r[k])}</td>`
             : `<td>${esc(r[k])}</td>`).join('') + '</tr>').join('') +
         '</tbody></table></div></div>')
@@ -1578,95 +1578,95 @@
   // §3k K1: 줄마다 **사람 문장**(`text` — 화면) + **개발 설명**(`dev` — `dump().bans`·V 오버레이). 주기·지연·층 과금
   // 같은 사양 문장은 `dev` 로 간다(명세서 후보 = `docs/product-spec-notes.md` §2). 못 읽은 이유는 사람 문장에 남는다.
   function liveRows () {
-    if (LIVE.busy) return [{ kind: 'live', text: '실시간 켜는 중', dev: '저장소에 켜짐을 쓰고 있다(제어 키 PUT)' }]
+    if (LIVE.busy) return [{ kind: 'live', text: NT_T('실시간 켜는 중'), dev: NT_T('저장소에 켜짐을 쓰고 있다(제어 키 PUT)') }]
     if (LIVE.on) {
       // 🆕 따라 보는 창(보강 4 B·H) — 「다른 창에서 바꾼 설정으로 보는 중 · 약 N분 뒤 자동 멈춤」. 끝 = 그 창이 고른 시각(`until`) ·
       //    모르면(옛 화면 파일이 켠 판) 그 판의 임대(`expiresAt`). 기준 시각 = 마지막 제어 읽기(읽기 사이 화면·dump 가 같은 글자다).
       const fol = LIVE.mode === 'follow'
       const folLeft = fol ? aboutMin((LIVE.end || LIVE.lease) - (LIVE.ctlAt || Date.now())) : ''
-      const until = fol ? `다른 창에서 바꾼 설정으로 보는 중 · ${folLeft} 뒤 자동 멈춤` : `${msHm(LIVE.until)} 까지`
-      const layer = [S.monitor ? (LIVE.layer2 ? '모니터링 지표까지(호출당 과금)' : '모니터링 구조 조회만(지표 요금 없음)') : '',
-        LIVE.util ? '사용률(지표 호출당 과금)' : ''].filter(Boolean).join(' + ')
-      const chk = LIVE.lastCheck ? ` · 마지막 확인 ${msHm(LIVE.lastCheck)}` : ''
+      const until = fol ? NT_T('다른 창에서 바꾼 설정으로 보는 중 · {0} 뒤 자동 멈춤', [folLeft]) : NT_T('{0} 까지', [msHm(LIVE.until)])
+      const layer = [S.monitor ? (LIVE.layer2 ? NT_T('모니터링 지표까지(호출당 과금)') : NT_T('모니터링 구조 조회만(지표 요금 없음)')) : '',
+        LIVE.util ? NT_T('사용률(지표 호출당 과금)') : ''].filter(Boolean).join(' + ')
+      const chk = LIVE.lastCheck ? NT_T(' · 마지막 확인 {0}', [msHm(LIVE.lastCheck)]) : ''
       // 켠 쪽만 말한다(끈 층이 문서에 남은 것은 그리지 않으므로 사람이 기다릴 것이 없다)
       const pend = LIVE.phase !== 'ok' ? [] : livePendWords()
       const fast = liveWaiting(Date.now())
       // 🆕 진행 표시(사용자 결정 2026-10-28) — 화면이 이미 아는 사실만 쓴다(요청·권한 0): ① 켜기 쓰기가 성공했다 · ② 경과(켠·바꾼 시각 →
       //    마지막 확인) · 보통 약 3분(꺼져 있다 켠 첫 실행 실측 173.8초) · 최대 약 8분(빠른 읽기 창) · ③ 도착. 8분이 지나면 이 표시를 접고
       //    옛 문장(기다림 → 15분 「새 상태가 오지 않습니다」)으로 돌아간다 — 약속한 「최대」를 넘긴 단계 표시는 거짓이 된다.
-      const steps = (what) => ` · ① 켜기 요청 저장됨 ✓ · ② ${what} · 경과 ${mss((LIVE.lastCheck || LIVE.asked) - LIVE.asked)} · 보통 약 3분, 최대 약 8분 · ` +
-        `10초마다 확인${LIVE.lastCheck ? `(마지막 확인 ${msHms(LIVE.lastCheck)})` : ''}`
-      const done = LIVE.doneWhat && LIVE.doneReads === LIVE.reads ? ` · ③ ${LIVE.doneWhat} 도착 ✓` : ''
+      const steps = (what) => NT_T(' · ① 켜기 요청 저장됨 ✓ · ② {0} · 경과 {1} · 보통 약 3분, 최대 약 8분 · ', [what, mss((LIVE.lastCheck || LIVE.asked) - LIVE.asked)]) +
+        NT_T('10초마다 확인{0}', [LIVE.lastCheck ? NT_T('(마지막 확인 {0})', [msHms(LIVE.lastCheck)]) : ''])
+      const done = LIVE.doneWhat && LIVE.doneReads === LIVE.reads ? NT_T(' · ③ {0} 도착 ✓', [LIVE.doneWhat]) : ''
       // 🔴 옛 저장소(조건부 연장 불가)면 창을 닫아도 그때까지 켜져 있다 · 연장이 실패 중이면 곧 꺼질 수 있다 —
       //    둘 다 요금이 걸린 사실이라 **사람 문장**이다(모든 단계의 줄 끝에 붙는다).
-      const tail = (LIVE.mode === 'fixed' ? ` · 이 저장소는 창을 닫아도 ${until} 켜져 있습니다` : '') +
-        (LIVE.renewWhy ? ` · ⚠ 연장하지 못했습니다(${LIVE.renewWhy}) — ${msHm(LIVE.lease)} 까지 다시 시도합니다` : '') +
-        (LIVE.setWhy ? ` · ⚠ 켜기·끄기 설정을 저장소에 쓰지 못했습니다(${LIVE.setWhy}) — 화면은 그대로입니다` : '') +
+      const tail = (LIVE.mode === 'fixed' ? NT_T(' · 이 저장소는 창을 닫아도 {0} 켜져 있습니다', [until]) : '') +
+        (LIVE.renewWhy ? NT_T(' · ⚠ 연장하지 못했습니다({0}) — {1} 까지 다시 시도합니다', [LIVE.renewWhy, msHm(LIVE.lease)]) : '') +
+        (LIVE.setWhy ? NT_T(' · ⚠ 켜기·끄기 설정을 저장소에 쓰지 못했습니다({0}) — 화면은 그대로입니다', [LIVE.setWhy]) : '') +
         // 🆕 제어 키를 못 읽었다(보강 4 · 불변식 ④) — 화면은 마지막 그대로 · 경고 꼬리 하나
-        (LIVE.ctlWhy ? ` · ⚠ 다른 창의 변경을 확인하지 못했습니다(${LIVE.ctlWhy}) — 화면은 그대로입니다` : '') +
+        (LIVE.ctlWhy ? NT_T(' · ⚠ 다른 창의 변경을 확인하지 못했습니다({0}) — 화면은 그대로입니다', [LIVE.ctlWhy]) : '') +
         // 층을 막 켰다 — 지금 문서는 그 층 없이 만들어졌다(켜는 쓰기가 깨운 관측이 그 층을 싣고 온다)
-        (pend.length ? (fast ? steps(`${pend.join('·')} 수집 중`) : ` · ${pend.join('·')} — 새 관측을 만드는 중입니다(도착하면 바로 표시됩니다)`) : '')
-      const keep = ` · 실시간은 ${fol ? `${folLeft} 뒤 자동으로 멈춥니다` : `${until} 켜져 있습니다`} — 끄려면 ${liveBtns()}`
-      const dev = (x) => [x, `층: ${layer}`,
-        fol ? `따라 보기: 다른 창이 쓴 제어 키를 1분마다 읽기만 한다(쓰지도 연장하지도 않는다) · 그 판의 임대 ${msHm(LIVE.lease)}` +
-          (LIVE.end ? ` · 그 창이 고른 끝 ${msHm(LIVE.end)}` : ' · 그 창이 고른 끝을 모른다(옛 화면 파일의 판)') + ' — 켠 창을 닫으면 임대 끝에 서버가 멈춘다'
-          : `상한: ${LIVE.untilBy === 'url' ? '이 화면 파일의 주소가 그때 만료된다' : `켠 시각 + ${durWord(LIVE.cap || LIVE.dur)}`}`,
-        LIVE.mode === 'lease' ? `임대: 서버 만료 ${msHm(LIVE.lease)} — 5분마다 15분씩 조건부 연장 · 창을 닫으면 약 20분 안에 멈춘다`
-          : fol ? '' : '임대 없음: 이 저장소는 조건부 연장을 못 받는다(CORS 에 if-match 가 없거나 ETag 를 못 읽었다) — 상한을 한 번에 썼다',
-        LIVE_SLOT.ctlGetUrl ? '제어 키 읽기: 1분마다(다른 창이 켜고 바꾸고 끈 것을 1분 안에 안다)' : '제어 키 읽기 주소 없음(옛 서명 함수) — 다른 창과 부딪히면 이 창만 끈다',
-        fast ? `켠 층을 기다리는 동안 10초마다 확인한다(${msHm(LIVE.asked + LIVE_WAIT_FOR_MS)} 까지 · 그 뒤 1분마다)${chk}`
-          : `1분마다 확인한다${chk}`].filter(Boolean).join(' · ')
+        (pend.length ? (fast ? steps(NT_T('{0} 수집 중', [pend.join('·')])) : NT_T(' · {0} — 새 관측을 만드는 중입니다(도착하면 바로 표시됩니다)', [pend.join('·')])) : '')
+      const keep = NT_T(' · 실시간은 {0} — 끄려면 {1}', [fol ? NT_T('{0} 뒤 자동으로 멈춥니다', [folLeft]) : NT_T('{0} 켜져 있습니다', [until]), liveBtns()])
+      const dev = (x) => [x, NT_T('층: {0}', [layer]),
+        fol ? NT_T('따라 보기: 다른 창이 쓴 제어 키를 1분마다 읽기만 한다(쓰지도 연장하지도 않는다) · 그 판의 임대 {0}', [msHm(LIVE.lease)]) +
+          (LIVE.end ? NT_T(' · 그 창이 고른 끝 {0}', [msHm(LIVE.end)]) : NT_T(' · 그 창이 고른 끝을 모른다(옛 화면 파일의 판)')) + NT_T(' — 켠 창을 닫으면 임대 끝에 서버가 멈춘다')
+          : NT_T('상한: {0}', [LIVE.untilBy === 'url' ? NT_T('이 화면 파일의 주소가 그때 만료된다') : NT_T('켠 시각 + {0}', [durWord(LIVE.cap || LIVE.dur)])]),
+        LIVE.mode === 'lease' ? NT_T('임대: 서버 만료 {0} — 5분마다 15분씩 조건부 연장 · 창을 닫으면 약 20분 안에 멈춘다', [msHm(LIVE.lease)])
+          : fol ? '' : NT_T('임대 없음: 이 저장소는 조건부 연장을 못 받는다(CORS 에 if-match 가 없거나 ETag 를 못 읽었다) — 상한을 한 번에 썼다'),
+        LIVE_SLOT.ctlGetUrl ? NT_T('제어 키 읽기: 1분마다(다른 창이 켜고 바꾸고 끈 것을 1분 안에 안다)') : NT_T('제어 키 읽기 주소 없음(옛 서명 함수) — 다른 창과 부딪히면 이 창만 끈다'),
+        fast ? NT_T('켠 층을 기다리는 동안 10초마다 확인한다({0} 까지 · 그 뒤 1분마다){1}', [msHm(LIVE.asked + LIVE_WAIT_FOR_MS), chk])
+          : NT_T('1분마다 확인한다{0}', [chk])].filter(Boolean).join(' · ')
       if (LIVE.phase === 'fail') {
-        return [{ kind: 'live', text: `상태를 읽지 못했습니다 — 아이콘의 상태 표시와 흐름을 지웠습니다 · 사유: ${LIVE.why}${keep}${tail}`,
-          dev: dev(`아래 그림은 수집 시각의 구조다(${kstAt(T.run.collected_at)}) · 1분마다 다시 읽는다`) }]
+        return [{ kind: 'live', text: NT_T('상태를 읽지 못했습니다 — 아이콘의 상태 표시와 흐름을 지웠습니다 · 사유: {0}{1}{2}', [LIVE.why, keep, tail]),
+          dev: dev(NT_T('아래 그림은 수집 시각의 구조다({0}) · 1분마다 다시 읽는다', [kstAt(T.run.collected_at)])) }]
       }
       if (LIVE.phase === 'stale') {
-        return [{ kind: 'live', text: `새 상태가 오지 않습니다 — 아이콘의 상태 표시와 흐름을 지웠습니다 · ${LIVE.why}${keep}${tail}`,
-          dev: dev(`아래 그림은 수집 시각의 구조다(${kstAt(T.run.collected_at)}) · 상태 함수는 5분마다 돈다 — ` +
-            '세 주기 넘게 새 관측이 없으면 그쪽이 멈춘 것이다') }]
+        return [{ kind: 'live', text: NT_T('새 상태가 오지 않습니다 — 아이콘의 상태 표시와 흐름을 지웠습니다 · {0}{1}{2}', [LIVE.why, keep, tail]),
+          dev: dev(NT_T('아래 그림은 수집 시각의 구조다({0}) · 상태 함수는 5분마다 돈다 — ', [kstAt(T.run.collected_at)]) +
+            NT_T('세 주기 넘게 새 관측이 없으면 그쪽이 멈춘 것이다')) }]
       }
       // 🔴 `wait` 의 `LIVE.why` 는 사양 문장이다(「바로 깨운다 · 옛 스택이면 다음 5분 주기」) → 개발 설명으로.
       // 🆕 이 그림이 상태 문서보다 새 구조다(B-09) — 「짝 안 맞음」이 아니라 **기다림**이다. 사람이 할 일이 없다.
       if (LIVE.phase === 'wait' && LIVE.pairWait) {
-        return [{ kind: 'live', text: `실시간 갱신 — ${until} · 이 구성도가 더 최신입니다 — 새 구성으로 측정한 첫 관측을 기다리는 중입니다(보통 몇 분)${tail}`,
-          dev: dev(`${LIVE.why} · 구조 단이 새 구조를 올리면 상태 함수가 바로 다시 잰다(옛 스택이면 다음 5분 주기)`) }]
+        return [{ kind: 'live', text: NT_T('실시간 갱신 — {0} · 이 구성도가 더 최신입니다 — 새 구성으로 측정한 첫 관측을 기다리는 중입니다(보통 몇 분){1}', [until, tail]),
+          dev: dev(NT_T('{0} · 구조 단이 새 구조를 올리면 상태 함수가 바로 다시 잰다(옛 스택이면 다음 5분 주기)', [LIVE.why])) }]
       }
       // 🆕 상태가 더 새 구조를 보고 있다(B-13) — 이 그림에는 얹지 않는다. 할 일 = 상단 «최신 화면 열기»(주소가 없으면 다시 받기).
       if (LIVE.phase === 'moved') {
-        return [{ kind: 'live', text: `실시간 갱신 — ${until} · 마지막 관측 ${msHm(LIVE.docAt)} 은 새 구성의 것이라 이 구성도에 표시하지 않았습니다 · ` +
-          (canGoLatest() ? '상단 «최신 화면 열기»를 누르면 새 구성의 화면으로 넘어가 모니터링이 이어집니다' : '최신 index.html 을 다시 받아 주세요') + tail,
-          dev: dev(`${LIVE.why} · 상태 함수는 늘 최신 구조로 잰다 — 이 화면 파일의 구조는 그대로라 기다려도 풀리지 않는다`) }]
+        return [{ kind: 'live', text: NT_T('실시간 갱신 — {0} · 마지막 관측 {1} 은 새 구성의 것이라 이 구성도에 표시하지 않았습니다 · ', [until, msHm(LIVE.docAt)]) +
+          (canGoLatest() ? NT_T('상단 «최신 화면 열기»를 누르면 새 구성의 화면으로 넘어가 모니터링이 이어집니다') : NT_T('최신 index.html 을 다시 받아 주세요')) + tail,
+          dev: dev(NT_T('{0} · 상태 함수는 늘 최신 구조로 잰다 — 이 화면 파일의 구조는 그대로라 기다려도 풀리지 않는다', [LIVE.why])) }]
       }
       if (LIVE.phase === 'wait') {
-        return [{ kind: 'live', text: `실시간 갱신 — ${until}${fast ? steps('관측 중') : ' · 첫 관측을 기다리는 중'}${tail}`,
-          dev: dev(`${LIVE.why} · 얹히기까지 보통 몇 분(꺼져 있다 켠 첫 실행 ≈3분 · 옛 스택이면 최대 약 8분)`) }]
+        return [{ kind: 'live', text: NT_T('실시간 갱신 — {0}{1}{2}', [until, fast ? steps(NT_T('관측 중')) : NT_T(' · 첫 관측을 기다리는 중'), tail]),
+          dev: dev(NT_T('{0} · 얹히기까지 보통 몇 분(꺼져 있다 켠 첫 실행 ≈3분 · 옛 스택이면 최대 약 8분)', [LIVE.why])) }]
       }
-      return [{ kind: 'live', text: `실시간 갱신 — ${until} · 마지막 관측 ${msHm(LIVE.docAt)}${done}${tail}`, dev: dev('') }]
+      return [{ kind: 'live', text: NT_T('실시간 갱신 — {0} · 마지막 관측 {1}{2}{3}', [until, msHm(LIVE.docAt), done, tail]), dev: dev('') }]
     }
     if (LIVE.note) return [{ kind: 'live', text: LIVE.note, dev: '' }]
     // 🆕 서명 전 화면 파일(위 `UNSIGNED_PAGE`) — 켜기 전에도, 구운 문서로 켠 뒤에도 같은 한 줄이다(사람이 할 일이 같다).
     if (UNSIGNED_PAGE) {
-      return [{ kind: 'live', text: '서명 전 파일입니다 — 잠시 뒤 다시 받아 주세요. 이 파일로는 실시간 모니터링을 켤 수 없습니다',
-        dev: '주소 칸이 비었는데 CSP 가 버킷 오리진을 연다 = 서명 함수가 칸을 채우기 전의 원본(unsigned/index.html 또는 게시 키를 나누기 전 스택의 빌드 직후)' }]
+      return [{ kind: 'live', text: NT_T('서명 전 파일입니다 — 잠시 뒤 다시 받아 주세요. 이 파일로는 실시간 모니터링을 켤 수 없습니다'),
+        dev: NT_T('주소 칸이 비었는데 CSP 가 버킷 오리진을 연다 = 서명 함수가 칸을 채우기 전의 원본(unsigned/index.html 또는 게시 키를 나누기 전 스택의 빌드 직후)') }]
     }
     // 🔴 켤 수 있다는 사실을 화면이 말한다 — 배포본에는 구운 상태가 없어서, 이 줄이 없으면
     //    「이 화면에 실시간이 있다」를 아무도 모른다(위 「상태 데이터가 있다」 줄과 같은 이유).
     // 🔴 이미 죽은 주소면 「켤 수 있다 … 까지(지난 시각)」가 아니라 **누른 뒤와 같은 문장**을 먼저 말한다 — 받은 뒤
     //    오래 둔 파일·켜지 않고 열어 둔 탭에서 사람은 눌러 본 뒤에야 만료를 알았다(#31·#32 리뷰 후속).
     if (LIVE_SLOT && !S.monitor && liveUrlDead(Date.now())) {
-      return [{ kind: 'live', text: '이 파일의 주소가 만료됐습니다 — 최신 index.html 을 다시 받으면 켤 수 있습니다',
-        dev: `서명 주소 만료 ${msHm(LIVE_SLOT.urlUntil)} · 켜기 하한 = 남은 수명 1분` }]
+      return [{ kind: 'live', text: NT_T('이 파일의 주소가 만료됐습니다 — 최신 index.html 을 다시 받으면 켤 수 있습니다'),
+        dev: NT_T('서명 주소 만료 {0} · 켜기 하한 = 남은 수명 1분', [msHm(LIVE_SLOT.urlUntil)]) }]
     }
     if (LIVE_SLOT && !S.monitor) {
       // 🔁 2026-10-28: 켜 둘 시간은 «모니터링» 팝오버에서 고른다(30분~8시간 · 기본 4시간) — 「사용률」 버튼은 고른 시간으로 켠다.
-      return [{ kind: 'live', text: `실시간 갱신을 켤 수 있습니다 — 상단 «모니터링» 또는 «사용률»(각각 켭니다 · ${durWord(LIVE.dur)} · 이 화면 파일로는 ` +
-        `${msHm(LIVE_SLOT.urlUntil)} 까지) · 지금 이 구성도는 구조만 표시합니다`,
-      dev: '켜면 그 자리에서 첫 관측을 시작하고 그 뒤 5분마다 새 관측을 카드에 얹는다 · 시각 = 이 화면 파일에 구운 서명 주소의 만료' }]
+      return [{ kind: 'live', text: NT_T('실시간 갱신을 켤 수 있습니다 — 상단 «모니터링» 또는 «사용률»(각각 켭니다 · {0} · 이 화면 파일로는 ', [durWord(LIVE.dur)]) +
+        NT_T('{0} 까지) · 지금 이 구성도는 구조만 표시합니다', [msHm(LIVE_SLOT.urlUntil)]),
+      dev: NT_T('켜면 그 자리에서 첫 관측을 시작하고 그 뒤 5분마다 새 관측을 카드에 얹는다 · 시각 = 이 화면 파일에 구운 서명 주소의 만료') }]
     }
     // 주소가 없는 화면에서 켰는데 구운 문서도 없다 — 켜도 아무것도 안 바뀌는 이유를 말한다.
     if (!LIVE_SLOT && S.monitor && !(OBS && OBS.run)) {
-      return [{ kind: 'live', text: '모니터링 — 표시할 상태 정보가 없습니다. 이 화면 파일에는 실시간 주소가 없습니다 · 구조만 표시됩니다',
-        dev: '로컬에서 만든 파일이거나, 배포본이면 서명 함수가 아직 주소를 굽지 않았다' }]
+      return [{ kind: 'live', text: NT_T('모니터링 — 표시할 상태 정보가 없습니다. 이 화면 파일에는 실시간 주소가 없습니다 · 구조만 표시됩니다'),
+        dev: NT_T('로컬에서 만든 파일이거나, 배포본이면 서명 함수가 아직 주소를 굽지 않았다') }]
     }
     return []
   }
@@ -1680,7 +1680,7 @@
       if (n.type === 'region' && !region) region = n.name || n.region || null
       if (n.type === 'account' && !acct) acct = n.attrs ? n.attrs.account || n.attrs.id || null : null
     }
-    const bits = [acct ? '계정 ' + acctText(acct) : null, region, vpc].filter(Boolean)
+    const bits = [acct ? NT_T('계정 ') + acctText(acct) : null, region, vpc].filter(Boolean)
     return bits.length ? bits.join(' / ') : String(p.target)
   }
   // (곳, 이유) 하나에 한 묶음 — 순서는 `T.partial` 순서(결정론).
@@ -1698,11 +1698,11 @@
     // §3k K5: 같은 곳·같은 이유는 한 줄이고, 못 읽은 **종류**를 앞 4개까지 이름으로 말한다(나머지는 `외 N종`).
     const rows = partialGroups().map((g) => {
       const ts = [...new Set(g.items.map((p) => p.rtype).filter(Boolean))].map(typeWord)
-      const what = ts.length ? ` · ${ts.slice(0, 4).join(', ')}${ts.length > 4 ? ` 외 ${ts.length - 4}종` : ''}` : ''
+      const what = ts.length ? ` · ${ts.slice(0, 4).join(', ')}${ts.length > 4 ? NT_T(' 외 {0}종', [ts.length - 4]) : ''}` : ''
       const raw = g.items.map((p) => `${p.code} — ${p.reason}`)
       // 🔁 2026-10-20(§17.26 C-3): 이 줄의 자리 = 왼쪽 아래 「!」 상자 · 글 = 고객 말(합니다체 · `POP_REASON`)
       return { kind: 'partial', text: `${g.place}${what} — ${popReason(g.items[0].code)}`,
-        title: raw.join('\n'), dev: `원문: ${raw.join(' / ')} · 사람 말(배너 옛 글): ${g.word}` }
+        title: raw.join('\n'), dev: NT_T('원문: {0} · 사람 말(배너 옛 글): {1}', [raw.join(' / '), g.word]) }
     })
     // §3h H2: **권한 부재는 숫자로 말한다.** 🔴 새 도식은 사선을 칠하지 않는다(W5) — 그린 것은 정보창 「수집」
     //    줄이 말하고, 자원이 하나도 안 읽힌 계정은 그릴 칸이 없어 캔버스에 흔적이 0이다. 그 계정이 존재한다는
@@ -1718,19 +1718,19 @@
         if (!c || !c.account_id) continue
         const e = byAcct.get(c.account_id) || { ok: false, deny: new Set() }
         if (c.status === 'ok') e.ok = true
-        if (c.status === 'denied') e.deny.add(c.region || '전역')
+        if (c.status === 'denied') e.deny.add(c.region || NT_T('전역'))
         byAcct.set(c.account_id, e)
       }
       for (const [a, e] of [...byAcct.entries()].filter(([, x]) => x.deny.size).sort((x, y) => String(x[0]).localeCompare(String(y[0])))) {
         const regs = [...e.deny].sort()
         rows.push({ kind: 'deny', text: e.ok
-          ? `계정 ${acctText(a)} — 이 계정의 일부 리전(${regs.slice(0, 4).join(', ')}${regs.length > 4 ? ` 외 ${regs.length - 4}` : ''})에 대한 읽기 권한이 없어 ` +
-            '캔버스에 빠진 리소스가 있습니다. 해당 계정의 읽기 전용 역할(설치 안내 4단계)을 확인하면 다음 수집부터 표시됩니다.'
-          : `계정 ${acctText(a)} — 이 계정에 대한 읽기 권한이 없어 캔버스가 비어 있습니다. ` +
-            '해당 계정에 읽기 전용 역할(설치 안내 4단계)을 만들면 다음 수집부터 표시됩니다.',
-        dev: '권한이 막힌 곳은 「없다」가 아니라 「모른다」다(§3h) · 그린 것은 정보창 「수집」 줄도 말한다 · ' +
-          '자원이 하나도 안 읽힌 계정은 그릴 칸이 없어 **이 줄이 유일한 근거**다' +
-          (cvA.found ? ` · 발견한 계정 ${cvA.found}개` : '') + ` · 거부된 리전: ${regs.join(', ')}` })
+          ? NT_T('계정 {0} — 이 계정의 일부 리전({1}{2})에 대한 읽기 권한이 없어 ', [acctText(a), regs.slice(0, 4).join(', '), regs.length > 4 ? NT_T(' 외 {0}', [regs.length - 4]) : '']) +
+            NT_T('캔버스에 빠진 리소스가 있습니다. 해당 계정의 읽기 전용 역할(설치 안내 4단계)을 확인하면 다음 수집부터 표시됩니다.')
+          : NT_T('계정 {0} — 이 계정에 대한 읽기 권한이 없어 캔버스가 비어 있습니다. ', [acctText(a)]) +
+            NT_T('해당 계정에 읽기 전용 역할(설치 안내 4단계)을 만들면 다음 수집부터 표시됩니다.'),
+        dev: NT_T('권한이 막힌 곳은 「없다」가 아니라 「모른다」다(§3h) · 그린 것은 정보창 「수집」 줄도 말한다 · ') +
+          NT_T('자원이 하나도 안 읽힌 계정은 그릴 칸이 없어 **이 줄이 유일한 근거**다') +
+          (cvA.found ? NT_T(' · 발견한 계정 {0}개', [cvA.found]) : '') + NT_T(' · 거부된 리전: {0}', [regs.join(', ')]) })
       }
     }
     // ---- 모니터링(ADR 0006). 🔴 이 줄은 **세 가지 다른 사실**을 갈라 말한다 ----
@@ -1751,77 +1751,77 @@
         // 🔴 지문이 다르다 ≠ 네트워크가 바뀌었다(#32 리뷰 2, 2026-09-28): 지문은 카드·선 목록이라, 그 회차에 한 종류를
         //    못 읽어 카드가 빠져도 달라진다. 「구성이 바뀌었다」고 단정하면 사람은 누가 무엇을 바꿨는지 찾으러 간다.
         rows.push({ kind: 'mon', text: (OBS_PAIRING.by !== 'digest'
-          ? '상태 데이터가 이 구성도와 맞지 않습니다 — 아이콘에 표시하지 않았습니다 · '
+          ? NT_T('상태 데이터가 이 구성도와 맞지 않습니다 — 아이콘에 표시하지 않았습니다 · ')
           : OBS_PAIRING.newer === 'page'
-            ? '상태 데이터가 **이 구성도보다 이전 구조**를 기준으로 합니다(구조 수집 결과가 달라졌습니다) — 상태를 아이콘에 표시하지 않았습니다 · '
-            : '이 구성도를 만든 뒤 **구조 수집 결과가 달라졌습니다**(구성이 바뀌었거나, 그 회차에 일부를 읽지 못해 아이콘이 빠졌습니다) — 상태를 아이콘에 표시하지 않았습니다 · ') + PAIR_FIX,
+            ? NT_T('상태 데이터가 **이 구성도보다 이전 구조**를 기준으로 합니다(구조 수집 결과가 달라졌습니다) — 상태를 아이콘에 표시하지 않았습니다 · ')
+            : NT_T('이 구성도를 만든 뒤 **구조 수집 결과가 달라졌습니다**(구성이 바뀌었거나, 그 회차에 일부를 읽지 못해 아이콘이 빠졌습니다) — 상태를 아이콘에 표시하지 않았습니다 · ')) + PAIR_FIX,
           dev: (OBS_PAIRING.by === 'digest'
-            ? `상태는 구조 스냅샷 ${kstAt(OBS_PAIR)} 의 아이콘·선 목록을, ` +
-              `지금 그림은 ${kstAt(T.run.collected_at)} 의 목록을 보고 있다(내용 지문이 다르다). 겹쳐 그리면 새로 생긴 것의 상태는 ` +
-              '앉을 자리가 없고 없어진 것은 「미측정」처럼 보이므로 **얹지 않는다**. '
-            : `관측은 구조 스냅샷 ${kstAt(OBS_PAIR)} 를 보고 만들어졌는데 지금 그림은 ${kstAt(T.run.collected_at)} 이다. ` +
-              '겹쳐 그리면 없어진 것에 상태가 붙고 남은 것이 「정상」으로 보이므로 **얹지 않는다**. ') +
-            '이력 되짚기도 같은 이유로 멈춘다.' })
+            ? NT_T('상태는 구조 스냅샷 {0} 의 아이콘·선 목록을, ', [kstAt(OBS_PAIR)]) +
+              NT_T('지금 그림은 {0} 의 목록을 보고 있다(내용 지문이 다르다). 겹쳐 그리면 새로 생긴 것의 상태는 ', [kstAt(T.run.collected_at)]) +
+              NT_T('앉을 자리가 없고 없어진 것은 「미측정」처럼 보이므로 **얹지 않는다**. ')
+            : NT_T('관측은 구조 스냅샷 {0} 를 보고 만들어졌는데 지금 그림은 {1} 이다. ', [kstAt(OBS_PAIR), kstAt(T.run.collected_at)]) +
+              NT_T('겹쳐 그리면 없어진 것에 상태가 붙고 남은 것이 「정상」으로 보이므로 **얹지 않는다**. ')) +
+            NT_T('이력 되짚기도 같은 이유로 멈춘다.') })
       } else if (!S.monitor) {
         // 🔴 켤 수 있다는 사실을 화면이 말해야 한다. 안 말하면 「데이터는 오는데 아무도 안 본다」가
         //    되고, 그 층은 **돈을 쓰면서** 아무 값도 못 만든다(ADR 0005 의 기본 꺼짐과 짝이다).
-        rows.push({ kind: 'mon', text: `상태 데이터가 있습니다(기준 ${kstAt(OBS.run.observed_at)}) — ` +
-          `상단 «모니터링»을 누르면 아이콘에 표시됩니다. 지금 이 구성도는 **${S.util && UTROWS ? '구조 + 사용률' : '구조만'}**입니다.`, dev: '' })
+        rows.push({ kind: 'mon', text: NT_T('상태 데이터가 있습니다(기준 {0}) — ', [kstAt(OBS.run.observed_at)]) +
+          NT_T('상단 «모니터링»을 누르면 아이콘에 표시됩니다. 지금 이 구성도는 **{0}**입니다.', [S.util && UTROWS ? NT_T('구조 + 사용률') : NT_T('구조만')]), dev: '' })
       } else if (!os.rows) {
-        rows.push({ kind: 'mon', text: '모니터링 — 상태 문서에 관측 항목이 없습니다 · 아이콘은 켜기 전과 같습니다',
-          dev: '**아이콘 테두리는 켜기 전과 똑같다**(없는 상태를 지어내지도, 「전부 미측정」으로 지우지도 ' +
-            '않는다) · 흐르는 선도 0개다.' })
+        rows.push({ kind: 'mon', text: NT_T('모니터링 — 상태 문서에 관측 항목이 없습니다 · 아이콘은 켜기 전과 같습니다'),
+          dev: NT_T('**아이콘 테두리는 켜기 전과 똑같다**(없는 상태를 지어내지도, 「전부 미측정」으로 지우지도 ') +
+            NT_T('않는다) · 흐르는 선도 0개다.') })
       } else {
         // 사람 문장 = 기준 시각 + 판정 분포 + 「일부 못 읽은 채 판정」 수(§3k K1 🔴 — 못 읽은 것의 **존재와 수**는
         // 사람 문장에 남는다). 나머지(층·초록의 근거·앉지 못한 관측의 회계)는 개발 설명이다.
-        rows.push({ kind: 'mon', text: `모니터링 — 기준 ${kstAt(OBS.run.observed_at)} · ` +
-          `아이콘 ${os.cards}곳: 흐름 ${os.live} · 정상 ${os.up} · 이상 ${os.down} · ` +
-          `관측 불가 ${os.none} · 미측정 ${os.unobserved}` +
+        rows.push({ kind: 'mon', text: NT_T('모니터링 — 기준 {0} · ', [kstAt(OBS.run.observed_at)]) +
+          NT_T('아이콘 {0}곳: 흐름 {1} · 정상 {2} · 이상 {3} · ', [os.cards, os.live, os.up, os.down]) +
+          NT_T('관측 불가 {0} · 미측정 {1}', [os.none, os.unobserved]) +
           (os.cardPartial
-            ? ` · 그중 ${os.cardPartial}곳은 **근거의 일부를 읽지 못한 상태로** 판정했습니다 — 「정상」과 같게 보지 마세요`
+            ? NT_T(' · 그중 {0}곳은 **근거의 일부를 읽지 못한 상태로** 판정했습니다 — 「정상」과 같게 보지 마세요', [os.cardPartial])
             : ''),
         dev: (OBS.layers && OBS.layers.metric
-          ? '지표 층까지 읽었다(호출당 과금)'
-          : '구조 조회만으로 판정했다 — 「흐르는가」는 지표 층을 켜야 나온다') +
-          ' · 「관측 불가」는 AWS 가 값을 주지 않는다는 뜻이고(`?`), 권한이 없어 못 읽은 것은 ' +
-          '위 «권한» 줄이 말한다(다른 어휘다)' +
+          ? NT_T('지표 층까지 읽었다(호출당 과금)')
+          : NT_T('구조 조회만으로 판정했다 — 「흐르는가」는 지표 층을 켜야 나온다')) +
+          NT_T(' · 「관측 불가」는 AWS 가 값을 주지 않는다는 뜻이고(`?`), 권한이 없어 못 읽은 것은 ') +
+          NT_T('위 «권한» 줄이 말한다(다른 어휘다)') +
           // 🔴 흐르는 선의 **근거를 말한다**. 초록은 **그 구간 자신을 잰 것**뿐이다
           //    (종단 추론 폐기 · ADR 0008 · S2). `flowByEnds` 가 0 이 아니면 회귀다.
           (os.flows
-            ? ` · 초록으로 흐르는 선 ${os.flows}개(전부 **그 선 자신의 관측** ${os.flowByEdge}` +
-              `${os.flowByEnds ? ` · 🔴 근거 없는 초록 ${os.flowByEnds}` : ''})`
-            : ' · 초록으로 흐르는 선은 0개다 — 어느 경로도 「지금 흐른다」로 관측되지 않았다')
+            ? NT_T(' · 초록으로 흐르는 선 {0}개(전부 **그 선 자신의 관측** {1}', [os.flows, os.flowByEdge]) +
+              `${os.flowByEnds ? NT_T(' · 🔴 근거 없는 초록 {0}', [os.flowByEnds]) : ''})`
+            : NT_T(' · 초록으로 흐르는 선은 0개다 — 어느 경로도 「지금 흐른다」로 관측되지 않았다'))
           +
           // 🔴 **거절한 것을 말한다.** 양 끝이 흐르는데 선이 회색이면 사람은 「고장인가」를 묻는다 —
           //    답은 「그 구간 자신을 잰 근거가 없다」다.
           (os.flowEndsOnly
-            ? ` · 양 끝 자원만 흐르는 선 ${os.flowEndsOnly}개는 **초록으로 칠하지 않았다** — 그 ` +
-              '구간 자신을 잰 근거가 없다(양 끝의 트래픽이 이 경로로 갔다는 보장이 없다)'
+            ? NT_T(' · 양 끝 자원만 흐르는 선 {0}개는 **초록으로 칠하지 않았다** — 그 ', [os.flowEndsOnly]) +
+              NT_T('구간 자신을 잰 근거가 없다(양 끝의 트래픽이 이 경로로 갔다는 보장이 없다)')
             : '')
           +
           // 🔴 「판정은 났지만 일부를 못 읽었다」를 정상에 섞지 않는다(계약 `partial`).
           (os.cardPartial
-            ? ` · 일부를 못 읽은 채 판정된 ${os.cardPartial}곳(\`~\`) — 지표 호출이 실패해도 판정은 남기기 때문이다`
+            ? NT_T(' · 일부를 못 읽은 채 판정된 {0}곳(`~`) — 지표 호출이 실패해도 판정은 남기기 때문이다', [os.cardPartial])
             : '') +
           (os.containers
-            ? ` · 컨테이너 ${os.containers}곳의 상태는 그리지 않는다 — 테두리는 «컨테이너 유형» ` +
-              '채널이 쓰고 있고, 그 상태는 안쪽 아이콘이 이미 말한다'
+            ? NT_T(' · 컨테이너 {0}곳의 상태는 그리지 않는다 — 테두리는 «컨테이너 유형» ', [os.containers]) +
+              NT_T('채널이 쓰고 있고, 그 상태는 안쪽 아이콘이 이미 말한다')
             : '') +
           // 🔴 **라우트는 실제로 선으로 그려진다**(어댑터가 서브넷→대상으로 재투영한다) — 그것까지
           //    「선을 그리지 않는 관계」로 말하면 거짓이다(2026-09-24 수정).
           (os.edgeOnWire
-            ? ` · 관계 관측 ${os.edgeOnWire}건은 그려진 선에 앉았다`
+            ? NT_T(' · 관계 관측 {0}건은 그려진 선에 앉았다', [os.edgeOnWire])
             : '') +
           (os.edgeUndrawn
             // 새 도식은 인터넷·LB 배치·온프렘 쪽 관계도 선으로 그리지 않는다(§17.20) — CloudFront 원본은 선이지만 관측 행이 없다(#43 · NO_STATE_EDGES)
-            ? ` · 관계 관측 ${os.edgeUndrawn}건은 이 화면이 선으로 그리지 않는 관계다(인터넷 쪽 길 · ` +
-              'LB 배치 · 서브넷 연관 · 보안그룹 참조 등) — 없는 선에 상태를 붙이지 않는다'
+            ? NT_T(' · 관계 관측 {0}건은 이 화면이 선으로 그리지 않는 관계다(인터넷 쪽 길 · ', [os.edgeUndrawn]) +
+              NT_T('LB 배치 · 서브넷 연관 · 보안그룹 참조 등) — 없는 선에 상태를 붙이지 않는다')
             : '') +
           // 🔴 카드에도 컨테이너에도 앉지 못한 **노드** 관측. 이것을 안 세면 화면 어디에도 없는
           //    보안그룹·NACL 수십~수백 건이 사라지고 사람은 「나머지는 다 정상」으로 읽는다.
           (os.nodeUnplaced
-            ? ` · 자원 관측 ${os.nodeUnplaced}건은 이 화면에 그려지는 아이콘이 아예 없는 종류다` +
-              '(보안그룹·NACL 등) — 그 판정은 어디에도 얹히지 않았다'
+            ? NT_T(' · 자원 관측 {0}건은 이 화면에 그려지는 아이콘이 아예 없는 종류다', [os.nodeUnplaced]) +
+              NT_T('(보안그룹·NACL 등) — 그 판정은 어디에도 얹히지 않았다')
             : '') })
       }
     }
@@ -1832,15 +1832,15 @@
     const mt = OBS && OBS.run && !OBS_STALE ? monTargets() : null
     if (mt) {
       const ex = mt.excluded.map(acctText)
-      rows.push({ kind: 'montgt', text: `지표 대상 ${mt.target.length} 계정 · ` +
-        `제외 ${mt.excluded.length} 계정(스택 B 없음)` +
-        (mt.unknown.length ? ` · 확인 못함 ${mt.unknown.length} 계정` : '') +
-        (ex.length ? ` · 제외: ${ex.slice(0, 4).join(', ')}${ex.length > 4 ? ` 외 ${ex.length - 4}` : ''}` +
-          ' — 스택 B 를 배포하면 다음 관측부터 대상이 됩니다' : ''),
-      dev: '모니터링은 멤버 역할(스택 B)에 들어간 계정만 부른다. 들어가지 못한 계정에 지표를 부르면 ' +
-        '거부되고, 거부된 호출도 과금된다' +
-        (mt.unknown.length ? ' · 「확인 못함」은 역할 진입이 거부도 성공도 아니었던 계정이다' +
-          '(요청 제한·세션 생성 실패 등) — 제외로 세지 않았다' : '') })
+      rows.push({ kind: 'montgt', text: NT_T('지표 대상 {0} 계정 · ', [mt.target.length]) +
+        NT_T('제외 {0} 계정(스택 B 없음)', [mt.excluded.length]) +
+        (mt.unknown.length ? NT_T(' · 확인 못함 {0} 계정', [mt.unknown.length]) : '') +
+        (ex.length ? NT_T(' · 제외: {0}{1}', [ex.slice(0, 4).join(', '), ex.length > 4 ? NT_T(' 외 {0}', [ex.length - 4]) : '']) +
+          NT_T(' — 스택 B 를 배포하면 다음 관측부터 대상이 됩니다') : ''),
+      dev: NT_T('모니터링은 멤버 역할(스택 B)에 들어간 계정만 부른다. 들어가지 못한 계정에 지표를 부르면 ') +
+        NT_T('거부되고, 거부된 호출도 과금된다') +
+        (mt.unknown.length ? NT_T(' · 「확인 못함」은 역할 진입이 거부도 성공도 아니었던 계정이다') +
+          NT_T('(요청 제한·세션 생성 실패 등) — 제외로 세지 않았다') : '') })
     }
     // ---- 옵션형 근거 «출처»(ADR 0009 D6 · 사용자 지시 2026-09-24) ----
     // 🔴 모니터링을 **켠** 화면에서만 말한다: 이 문장은 「지금 보고 있는 판정이 무엇을 근거로
@@ -1849,52 +1849,52 @@
       const ss = srcStats()
       const list = (xs) => xs.map(srcLabel).join(' · ')
       // 🔴 사유는 **문서가 준 것**(`why`)만 쓴다 — 추측해 적으면 고객이 못 고칠 조치를 한다.
-      const why = (xs) => { const w = xs.map((s) => s.why).find(Boolean); return w ? ` — ${w}` : '' }
+      const why = (xs) => { const w = xs.map((s) => s.why).find(Boolean); return w ? ` — ${NT_T(w)}` : '' }   // engine reason — translated at display time
       // 🔴 **「활성화되어 있지 않아」는 `unknown` 이 0 일 때만 쓴다.** 켜짐을 확인 못한 것이 하나라도
       //    있으면 그 문장은 이미 켠 고객에게 「켜세요」라고 말하는 것이 된다(ADR 0009 D2 의 규율).
       // 🔴 `!ss.off.length` 도 게이트다 — 꺼진 근거가 **하나도 없으면**(전부 「해당 자원 없음」)
       //    「활성화되어 있지 않아」는 고객이 켤 수 없는 것을 켜라는 말이 된다(실측 2026-09-25).
       const head = ss.used.length
-        ? `추가 근거 ${ss.used.length}종을 함께 반영했습니다`
+        ? NT_T('추가 근거 {0}종을 함께 반영했습니다', [ss.used.length])
         : (ss.unread.length || ss.unknown.length || !ss.off.length)
-            ? '지표만으로 판정했습니다'
-            : 'VPC 흐름 로그·Container Insights 가 꺼져 있어 지표만으로 ' +
-              '판정했습니다'
+            ? NT_T('지표만으로 판정했습니다')
+            : NT_T('VPC 흐름 로그·Container Insights 가 꺼져 있어 지표만으로 ') +
+              NT_T('판정했습니다')
       const parts = []
-      if (ss.used.length) parts.push(`판정에 쓴 근거: ${list(ss.used)}`)
+      if (ss.used.length) parts.push(NT_T('판정에 쓴 근거: {0}', [list(ss.used)]))
       if (ss.unread.length) {
         // 고칠 주체가 **우리**다(고객이 이미 켰다) — 그래서 「켜세요」가 아니라 사유를 적는다.
         // 🔴 「사용」과 겹칠 수 있다(한 종류 안에 읽은 로그와 못 읽은 로그) — 로그별 사유는 아래 `srclog` 줄이 말한다.
-        parts.push(`켜져 있지만 읽지 않은 곳이 있는 근거 ${ss.unread.length}종: ` +
+        parts.push(NT_T('켜져 있지만 읽지 않은 곳이 있는 근거 {0}종: ', [ss.unread.length]) +
           list(ss.unread) + why(ss.unread))
       }
       if (ss.unknown.length) {
-        parts.push(`켜짐을 확인하지 못한 근거 ${ss.unknown.length}종: ` +
+        parts.push(NT_T('켜짐을 확인하지 못한 근거 {0}종: ', [ss.unknown.length]) +
           list(ss.unknown) + why(ss.unknown))
       }
-      if (ss.off.length) parts.push(`꺼져 있는 근거 ${ss.off.length}종: ${list(ss.off)}`)
+      if (ss.off.length) parts.push(NT_T('꺼져 있는 근거 {0}종: {1}', [ss.off.length, list(ss.off)]))
       // 🔴 여기는 **조치할 것이 없는** 목록이다 — 그래서 「0/0」을 적지 않는다(분모 0 을 보여 주면
       //    「0개가 켜져 있다」로 읽히고, 그것이 곧 「켜세요」가 된다). 이름 + 「자원 0개」만 말한다.
       if (ss.na.length) {
-        parts.push(`해당 자원이 없어 판단에서 제외한 근거 ${ss.na.length}종: ` +
-          ss.na.map((s) => `${SRC_LABEL[s.kind] || s.kind}(${SRC_UNIT[s.scope.unit] ||
-            s.scope.unit} 0개)`).join(' · '))
+        parts.push(NT_T('해당 자원이 없어 판단에서 제외한 근거 {0}종: ', [ss.na.length]) +
+          ss.na.map((s) => NT_T('{0}({1} 0개)', [SRC_LABEL[s.kind] || s.kind, SRC_UNIT[s.scope.unit] ||
+            s.scope.unit])).join(' · '))
       }
       // §3k: 머리 문장은 사람 문장(ADR 0009 D6 — 사용자 결정 2026-09-24) · 근거 조각 목록은 개발 설명.
-      rows.push({ kind: 'src', text: '옵션형 근거 — ' + head,
+      rows.push({ kind: 'src', text: NT_T('옵션형 근거 — ') + head,
         dev: (parts.length ? parts.join(' · ') + ' · ' : '') +
-        '켜기는 고객의 결정이고 이 툴은 아무것도 켜지 않는다(읽기 전용) · 위 «권한»·«수집 실패» ' +
-        '줄과 다른 축이다 — 그쪽은 우리 권한, 이쪽은 고객이 켠 것이다' })
+        NT_T('켜기는 고객의 결정이고 이 툴은 아무것도 켜지 않는다(읽기 전용) · 위 «권한»·«수집 실패» ') +
+        NT_T('줄과 다른 축이다 — 그쪽은 우리 권한, 이쪽은 고객이 켠 것이다') })
       // 🔴 못 읽은(또는 일부만 읽은) 로그 **한 개당 한 줄**(§3k K3 추가 · 대장 108 · 검사 120). 같은 이유끼리도 합치지
       //    않는다 — 합치면 어느 로그를 고칠지가 화면에서 사라진다. 코드·엔진 문장·`detail` 은 `title` 에만 간다.
       //    `duplicate_covered` 는 줄을 만들지 않는다(경고가 아니다).
       for (const s of srcRows().slice().sort((a, b) => a.kind.localeCompare(b.kind))) {
         for (const r of flowLogsOf(s).slice().sort((a, b) => a.id.localeCompare(b.id))) {
           if (!unreadLog(r) && !partialLog(r)) continue
-          const where = r.attached_to ? nameOfId(r.attached_to) : (r.level === 'network_interface' ? 'ENI 단위' : '연결 대상 미확인')
+          const where = r.attached_to ? nameOfId(r.attached_to) : (r.level === 'network_interface' ? NT_T('ENI 단위') : NT_T('연결 대상 미확인'))
           rows.push({ kind: 'srclog',
-            text: `${SRC_LABEL[s.kind] || '흐름 로그'} ${r.id}(${where}) — ` +
-              `${partialLog(r) ? '일부만 읽음' : '켜져 있지만 못 읽음'}: ${flowWhy(r.why_code)}`,
+            text: `${SRC_LABEL[s.kind] || NT_T('흐름 로그')} ${r.id}(${where}) — ` +
+              `${partialLog(r) ? NT_T('일부만 읽음') : NT_T('켜져 있지만 못 읽음')}: ${flowWhy(r.why_code)}`,
             title: flowLogTitle(r) })
         }
       }
@@ -1909,9 +1909,9 @@
     //    「N개」는 버튼이 말한다 — 여기서 또 세면 개수 문장이 된다).
     if (SCOPE) {
       const names = accounts.map((a, i) => (SCOPE_SET.has(a.id) ? acctLabel(i) : null)).filter(Boolean).join(', ')
-      rows.push({ kind: 'scope', text: `${names} 만 보고 있습니다 · 외부 연결 ${xwireCount(L)} — ` +
-        '화면만 좁혔고 수집 범위와 비용은 그대로입니다. 「계정: 전체」를 누르면 돌아갑니다.',
-      dev: '범위 밖과 잇는 선은 흐린 TGW 에 닿거나 「못 그린 관계」로 남는다 — 지우지 않는다(§17.22)' })
+      rows.push({ kind: 'scope', text: NT_T('{0} 만 보고 있습니다 · 외부 연결 {1} — ', [names, xwireCount(L)]) +
+        NT_T('화면만 좁혔고 수집 범위와 비용은 그대로입니다. 「계정: 전체」를 누르면 돌아갑니다.'),
+      dev: NT_T('범위 밖과 잇는 선은 흐린 TGW 에 닿거나 「못 그린 관계」로 남는다 — 지우지 않는다(§17.22)') })
     }
     // §3k: 아래 unplaced·unwired 두 줄은 **개발 설명**이다(글자는 개발자 화면·`dump().bans`).
     //    🔴 그러나 「그리지 못한 것이 있다」는 사실과 그 수는 사람 문장 한 줄(`undrawn`)에 남긴다 —
@@ -1919,27 +1919,27 @@
     // §3i: 「확인하지 못했다」(partial) 와 **다른 어휘**다 — 이쪽은 이 화면의 규칙 공백이고,
     // 조치 주체가 고객이 아니라 개발이다. 합치면 고객이 권한을 줘도 화면이 안 변한다.
     if ((S.unplaced || []).length) {
-      rows.push({ kind: 'unplaced', text: '', dev: `그릴 규칙이 없어 캔버스에 세우지 못한 리소스 ` +
-        `${S.unplaced.length}개 — 표에서 본다(위치를 날조하지 않는다). 종류: ` +
+      rows.push({ kind: 'unplaced', text: '', dev: NT_T(`그릴 규칙이 없어 캔버스에 세우지 못한 리소스 `) +
+        NT_T('{0}개 — 표에서 본다(위치를 날조하지 않는다). 종류: ', [S.unplaced.length]) +
         [...new Set(S.unplaced.map((r) => r.type))].sort().join(', ') +
-        ' · 규칙을 늘리는 것은 §3 개정이다' })
+        NT_T(' · 규칙을 늘리는 것은 §3 개정이다') })
     }
     // 🔴 관계는 **따로 센다.** 「리소스 N개」에 선을 섞으면 그 수가 거짓이 되고, 고칠 곳도 다르다
     //    (노드는 타입 규칙, 선은 종류 규칙·끝점). 사람 문장에서도 두 수를 나눠 말한다.
     if ((S.unwired || []).length) {
-      rows.push({ kind: 'unwired', text: '', dev: `그릴 규칙이 없어 선을 긋지 못한 관계 ` +
-        `${S.unwired.length}개 — 표에서 본다(없는 관계를 그리지 않는다). 종류: ` +
+      rows.push({ kind: 'unwired', text: '', dev: NT_T(`그릴 규칙이 없어 선을 긋지 못한 관계 `) +
+        NT_T('{0}개 — 표에서 본다(없는 관계를 그리지 않는다). 종류: ', [S.unwired.length]) +
         [...new Set(S.unwired.map((r) => r.type))].sort().join(', ') +
-        ' · 잔차에 걸린 선을 조상으로 환산하면 존재하지 않는 관계가 된다' })
+        NT_T(' · 잔차에 걸린 선을 조상으로 환산하면 존재하지 않는 관계가 된다') })
     }
     // 🔁 2026-10-20(§17.26 C-7): 자리 = 왼쪽 아래 「!」 상자 「캔버스에 없는 리소스」 절의 머리. 수는 그 표(`listRows`)에서 센다
     const nAll = listRows().length; const nRel = (S.unwired || []).length; const nNote = (S.notes || []).length; const nNode = nAll - nRel - nNote
     if (nNode || nRel || nNote) {
       rows.push({ kind: 'undrawn', text:
-        [nNode ? `캔버스에 없는 리소스 ${nNode}개` : '', nRel ? `그림에 없는 연결 ${nRel}개` : '', nNote ? `그리지 못한 Global Accelerator 대상 ${nNote}곳` : ''].filter(Boolean).join(' · ') })
+        [nNode ? NT_T('캔버스에 없는 리소스 {0}개', [nNode]) : '', nRel ? NT_T('그림에 없는 연결 {0}개', [nRel]) : '', nNote ? NT_T('그리지 못한 Global Accelerator 대상 {0}곳', [nNote]) : ''].filter(Boolean).join(' · ') })
     }
     if (S.mode === 'snapshot') {
-      rows.push({ kind: 'mode', text: `편집한 구성도입니다(${S.history.length}건) — «원래대로»를 누르면 편집이 취소됩니다` })
+      rows.push({ kind: 'mode', text: NT_T('편집한 구성도입니다({0}건) — «원래대로»를 누르면 편집이 취소됩니다', [S.history.length]) })
     }
     // 지연 문구는 경고가 아니라 **출처 표기**다(그래서 상시). 언제 찍은 그림인지 같이 밝힌다 —
     // 스냅샷을 라이브로 오독하는 것이 이 화면의 가장 큰 오판 경로다. 수집 소요 시간은 사양 문장이다
@@ -1960,30 +1960,30 @@
       // 인 화면과 이상이 있는 화면이 같은 색으로 보인다.
       // 실시간 알약 1개(문장은 위 `liveRows` 몫). 🔴 읽기 실패·멈춤은 warn 이다 — 상태가 지워진 화면을
       //    정상 화면과 같은 색으로 두면 「이상 0」으로 읽힌다.
-      if (LIVE.busy) pills.push('<span class="bpill">실시간 켜는 중</span>')
+      if (LIVE.busy) pills.push(NT_T('<span class="bpill">실시간 켜는 중</span>'))
       else if (LIVE.on) {
-        if (LIVE.phase === 'fail') pills.push('<span class="bpill warn">⚠ 상태 못 읽음</span>')
-        else if (LIVE.phase === 'stale') pills.push('<span class="bpill warn">⚠ 상태 갱신 멈춤</span>')
+        if (LIVE.phase === 'fail') pills.push(NT_T('<span class="bpill warn">⚠ 상태 못 읽음</span>'))
+        else if (LIVE.phase === 'stale') pills.push(NT_T('<span class="bpill warn">⚠ 상태 갱신 멈춤</span>'))
         // 🆕 B-13 — 구조가 바뀌었다. 알약이 곧 버튼이다(누를 때만 이 탭이 최신 화면으로 넘어간다 · 검사 106).
-        else if (LIVE.phase === 'moved') pills.push(canGoLatest() ? '<span class="bpill warn bgo" data-golatest>⚠ 구조 바뀜 — 최신 화면 열기 ▸</span>' : '<span class="bpill warn">⚠ 구조 바뀜 — 최신 index.html</span>')
-        else if (LIVE.renewWhy) pills.push(`<span class="bpill warn">⚠ 연장 실패 — ${esc(msHm(LIVE.lease))} 까지</span>`)
+        else if (LIVE.phase === 'moved') pills.push(canGoLatest() ? NT_T('<span class="bpill warn bgo" data-golatest>⚠ 구조 바뀜 — 최신 화면 열기 ▸</span>') : NT_T('<span class="bpill warn">⚠ 구조 바뀜 — 최신 index.html</span>'))
+        else if (LIVE.renewWhy) pills.push(NT_T('<span class="bpill warn">⚠ 연장 실패 — {0} 까지</span>', [esc(msHm(LIVE.lease))]))
         // 🆕 제어 키를 못 읽었다(보강 4) — 화면은 그대로지만 다른 창의 변경을 모른다
-        else if (LIVE.ctlWhy) pills.push('<span class="bpill warn">⚠ 다른 창 변경 확인 못 함</span>')
+        else if (LIVE.ctlWhy) pills.push(NT_T('<span class="bpill warn">⚠ 다른 창 변경 확인 못 함</span>'))
         // 🆕 진행 표시(사용자 결정 2026-10-28) — 상세는 접혀 있는 것이 기본이라 경과는 알약에도 둔다(8분 창 안에서만 · 기준 = 마지막 읽기)
-        else if (LIVE.phase === 'wait') pills.push(LIVE.pairWait ? '<span class="bpill">실시간 — 새 구조 관측 대기</span>'
-          : liveWaiting(Date.now()) ? `<span class="bpill">실시간 — 관측 중 · 경과 ${esc(mss((LIVE.lastCheck || LIVE.asked) - LIVE.asked))}</span>`
-            : '<span class="bpill">실시간 — 첫 관측 대기</span>')
+        else if (LIVE.phase === 'wait') pills.push(LIVE.pairWait ? NT_T('<span class="bpill">실시간 — 새 구조 관측 대기</span>')
+          : liveWaiting(Date.now()) ? NT_T('<span class="bpill">실시간 — 관측 중 · 경과 {0}</span>', [esc(mss((LIVE.lastCheck || LIVE.asked) - LIVE.asked))])
+            : NT_T('<span class="bpill">실시간 — 첫 관측 대기</span>'))
         // 🆕 따라 보는 창(보강 4 H) — 「다른 창에서 켠 실시간 · 약 N분 뒤 자동 멈춤」
-        else if (LIVE.mode === 'follow') pills.push(`<span class="bpill">다른 창에서 켠 실시간 · ${esc(aboutMin((LIVE.end || LIVE.lease) - (LIVE.ctlAt || Date.now())))} 뒤 자동 멈춤</span>`)
-        else pills.push(`<span class="bpill">실시간 ~${esc(msHm(LIVE.until))}</span>`)
+        else if (LIVE.mode === 'follow') pills.push(NT_T('<span class="bpill">다른 창에서 켠 실시간 · {0} 뒤 자동 멈춤</span>', [esc(aboutMin((LIVE.end || LIVE.lease) - (LIVE.ctlAt || Date.now())))]))
+        else pills.push(NT_T('<span class="bpill">실시간 ~{0}</span>', [esc(msHm(LIVE.until))]))
       } else if (LIVE.notePill) {
         pills.push(`<span class="bpill${LIVE.noteWarn ? ' warn' : ''}">${esc(LIVE.notePill)}</span>`)
       } else if (LIVE_SLOT && !S.monitor && liveUrlDead(Date.now())) {
-        pills.push('<span class="bpill warn">⚠ 주소 만료 — 최신 index.html</span>')
+        pills.push(NT_T('<span class="bpill warn">⚠ 주소 만료 — 최신 index.html</span>'))
       } else if (LIVE_SLOT && !S.monitor) {
-        pills.push('<span class="bpill">실시간 가능 — «모니터링»</span>')
+        pills.push(NT_T('<span class="bpill">실시간 가능 — «모니터링»</span>'))
       } else if (UNSIGNED_PAGE) {
-        pills.push('<span class="bpill warn">⚠ 서명 전 화면 파일 — 다시 받기</span>')
+        pills.push(NT_T('<span class="bpill warn">⚠ 서명 전 화면 파일 — 다시 받기</span>'))
       }
       if (OBS && OBS.run) {
         const os = obsStats(L)
@@ -1991,15 +1991,15 @@
         //    「흐름 0 · 정상 0」이라 적었는데, 그건 「거부했다」가 아니라 **「전부 죽었다」**로 읽힌다.
         //    꺼진 상태에서 버튼을 권하지도 않는다 — 눌러도 얹히지 않는다(이유는 배너가 말한다).
         // 「구조 바뀜」 알약이 같은 사실을 이미 말하면 한 번만 말한다(정보의 출처는 하나 — canvas-principles §16 2).
-        if (OBS_STALE) pills.push(LIVE.on && LIVE.phase === 'moved' ? '' : '<span class="bpill warn">⚠ 상태 데이터 짝 안 맞음</span>')
-        else if (!S.monitor) pills.push('<span class="bpill">상태 데이터 있음 — «모니터링»</span>')
-        else if (!os.rows) pills.push('<span class="bpill">관측 항목 0</span>')
+        if (OBS_STALE) pills.push(LIVE.on && LIVE.phase === 'moved' ? '' : NT_T('<span class="bpill warn">⚠ 상태 데이터 짝 안 맞음</span>'))
+        else if (!S.monitor) pills.push(NT_T('<span class="bpill">상태 데이터 있음 — «모니터링»</span>'))
+        else if (!os.rows) pills.push(NT_T('<span class="bpill">관측 항목 0</span>'))
         else {
           // 사용자 결정 2026-09-24: 알약은 **키워드 + 수치**만이다(문장·기준 시각·근거는 배너 몫).
-          pills.push(`<span class="bpill">흐름 ${os.live} · 정상 ${os.up}</span>`)
-          if (os.down) pills.push(`<span class="bpill warn">⚠ 이상 ${os.down}</span>`)
-          if (os.none) pills.push(`<span class="bpill">관측 불가 ${os.none}</span>`)
-          if (os.cardPartial) pills.push(`<span class="bpill warn">~ 일부 못 읽음 ${os.cardPartial}</span>`)
+          pills.push(NT_T('<span class="bpill">흐름 {0} · 정상 {1}</span>', [os.live, os.up]))
+          if (os.down) pills.push(NT_T('<span class="bpill warn">⚠ 이상 {0}</span>', [os.down]))
+          if (os.none) pills.push(NT_T('<span class="bpill">관측 불가 {0}</span>', [os.none]))
+          if (os.cardPartial) pills.push(NT_T('<span class="bpill warn">~ 일부 못 읽음 {0}</span>', [os.cardPartial]))
         }
         // ADR 0009 D6 — 옵션형 근거 알약 **1개**(문장은 배너 몫이다). 🔴 위 `수집 실패`·
         // `권한 없어 못 읽은 계정` 과 **어휘를 합치지 마라**: 저것을 본 사람은 「스택 B 를 배포해야
@@ -2009,32 +2009,32 @@
         const mt = OBS_STALE ? null : monTargets()
         if (mt) {
           pills.push(`<span class="bpill${mt.excluded.length || mt.unknown.length ? ' warn' : ''}">` +
-            `지표 대상 ${mt.target.length} · 제외 ${mt.excluded.length}` +
-            `${mt.unknown.length ? ` · 확인 못함 ${mt.unknown.length}` : ''}</span>`)
+            NT_T('지표 대상 {0} · 제외 {1}', [mt.target.length, mt.excluded.length]) +
+            `${mt.unknown.length ? NT_T(' · 확인 못함 {0}', [mt.unknown.length]) : ''}</span>`)
         }
         const ss = srcStats()
         if (S.monitor && !OBS_STALE && ss.rows) {
           if (ss.pill === 'mixed') {
             // ADR 0009 D6 추가(2026-09-28) — 못 읽음이 사용을 가리지 않는다. 알약은 여전히 **1개**다.
-            pills.push(`<span class="bpill warn">추가 근거 ${ss.used.length}종 · ⚠ 못 읽음 ${ss.unread.length}종</span>`)
+            pills.push(NT_T('<span class="bpill warn">추가 근거 {0}종 · ⚠ 못 읽음 {1}종</span>', [ss.used.length, ss.unread.length]))
           } else if (ss.pill === 'unread') {
-            pills.push(`<span class="bpill warn">⚠ 근거 못 읽음 ${ss.unread.length}종</span>`)
+            pills.push(NT_T('<span class="bpill warn">⚠ 근거 못 읽음 {0}종</span>', [ss.unread.length]))
           } else if (ss.pill === 'used') {
-            pills.push(`<span class="bpill">추가 근거 ${ss.used.length}종</span>`)
+            pills.push(NT_T('<span class="bpill">추가 근거 {0}종</span>', [ss.used.length]))
           } else if (ss.pill === 'unknown') {
             // 🔴 「꺼짐」이 아니라 「확인 못함」이다 — 이미 켠 고객에게 「켜세요」라고 말하지 않는다.
-            pills.push(`<span class="bpill">근거 확인 못함 ${ss.unknown.length}종</span>`)
+            pills.push(NT_T('<span class="bpill">근거 확인 못함 {0}종</span>', [ss.unknown.length]))
           } else {
-            pills.push('<span class="bpill">지표 기반만</span>')
+            pills.push(NT_T('<span class="bpill">지표 기반만</span>'))
           }
         }
       }
       // §3k: 상한 미달성은 알약을 띄우지 않는다 — 사람이 할 일이 없다(개발 설명은 `dump().bans`).
-      if (S.mode === 'snapshot') pills.push(`<span class="bpill snap">편집한 그림 ${S.history.length}건</span>`)
-      pills.push(`<span class="bsrc">${esc(kstAt(T.run.collected_at))} 스냅샷</span>`)
+      if (S.mode === 'snapshot') pills.push(NT_T('<span class="bpill snap">편집한 그림 {0}건</span>', [S.history.length]))
+      pills.push(NT_T('<span class="bsrc">{0} 스냅샷</span>', [esc(kstAt(T.run.collected_at))]))
       bansEl.className = S.bansOpen ? 'open' : ''
       bansEl.innerHTML = `<div class="bansum" data-bantoggle>${pills.join('')}` +
-        `<span class="bmore">${S.bansOpen ? '접기 ▴' : '자세히 ▾'}</span></div>` +
+        `<span class="bmore">${S.bansOpen ? NT_T('접기 ▴') : NT_T('자세히 ▾')}</span></div>` +
         '<div class="bandetail">' + rows.filter((r) => r.text && !POP_KINDS.has(r.kind)).map((r) =>
           `<div class="ban ${r.kind}" data-kind="${r.kind}"${r.title ? ` title="${esc(r.title)}"` : ''}>` +
           `${fmtBan(r.text)}</div>`).join('') + '</div>'
@@ -2048,12 +2048,12 @@
     //    「라이브」 초록 칩은 실시간 모니터링으로 오독됐다 — 편집한 그림일 때만 무엇을 할 수 있는지 말한다.
     const chip = document.getElementById('modechip')
     if (chip) {
-      chip.textContent = `편집한 그림 ${S.history.length}건`
+      chip.textContent = NT_T('편집한 그림 {0}건', [S.history.length])
       chip.className = 'chip ' + S.mode
       chip.hidden = S.mode === 'live'
     }
     const back = document.getElementById('btn-live')
-    if (back) { back.textContent = '원래대로'; back.hidden = S.mode === 'live' }
+    if (back) { back.textContent = NT_T('원래대로'); back.hidden = S.mode === 'live' }
     renderList()   // 왼쪽 아래 「!」 — 배너와 같은 때 같은 줄로 다시 쓴다(줄 출처가 하나다)
   }
   let INIT_VIEW = null
@@ -2142,7 +2142,7 @@
           }, 'image/png')
         } catch (e) { res({ name, size: 0, type: '', err: String(e && e.message) }) }
       }
-      img.onerror = () => res({ name, size: 0, type: '', err: 'SVG 이미지 로드 실패' })
+      img.onerror = () => res({ name, size: 0, type: '', err: NT_T('SVG 이미지 로드 실패') })
       img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(text)))
     })
   }
@@ -2184,7 +2184,7 @@
   //    어디에도 「슬롯」이라는 낱말과 5분 칸 DOM 을 만들지 마라(검사 85 ④⑤ 가 그것을 잰다).
   // 🔴 변경점을 만드는 것은 **수집기의 차분**(`changes[]`)이고 렌더러가 아니다(불변식 ③).
   //    여기서 노드 두 벌을 비교해 «변경»을 발명하면 계약 밖에서 사실을 만드는 것이 된다.
-  const DOCK_TABS = [['hist', '변경 이력'], ['notes', '특이사항']]
+  const DOCK_TABS = [['hist', NT_T('변경 이력')], ['notes', NT_T('특이사항')]]
   const hhmm = (iso) => {
     const t = Date.parse(iso)
     return Number.isFinite(t) ? msHm(t) : '—'
@@ -2192,11 +2192,11 @@
   // 🆕 접힌 반복은 양 끝을 말한다(§3j J0 「반복」 · QA B-20 · 사용자 승인 2026-10-21) — 줄 시각은 **마지막** 변화다. 시작(`first_at`)을
   //    아는 줄만 `08:52 KST부터 09:11 KST까지 4회 반복` · 시작의 KST 날짜가 끝과 다르면 시작 앞에 `MM-DD`. 모르면 `N회 반복` 만(지어내지 않는다).
   const histRepeat = (r) => {
-    const n = `${r.repeat}회 반복`
+    const n = NT_T('{0}회 반복', [r.repeat])
     const a = r.first ? Date.parse(r.first) : NaN; const b = Date.parse(r.at)
     if (!Number.isFinite(a) || !Number.isFinite(b)) return n
     const day = kstIso(a).slice(0, 10) === kstIso(b).slice(0, 10) ? '' : kstIso(a).slice(5, 10) + ' '
-    return `${day}${msHm(a)}부터 ${msHm(b)}까지 ${n}`
+    return NT_T('{0}{1}부터 {2}까지 {3}', [day, msHm(a), msHm(b), n])
   }
   // 줄의 title 은 **AWS 식별자**(콘솔에서 찾을 수 있는 것)를 댄다 — 엔진 id 의 `종류/계정/리전/` 머리는 원어라
   // 화면에 내지 않는다(§3j J0). 관계는 양 끝의 식별자를 댄다.
@@ -2205,59 +2205,59 @@
   //    목록의 시각(`at`)은 확인한 때이고 정렬·되짚기의 기준이라 바꾸지 않는다. 실제로 멈춘/시작한
   //    분(`occurred_at`)은 **따로** 적는다 — `at` 자리에 넣으면 되짚기가 엉뚱한 변경까지 되돌린다.
   //    엔진이 모르면 키가 없다 → 그때는 아무것도 적지 않는다(추정하지 않는다).
-  const OCC_VERB = { 'live→up': ['멈춤', '멈춘'], 'up→live': ['시작', '시작한'] }
+  const OCC_VERB = { 'live→up': [NT_T('멈춤'), NT_T('멈춘')], 'up→live': [NT_T('시작'), NT_T('시작한')] }
   // ---- 이력 줄은 **무엇이** 바뀌었는지 이름으로 말한다 (§3j J0 · 검사 113) ----
   // 🔴 배포본 실측 2026-09-27: `02:19Z` 16줄이 전부 「관계 endpoint_connection 생겼다」로 찍혀 **같은 줄이
   //    반복되는 것처럼** 보였다(실제로는 서로 다른 연결 16개). 줄이 이름 없이 엔진 원어만 말했고 묶는 규칙이
   //    없었다. 그래서 ① 종류는 한글로 ② 대상은 이름으로 ③ 같은 시각·같은 변경·같은 종류는 한 줄로 묶는다.
   // 🔴 원어(`endpoint_connection`·`nat_gateway`)는 화면 글자에 0개다 — 모르는 종류는 「리소스」·「관계」로 만다.
-  const HIST_VERB = { resource_added: '생김', resource_removed: '없어짐' }
-  const HIST_TYPE = { account: '계정', region: '리전', vpc: 'VPC', subnet: '서브넷', route_table: '라우팅 테이블',
-    internet_gateway: '인터넷 게이트웨이', nat_gateway: 'NAT 게이트웨이', transit_gateway: 'Transit Gateway',
-    transit_gateway_attachment: 'TGW 어태치먼트', vpc_peering_connection: 'VPC 피어링',
-    vpc_endpoint: 'VPC 엔드포인트', security_group: '보안 그룹', network_acl: '네트워크 ACL',
-    load_balancer: '로드밸런서',
+  const HIST_VERB = { resource_added: NT_T('생김'), resource_removed: NT_T('없어짐') }
+  const HIST_TYPE = { account: NT_T('계정'), region: NT_T('리전'), vpc: 'VPC', subnet: NT_T('서브넷'), route_table: NT_T('라우팅 테이블'),
+    internet_gateway: NT_T('인터넷 게이트웨이'), nat_gateway: NT_T('NAT 게이트웨이'), transit_gateway: 'Transit Gateway',
+    transit_gateway_attachment: NT_T('TGW 어태치먼트'), vpc_peering_connection: NT_T('VPC 피어링'),
+    vpc_endpoint: NT_T('VPC 엔드포인트'), security_group: NT_T('보안 그룹'), network_acl: NT_T('네트워크 ACL'),
+    load_balancer: NT_T('로드밸런서'),
     // 🔴 스키마 노드 종류 전부(`topology.schema.json` node_type) — 빠지면 `typeWord` 가 영어 표(TYPE_LABEL)나 「리소스」로 떨어진다
     //    (QA B B-03 실측: VPN · VGW · EIC · ECS · RDS · SageMaker = 「리소스 …」, 「Customer gateway」 · 「EC2 instance」). 검사 113 이 전수를 잰다.
-    transit_gateway_route_table: 'TGW 라우팅 테이블', ec2_instance: 'EC2 인스턴스', auto_scaling_group: 'Auto Scaling 그룹',
-    eks_cluster: 'EKS 클러스터', ecs_service: 'ECS 서비스', rds_db_instance: 'RDS 인스턴스', network_firewall: 'Network Firewall',
-    cloudfront: 'CloudFront 배포', ec2_instance_connect_endpoint: 'EC2 Instance Connect 엔드포인트',
-    sagemaker_notebook_instance: 'SageMaker 노트북', sagemaker_domain: 'SageMaker 도메인', sagemaker_endpoint: 'SageMaker 엔드포인트',
-    vpn_gateway: 'VPN 게이트웨이', customer_gateway: '고객 게이트웨이', vpn_connection: 'VPN 연결',
-    direct_connect_connection: 'Direct Connect 연결', direct_connect_virtual_interface: 'Direct Connect 가상 인터페이스',
-    direct_connect_gateway: 'DX 게이트웨이',
+    transit_gateway_route_table: NT_T('TGW 라우팅 테이블'), ec2_instance: NT_T('EC2 인스턴스'), auto_scaling_group: NT_T('Auto Scaling 그룹'),
+    eks_cluster: NT_T('EKS 클러스터'), ecs_service: NT_T('ECS 서비스'), rds_db_instance: NT_T('RDS 인스턴스'), network_firewall: 'Network Firewall',
+    cloudfront: NT_T('CloudFront 배포'), ec2_instance_connect_endpoint: NT_T('EC2 Instance Connect 엔드포인트'),
+    sagemaker_notebook_instance: NT_T('SageMaker 노트북'), sagemaker_domain: NT_T('SageMaker 도메인'), sagemaker_endpoint: NT_T('SageMaker 엔드포인트'),
+    vpn_gateway: NT_T('VPN 게이트웨이'), customer_gateway: NT_T('고객 게이트웨이'), vpn_connection: NT_T('VPN 연결'),
+    direct_connect_connection: NT_T('Direct Connect 연결'), direct_connect_virtual_interface: NT_T('Direct Connect 가상 인터페이스'),
+    direct_connect_gateway: NT_T('DX 게이트웨이'),
     // 파생 노드 2종(스키마 2.7.0 · LB 대상 해소가 짓는다 · §17.27)
-    lambda_function: 'Lambda 함수', external_ip: '외부 IP',
+    lambda_function: NT_T('Lambda 함수'), external_ip: NT_T('외부 IP'),
     // #114(스키마 2.9.0 · §17.32) — VPC 안 IP 를 쓰는 서비스
-    elasticache_cluster: 'ElastiCache 캐시 클러스터', rds_db_cluster: 'RDS DB 클러스터', opensearch_domain: 'OpenSearch 도메인', msk_cluster: 'MSK 클러스터',
+    elasticache_cluster: NT_T('ElastiCache 캐시 클러스터'), rds_db_cluster: NT_T('RDS DB 클러스터'), opensearch_domain: NT_T('OpenSearch 도메인'), msk_cluster: NT_T('MSK 클러스터'),
     // 2.8.0(P2-4 · §17.30)
-    route53_hosted_zone: 'Route 53 호스팅 영역',
+    route53_hosted_zone: NT_T('Route 53 호스팅 영역'),
     // 2.8.0(P2-3 · §17.31) — 파생 노드(CloudFront S3 원본)
-    s3_bucket: 'S3 버킷',
+    s3_bucket: NT_T('S3 버킷'),
     // 2.10.0(배치 D · §17.34~37)
-    elastic_ip: '탄력적 IP', api_gateway: 'API Gateway', rds_db_proxy: 'RDS 프록시', global_accelerator: 'Global Accelerator',
+    elastic_ip: NT_T('탄력적 IP'), api_gateway: 'API Gateway', rds_db_proxy: NT_T('RDS 프록시'), global_accelerator: 'Global Accelerator',
     // 2.11.0(#129 · §17.38~40)
-    core_network: 'Cloud WAN 코어 네트워크', lattice_service_network: 'VPC Lattice 서비스 네트워크', lattice_service: 'VPC Lattice 서비스',
+    core_network: NT_T('Cloud WAN 코어 네트워크'), lattice_service_network: NT_T('VPC Lattice 서비스 네트워크'), lattice_service: NT_T('VPC Lattice 서비스'),
     // 2.12.0(ADR 0014 · §17.41) — 노드 종류는 하나 · 수집 종류는 둘(CloudFront 범위 = `waf_web_acl_global` · coverage 줄만 이 이름을 쓴다 —
     //   「!」 목록이 「리소스」로 떨어지면 무엇을 못 읽었는지 말하지 않는다)
-    waf_web_acl: 'WAF 웹 ACL', waf_web_acl_global: 'WAF 웹 ACL(CloudFront)' }
+    waf_web_acl: NT_T('WAF 웹 ACL'), waf_web_acl_global: NT_T('WAF 웹 ACL(CloudFront)') }
   // 엔진 관계 종류 전수(`schema/topology.schema.json` `edge_type`). 늘면 여기도 는다 — 없으면 「관계」로 만다.
-  const REL_LABEL = { route: '라우트', association: '연관', attachment: '어태치먼트', peering: '피어링',
-    endpoint_connection: '엔드포인트 연결', security_group_reference: '보안 그룹 참조',
-    load_balancer_placement: '로드밸런서 배치', origin: 'CloudFront 오리진', load_balancer_target: 'LB 대상',
+  const REL_LABEL = { route: NT_T('라우트'), association: NT_T('연관'), attachment: NT_T('어태치먼트'), peering: NT_T('피어링'),
+    endpoint_connection: NT_T('엔드포인트 연결'), security_group_reference: NT_T('보안 그룹 참조'),
+    load_balancer_placement: NT_T('로드밸런서 배치'), origin: NT_T('CloudFront 오리진'), load_balancer_target: NT_T('LB 대상'),
     // 2.8.0(P1-3·P2-4 · §17.28·§17.30)
-    endpoint_provider: '엔드포인트 제공자', dns_alias: 'Route 53 별칭', zone_association: '프라이빗 호스팅 영역 연결',
+    endpoint_provider: NT_T('엔드포인트 제공자'), dns_alias: NT_T('Route 53 별칭'), zone_association: NT_T('프라이빗 호스팅 영역 연결'),
     // 2.10.0(배치 D · §17.34~37)
-    eip_association: '탄력적 IP 연결', vpc_link: 'VPC 링크', proxy_target: 'RDS 프록시 대상', accelerator_endpoint: 'Global Accelerator 엔드포인트',
+    eip_association: NT_T('탄력적 IP 연결'), vpc_link: NT_T('VPC 링크'), proxy_target: NT_T('RDS 프록시 대상'), accelerator_endpoint: NT_T('Global Accelerator 엔드포인트'),
     // 2.11.0(#129 · §17.38~40)
-    connect_transport: 'TGW Connect 전송', core_network_attachment: 'Cloud WAN 연결', lattice_vpc_association: 'VPC Lattice VPC 연결',
-    lattice_service_association: 'VPC Lattice 서비스 연결', lattice_target: 'VPC Lattice 대상',
+    connect_transport: NT_T('TGW Connect 전송'), core_network_attachment: NT_T('Cloud WAN 연결'), lattice_vpc_association: NT_T('VPC Lattice VPC 연결'),
+    lattice_service_association: NT_T('VPC Lattice 서비스 연결'), lattice_target: NT_T('VPC Lattice 대상'),
     // 2.12.0(ADR 0014)
-    waf_protection: 'WAF 보호' }
+    waf_protection: NT_T('WAF 보호') }
   // 상태 4어휘(`observation.schema.json` `status`)의 줄 표기 — 상단 알약과 같은 말을 쓴다.
-  const ST_WORD = { live: '흐름', up: '정상', down: '이상', none: '관측 불가' }
-  const typeWord = (t) => (t && (HIST_TYPE[t] || TYPE_LABEL[t])) || '리소스'
-  const relWord = (t) => (t && REL_LABEL[t]) || '관계'
+  const ST_WORD = { live: NT_T('흐름'), up: NT_T('정상'), down: NT_T('이상'), none: NT_T('관측 불가') }
+  const typeWord = (t) => (t && (HIST_TYPE[t] || TYPE_LABEL[t])) || NT_T('리소스')
+  const relWord = (t) => (t && REL_LABEL[t]) || NT_T('관계')
   // 🔴 `changes[].target_kind` 는 **«선이냐 상자냐»**뿐이다(계약 enum `node|edge`) — 리소스 종류가
   //    아니다. 종류는 캔버스 카드 → 엔진 id 첫 구획(`<종류>/<계정>/<리전>/<id>`, `engine/src/nettopo/model.py:24-38`)
   //    → 없어진 것의 모습(`was`) 순으로 찾는다. 슬러그 id(픽스처·합성)에는 구획이 없다.
@@ -2324,7 +2324,7 @@
   function histWho (c, was) {
     const r = c.target_kind === 'edge' ? relOf(c.target_id) : null
     if (r) return { word: relWord(r.t), name: `${histName(r.a, was)} → ${histName(r.b, was)}` }
-    if (c.target_kind === 'edge') return { word: '관계', name: lastSeg(c.target_id) }
+    if (c.target_kind === 'edge') return { word: NT_T('관계'), name: lastSeg(c.target_id) }
     return { word: typeWord(idTypeOf(c.target_id, was)), name: histName(c.target_id, was) }
   }
   const HIST_OPEN = new Set()           // 펼친 묶음 줄(열쇠 = 시각|변경|대상|종류)
@@ -2437,9 +2437,9 @@
   }
   function histRows () {
     const nowAt = histNowAt()
-    const rows = [{ at: nowAt, kind: 'now', text: '지금', repeat: 1,
-      full: nowAt === T.run.collected_at ? `기준 스냅샷 ${kstAt(T.run.collected_at)}`
-        : `지금 화면 — 구조 ${kstAt(T.run.collected_at)} 수집 · 상태 ${kstAt(nowAt)} 관측` }]
+    const rows = [{ at: nowAt, kind: 'now', text: NT_T('지금'), repeat: 1,
+      full: nowAt === T.run.collected_at ? NT_T('기준 스냅샷 {0}', [kstAt(T.run.collected_at)])
+        : NT_T('지금 화면 — 구조 {0} 수집 · 상태 {1} 관측', [kstAt(T.run.collected_at), kstAt(nowAt)]) }]
     if (!OBS) return rows
     const was = wasIndex()
     const cs = (OBS.changes || []).slice().sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0))
@@ -2453,11 +2453,11 @@
         const src = histName(o.a, was)
         const nm = `${histName(o.b, was)} → ${histName(n.b, was)}`
         rows.push({ at, kind: 'replaced', target: come.target_id, targets: [gone.target_id, come.target_id],
-          cut: false, text: `${relWord(o.t)} 대상 ${nm} 로 바뀜`, nm, mk: (x) => `${relWord(o.t)} 대상 ${x} 로 바뀜`, tid: [o.a],
-          full: `${src} 의 ${relWord(o.t)} 대상이 바뀌었습니다 — ${histName(o.b, was)} 없어짐 · ${histName(n.b, was)} 생김 ` +
+          cut: false, text: NT_T('{0} 대상 {1} 로 바뀜', [relWord(o.t), nm]), nm, mk: (x) => NT_T('{0} 대상 {1} 로 바뀜', [relWord(o.t), x]), tid: [o.a],
+          full: NT_T('{0} 의 {1} 대상이 바뀌었습니다 — {2} 없어짐 · {3} 생김 ', [src, relWord(o.t), histName(o.b, was), histName(n.b, was)]) +
             `(${nativeOf(o.a)}: ${nativeOf(o.b)} → ${nativeOf(n.b)})` +
-            (late ? ` · 옛 대상이 없어진 것은 ${kstAt(gone.at)} 에, 새 대상은 다음 구조 수집 뒤 ${kstAt(at)} 에 확인했습니다` : ''),
-          occ: late ? `옛 대상 ${hhmm(gone.at)} 없어짐` : null, repeat: 1, lateGone: late ? gone : null })
+            (late ? NT_T(' · 옛 대상이 없어진 것은 {0} 에, 새 대상은 다음 구조 수집 뒤 {1} 에 확인했습니다', [kstAt(gone.at), kstAt(at)]) : ''),
+          occ: late ? NT_T('옛 대상 {0} 없어짐', [hhmm(gone.at)]) : null, repeat: 1, lateGone: late ? gone : null })
       }
       // ② 생김·없어짐 — 같은 변경 · 같은 대상(선/상자) · 같은 종류는 한 줄로 묶는다
       const groups = new Map()
@@ -2484,26 +2484,26 @@
           targets: [x.target_id], tid: histTid(x.target_id) }))).map((x) => x.text)
         rows.push({ at, kind: c.kind, target: c.target_id, targets: list.map((x) => x.target_id), cut: false,
           group: key, items: names, itemIds: list.map((x) => x.target_id),
-          text: `${who.word} ${list.length}개 ${HIST_VERB[c.kind]}`,
-          full: `${who.word} ${list.length}개 ${HIST_VERB[c.kind]} — ${names.join(', ')}`,
+          text: NT_T('{0} {1}개 {2}', [who.word, list.length, HIST_VERB[c.kind]]),
+          full: NT_T('{0} {1}개 {2} — {3}', [who.word, list.length, HIST_VERB[c.kind], names.join(', ')]),
           occ: null, repeat: Math.max(...list.map((x) => x.repeat_count || 1)) })
       }
       // ③ 상태
       for (const c of here) {
         if (c.kind !== 'status_changed') continue
         const who = histWho(c, was)
-        const extra = ` (${ST_WORD[c.from] || '모름'} → ${ST_WORD[c.to] || '모름'})`
+        const extra = ` (${ST_WORD[c.from] || NT_T('모름')} → ${ST_WORD[c.to] || NT_T('모름')})`
         const cut = c.to === 'down'
         const occ = typeof c.occurred_at === 'string' ? c.occurred_at : null
-        const verb = (occ && OCC_VERB[`${c.from}→${c.to}`]) || ['', '바뀐']
+        const verb = (occ && OCC_VERB[`${c.from}→${c.to}`]) || ['', NT_T('바뀐')]
         const fv = OCC_VERB[`${c.from}→${c.to}`]
-        const tail = fv ? `흐름 ${fv[0]}` : `${ST_WORD[c.from] || '모름'} → ${ST_WORD[c.to] || '모름'}`
+        const tail = fv ? NT_T('흐름 {0}', [fv[0]]) : `${ST_WORD[c.from] || NT_T('모름')} → ${ST_WORD[c.to] || NT_T('모름')}`
         rows.push({ at: c.at, kind: c.kind, target: c.target_id, cut, targets: [c.target_id],
           text: `${who.word} ${who.name} · ${tail}`, nm: who.name, mk: (x) => `${who.word} ${x} · ${tail}`, tid: histTid(c.target_id),
-          full: `${who.word} ${who.name}${idTail(c.target_id, who.name)} — 상태가 바뀌었다${extra}` +
-            (occ ? ` · 실제로 ${verb[1]} 분 ${kstAt(occ)} (목록 시각 ${kstAt(c.at)} = 확인한 때)` : '') +
-            ((c.repeat_count || 1) > 1 && typeof c.first_at === 'string' ? ` · 반복 ${kstAt(c.first_at)} 부터 ${kstAt(c.at)} 까지` : ''),
-          occ: occ ? `실제 ${hhmm(occ)}${verb[0] ? ' ' + verb[0] : ''}` : null,
+          full: NT_T('{0} {1}{2} — 상태가 바뀌었다{3}', [who.word, who.name, idTail(c.target_id, who.name), extra]) +
+            (occ ? NT_T(' · 실제로 {0} 분 {1} (목록 시각 {2} = 확인한 때)', [verb[1], kstAt(occ), kstAt(c.at)]) : '') +
+            ((c.repeat_count || 1) > 1 && typeof c.first_at === 'string' ? NT_T(' · 반복 {0} 부터 {1} 까지', [kstAt(c.first_at), kstAt(c.at)]) : ''),
+          occ: occ ? NT_T('실제 {0}{1}', [hhmm(occ), verb[0] ? ' ' + verb[0] : '']) : null,
           repeat: c.repeat_count || 1, first: (c.repeat_count || 1) > 1 && typeof c.first_at === 'string' ? c.first_at : null })
       }
       histSplit(rows.filter((r) => r.at === at && r.kind !== 'now'))
@@ -2626,11 +2626,11 @@
   // 선은 오른쪽 칸이 `obsIds`(어댑터가 실어 보낸 엔진 관계 id)로 찾는다.
   function cmpMarkOf (c, replaced) {
     const edge = c.target_kind === 'edge'
-    if (c.kind === 'resource_added') return { id: c.target_id, edge, kind: 'add', label: replaced ? '바뀜' : '생김' }
-    if (c.kind === 'resource_removed') return { id: c.target_id, edge, kind: 'gone', label: '없어짐' }
+    if (c.kind === 'resource_added') return { id: c.target_id, edge, kind: 'add', label: replaced ? NT_T('바뀜') : NT_T('생김') }
+    if (c.kind === 'resource_removed') return { id: c.target_id, edge, kind: 'gone', label: NT_T('없어짐') }
     if (c.kind !== 'status_changed') return null
     const v = OCC_VERB[`${c.from}→${c.to}`]
-    const w = c.to === 'down' ? '이상' : v ? v[0] : `${ST_WORD[c.from] || '모름'} → ${ST_WORD[c.to] || '모름'}`
+    const w = c.to === 'down' ? NT_T('이상') : v ? v[0] : `${ST_WORD[c.from] || NT_T('모름')} → ${ST_WORD[c.to] || NT_T('모름')}`
     return { id: c.target_id, edge, kind: 'status', label: `${w} ${hhmm(c.occurred_at || c.at)}` }
   }
   // 상태 되짚기(J2): 대상마다 t **뒤** 가장 이른 변경의 `from` 이 「그 변경 직후」의 판정이다. 없으면 지금 값.
@@ -2755,20 +2755,20 @@
     const nodeWho = (n) => `${typeWord(n.type)} ${n.name || lastSeg(n.id)}`
     const out = []
     const put = (head, xs) => {
-      if (xs.length) out.push(`<div class="cl">${esc(head)} ${xs.length}개: ${esc(xs.slice(0, 8).join(', '))}` +
-        (xs.length > 8 ? ` 외 ${xs.length - 8}개` : '') + '</div>')
+      if (xs.length) out.push(NT_T('<div class="cl">{0} {1}개: {2}', [esc(head), xs.length, esc(xs.slice(0, 8).join(', '))]) +
+        (xs.length > 8 ? NT_T(' 외 {0}개', [xs.length - 8]) : '') + '</div>')
     }
     if (V.error) out.push(`<div class="cl err">${esc(V.error)}</div>`)
-    if (!V.struct) out.push('<div class="cl">이 화면에는 이전 구조가 없어 없어진 리소스를 그리지 못합니다.</div>')
-    put('그릴 정보가 없는 없어진 것', V.R.noShape.map(who))
-    put('그때 있었지만 그릴 정보가 없는 것', V.R.noShapeLater.map(who))
-    put('들어 있던 곳의 모습을 몰라 그리지 못한 것', V.R.orphans.map(nodeWho))
-    put('그때 상태를 되짚지 못한 것', V.lost.filter((c) => !c.folded).map(who))
+    if (!V.struct) out.push(NT_T('<div class="cl">이 화면에는 이전 구조가 없어 없어진 리소스를 그리지 못합니다.</div>'))
+    put(NT_T('그릴 정보가 없는 없어진 것'), V.R.noShape.map(who))
+    put(NT_T('그때 있었지만 그릴 정보가 없는 것'), V.R.noShapeLater.map(who))
+    put(NT_T('들어 있던 곳의 모습을 몰라 그리지 못한 것'), V.R.orphans.map(nodeWho))
+    put(NT_T('그때 상태를 되짚지 못한 것'), V.lost.filter((c) => !c.folded).map(who))
     // 접힌 반복 안의 시각(J2 「접힌 줄」) — 상태를 얹지 않은 이유를 이름으로 말한다(조용히 빼면 「관측 없음」으로만 읽힌다)
-    put('상태가 여러 번 바뀐 기록이 한 줄로 접혀 그때 상태를 모르는 것', V.lost.filter((c) => c.folded).map(who))
+    put(NT_T('상태가 여러 번 바뀐 기록이 한 줄로 접혀 그때 상태를 모르는 것'), V.lost.filter((c) => c.folded).map(who))
     const ud = (V.undrawn || []).map((id) => V.marks.find((m) => m.id === id)).filter(Boolean)
-    put('그림에 선이 없는 관계라 표시하지 못한 변경', ud.filter((m) => m.edge).map((m) => m.who))
-    put('그림에서 자리를 찾지 못한 변경', ud.filter((m) => !m.edge).map((m) => m.who))
+    put(NT_T('그림에 선이 없는 관계라 표시하지 못한 변경'), ud.filter((m) => m.edge).map((m) => m.who))
+    put(NT_T('그림에서 자리를 찾지 못한 변경'), ud.filter((m) => !m.edge).map((m) => m.who))
     return out.join('')
   }
   function cmpClose () {
@@ -2833,14 +2833,14 @@
     // 없어진 카드에 붙어 있던 연결도 같이 없어졌다 — 목록 줄은 따로 없어도 그림에서는 유령이다.
     for (const id of [...R.ghosts].sort()) {
       const c = { target_id: id, target_kind: relOf(id) ? 'edge' : 'node' }
-      push({ id, edge: c.target_kind === 'edge', kind: 'gone', label: '없어짐' }, c)
+      push({ id, edge: c.target_kind === 'edge', kind: 'gone', label: NT_T('없어짐') }, c)
     }
     const el = document.createElement('div')
     el.id = 'cmp'
     el.innerHTML = '<div class="chead">' +
       // 칸 머리를 누르면 그 시각 변경 전부로 맞춘다(§3j J3 · 2026-10-21) — 줄 하나를 누른 뒤 같은 시각의 나머지를 보는 길
-      `<span class="ctitle" data-call title="누르면 이 시각의 변경 ${here.length}건 전부를 화면에 맞춥니다">${esc(hhmm(at))} 변경 ${here.length}건 — 그 변경 직후의 모습</span>` +
-      '<span class="close" data-cclose title="닫기 (Esc)">✕</span></div><div class="clist"></div>'
+      NT_T('<span class="ctitle" data-call title="누르면 이 시각의 변경 {0}건 전부를 화면에 맞춥니다">{1} 변경 {2}건 — 그 변경 직후의 모습</span>', [here.length, esc(hhmm(at)), here.length]) +
+      NT_T('<span class="close" data-cclose title="닫기 (Esc)">✕</span></div><div class="clist"></div>')
     // 그리지 못한 없어짐(모습 없음)도 카메라가 갈 자리는 있다 — 지금 그 자원이 있던 곳(§3j J3 · N-01). 두 칸이 같은 목록을 받는다
     const seats = R.noShape.map((c) => ({ id: c.target_id, near: cmpNear({ id: c.target_id, edge: c.target_kind === 'edge' }) }))
     // 카메라가 감쌀 것 — 누른 줄의 대상만. 표시가 없는 대상(가지치기된 유령 등)은 「들어 있던 곳」 사슬로만 간다(J3 · 지어내지 않는다)
@@ -2854,7 +2854,7 @@
       }
     }
     CMPV = { at, n: here.length, el, frame: null, marks, seats, lost, R, struct, undrawn: null, ready: false, cam, focus: null, foc: fids, fm,
-      error: R.bad.length ? `이 시각의 구성도를 만들지 못했습니다 — ${R.bad.slice(0, 2).join(' · ')}` : '' }
+      error: R.bad.length ? NT_T('이 시각의 구성도를 만들지 못했습니다 — {0}', [R.bad.slice(0, 2).join(' · ')]) : '' }
     if (!CMPV.error) {
       const obs = cmpObs(at, topo, lost)
       // 그 시각까지 흐르다가 멈춘 선(§3j J4 개정 · P8) — 칸의 관측 문서에는 이력이 없으므로 부모가 잘라 넘긴다
@@ -2866,7 +2866,7 @@
         JSON.stringify(cfg).replace(/</g, '\\u003c') + '<' + '/script>'
       const fr = document.createElement('iframe')
       fr.setAttribute('sandbox', 'allow-scripts')
-      fr.setAttribute('title', `${hhmm(at)} 변경 직후의 모습`)
+      fr.setAttribute('title', NT_T('{0} 변경 직후의 모습', [hhmm(at)]))
       fr.srcdoc = DOC_SRC.replace('</head>', () => tag + '</head>')
       el.appendChild(fr)
       CMPV.frame = fr
@@ -2970,7 +2970,7 @@
         }
         if (m.kind === 'add' && whole) nAdd++
         keepLn.add(w.id)
-        const text = whole ? m.label : `${m.label} · 선 ${w.obsIds.length}개 중 ${same}개`
+        const text = whole ? m.label : NT_T('{0} · 선 {1}개 중 {2}개', [m.label, w.obsIds.length, same])
         out.push({ id: m.id, kind: m.kind, edge: !!m.edge, wire: w.id, whole, label: text })
       }
     }
@@ -2986,7 +2986,7 @@
         // 선을 긋지 않는 관계 — 끝 자리에 앉는다. 모양은 걸지 않는다(그 자원은 그대로다) · 판정 기록이 관계 이름을 말한다
         if (!seat || !seat.at) { undrawn.push(m.id); continue }
         const r = relOf(m.id)
-        at = seat.at; tag = r && r.t === 'association' ? `${typeWord(r.a.split('/')[0])} 연관` : relWord(r && r.t)
+        at = seat.at; tag = r && r.t === 'association' ? NT_T('{0} 연관', [typeWord(r.a.split('/')[0])]) : relWord(r && r.t)
       } else {
         at = NT_AWS.markAt(m.id)
         if (!at && seat && seat.lines) { onLines(m, seat.lines.map((l) => ({ id: l.k, obsIds: l.ids, pts: l.pts, ends: l.ends }))); continue }
@@ -3014,7 +3014,7 @@
         born.add(b.id); nAdd++
       }
       keep.add(b.id)
-      const text = tag ? `${m.label} · ${tag}` : inside ? `${m.label} · 묶음 안` : m.label
+      const text = tag ? `${m.label} · ${tag}` : inside ? NT_T('{0} · 묶음 안', [m.label]) : m.label
       out.push({ id: m.id, kind: m.kind, edge: !!m.edge, box: b.id, inside, label: text, ...(tag ? { seat: true } : {}) })
     }
     if (vp && svg.length) vp.insertAdjacentHTML('beforeend', `<g id="cmpmarks" pointer-events="none">${svg.join('')}</g>`)
@@ -3035,20 +3035,20 @@
     applyTransform()
   }
   // 초 → 사람 단위(검사 118 ③). 「240000초」는 읽히지 않는다(배포본 실측 2026-09-28).
-  const durKo = (s) => s < 120 ? `${s}초` : s < 7200 ? `${Math.round(s / 60)}분`
-    : s < 259200 ? `약 ${Math.round(s / 3600)}시간` : `약 ${Math.round(s / 86400)}일`
+  const durKo = (s, about = true) => s < 120 ? NT_T('{0}초', [s]) : s < 7200 ? NT_T('{0}분', [Math.round(s / 60)])
+    : s < 259200 ? NT_T(about ? '약 {0}시간' : '{0}시간', [Math.round(s / 3600)]) : NT_T(about ? '약 {0}일' : '{0}일', [Math.round(s / 86400)])
   // 대장 94 가 요구하는 「차분의 한계 3개」. 접지 않는다 — 접으면 아무도 안 읽는다.
   function histLimits () {
     const h = (OBS && OBS.history) || {}
     return [
-      '누가 바꿨는지는 이 목록으로 알 수 없습니다 — 관측 결과의 차이이며 감사 로그가 아닙니다.',
+      NT_T('누가 바꿨는지는 이 목록으로 알 수 없습니다 — 관측 결과의 차이이며 감사 로그가 아닙니다.'),
       // 🔴 이 값은 수집 주기가 아니라 목록 구간 안의 **가장 긴 확인 간격**이다(수집기가 가장 거친 쪽을
       //    적는다 — 모니터링이 꺼져 있던 동안도 한 간격). 188 배포본이 「수집 주기(240000초)」라고 말했다(§3j J0).
       h.resolution_seconds
-        ? `확인 간격이 길게는 ${durKo(h.resolution_seconds)}입니다 — 그 사이에 여러 번 바뀐 것은 한 줄로 표시됩니다.`
-        : '확인 사이에 여러 번 바뀐 것은 한 줄로 표시됩니다.',
-      h.baseline_at ? `기준 시각 ${kstAt(h.baseline_at)} 이전의 변경은 확인할 수 없습니다.`
-        : '기준 시각 이전의 변경은 확인할 수 없습니다.'
+        ? NT_T('확인 간격이 길게는 {0}입니다 — 그 사이에 여러 번 바뀐 것은 한 줄로 표시됩니다.', [durKo(h.resolution_seconds)])
+        : NT_T('확인 사이에 여러 번 바뀐 것은 한 줄로 표시됩니다.'),
+      h.baseline_at ? NT_T('기준 시각 {0} 이전의 변경은 확인할 수 없습니다.', [kstAt(h.baseline_at)])
+        : NT_T('기준 시각 이전의 변경은 확인할 수 없습니다.')
     ]
   }
   // 목록이 잘렸으면 **목록 끝에서** 그렇다고 말한다(ADR 0006 O4 · 대장 19). 잘림은 원인이 둘이다 —
@@ -3062,34 +3062,34 @@
     const win = !!(h.baseline_at && obsAt && h.retention_seconds &&
       Date.parse(h.baseline_at) < Date.parse(obsAt) - h.retention_seconds * 1000)
     const out = []
-    if (win) out.push(`${durKo(h.retention_seconds).replace(/^약 /, '')}보다 오래된 변경은 목록에서 제외했습니다`)
+    if (win) out.push(NT_T('{0}보다 오래된 변경은 목록에서 제외했습니다', [durKo(h.retention_seconds, false)]))
     // 🔴 상한 문장은 「창으로 설명이 안 될 때」 또는 「목록이 상한에 닿았을 때」. 상한이 없는 문서(상한 전
     //    상태 함수가 쓴 것)도 잘림 자체는 말한다 — 숫자만 뺀다.
     const n = (OBS.changes || []).length
     if (!win || (h.max_changes && n >= h.max_changes)) {
       out.push(h.max_changes
-        ? `목록이 ${h.max_changes.toLocaleString('en-US')}줄을 넘어 오래된 변경부터 제외했습니다`
-        : '목록 줄 수 상한을 넘어 오래된 변경부터 제외했습니다')
+        ? NT_T('목록이 {0}줄을 넘어 오래된 변경부터 제외했습니다', [h.max_changes.toLocaleString('en-US')])
+        : NT_T('목록 줄 수 상한을 넘어 오래된 변경부터 제외했습니다'))
     }
-    return `<div class="hcutoff">${esc(out.join(' · '))} — 맨 아래 줄이 처음이 아닙니다.</div>`
+    return NT_T('<div class="hcutoff">{0} — 맨 아래 줄이 처음이 아닙니다.</div>', [esc(out.join(' · '))])
   }
   function histHtml () {
     // 사람이 할 일을 말한다(§3j J0 · 검사 118 ②) — 옛 문장은 「렌더러가 만들 수 없다(불변식 ③)」였다.
     if (!OBS) {
       // 켠 채 기다리는 중이면 「켜면」이 아니라 무엇을 기다리는지 말한다(B-09 — 이 그림이 더 새 구조면 새 구조의 첫 관측).
       if (LIVE.on && LIVE.phase === 'wait') {
-        return `<div class="off">${LIVE.pairWait ? '이 구성도가 더 최신입니다 — 새 구성으로 측정한 첫 관측' : '첫 관측'}을 기다리는 중입니다 — 도착하면 변경 이력이 표시됩니다.</div>`
+        return NT_T('<div class="off">{0}을 기다리는 중입니다 — 도착하면 변경 이력이 표시됩니다.</div>', [LIVE.pairWait ? NT_T('이 구성도가 더 최신입니다 — 새 구성으로 측정한 첫 관측') : NT_T('첫 관측')])
       }
       return LIVE_SLOT
-        ? '<div class="off">아직 받은 변경 이력이 없습니다 — 상단 «모니터링»을 켜면 여기에 표시됩니다.</div>'
-        : '<div class="off">변경 이력이 없습니다 — 이 파일에는 이력 데이터가 포함되지 않았습니다.</div>'
+        ? NT_T('<div class="off">아직 받은 변경 이력이 없습니다 — 상단 «모니터링»을 켜면 여기에 표시됩니다.</div>')
+        : NT_T('<div class="off">변경 이력이 없습니다 — 이 파일에는 이력 데이터가 포함되지 않았습니다.</div>')
     }
     // 🔴 목록을 그려 놓고 클릭이 아무 일도 안 하게 두지 마라 — 짝이 어긋나면 되짚기가 멈추므로
     //    (위 `pickTime`) 행은 **죽은 조작**이 된다. 이유를 말하고 목록을 내지 않는다.
     if (OBS_STALE) {
-      return `<div class="off">관측 문서가 이 그림과 <b>맞지 않습니다</b> — 관측은 ${esc(kstAt(OBS_PAIR))} ` +
-        `구조를, 지금 구성도는 ${esc(kstAt(T.run.collected_at))} 구조를 기준으로 합니다. 다른 구조의 변경 이력을 이 구성도에 ` +
-        `적용하면 엉뚱한 아이콘이 사라지므로 목록을 표시하지 않습니다. ${esc(PAIR_FIX)}.</div>`
+      return NT_T('<div class="off">관측 문서가 이 그림과 <b>맞지 않습니다</b> — 관측은 {0} ', [esc(kstAt(OBS_PAIR))]) +
+        NT_T('구조를, 지금 구성도는 {0} 구조를 기준으로 합니다. 다른 구조의 변경 이력을 이 구성도에 ', [esc(kstAt(T.run.collected_at))]) +
+        NT_T('적용하면 엉뚱한 아이콘이 사라지므로 목록을 표시하지 않습니다. {0}.</div>', [esc(PAIR_FIX)])
     }
     // 밝은 줄 = 누른 줄(§3j J3 · 2026-10-21) · 칸 머리로 연 칸이면 그 시각 줄 전부
     const fk = CMPV && CMPV.foc ? CMPV.foc.join('\n') : null
@@ -3100,7 +3100,7 @@
       return `<div class="hrow${on ? ' on' : ''}${r.kind === 'now' ? '' : ' past'}${r.cut ? ' cut' : ''}${r.split ? ' hsplit' : ''}" ` +
         `data-at="${esc(r.at)}"${r.kind === 'now' ? ' data-now' : ` data-ri="${i}"`} title="${esc(r.full || r.text)}">` +
         `<span class="hat">${esc(hhmm(r.at))}</span>` +
-        (r.cut ? '<span class="hcut">끊김</span>' : '') +
+        (r.cut ? NT_T('<span class="hcut">끊김</span>') : '') +
         `<span class="hwhat">${r.split ? esc(r.text).replace(esc(r.split), `<span class="htail">${esc(r.split)}</span>`) : esc(r.text)}</span>` +
         (r.occ ? `<span class="hocc">${esc(r.occ)}</span>` : '') +
         (r.repeat > 1 ? `<span class="hn${r.first ? ' hfold' : ''}">${esc(histRepeat(r))}</span>` : '') +
@@ -3115,28 +3115,28 @@
     // 🔴 목록이 주인공이다 — 차분 자체의 한계 3문장은 **접는다**(사용자 결정 2026-09-24: 「쓸데없는 정보가
     //    너무 많다」). 지우지는 않는다 — 없애면 사람이 「그 시각엔 이랬다」로 오판한다. 고른 시각에서
     //    **그리지 못한 것**은 여기가 아니라 오른쪽 칸 머리 아래가 말한다(§3j J2 — 그 그림 바로 옆이어야 읽힌다).
-    return '<div class="sec">변경·끊김이 일어난 시각 — 누르면 그때 상태를 오른쪽에 표시합니다</div>' + body + histCutoff() +
-      '<details class="hmore"><summary>이 목록으로 알 수 없는 것</summary>' +
+    return NT_T('<div class="sec">변경·끊김이 일어난 시각 — 누르면 그때 상태를 오른쪽에 표시합니다</div>') + body + histCutoff() +
+      NT_T('<details class="hmore"><summary>이 목록으로 알 수 없는 것</summary>') +
       `<div class="hlim">${histLimits().map(esc).join('<br>')}</div></details>`
   }
   // 「특이사항」 = 같은 질문의 **현재형**(대장 94). 원인·API·코드·사유가 붙어 글이 길다 —
   // 그래서 팝오버가 아니라 독이다(대장 101 ①).
   function notesHtml () {
     const P = T.partial || []
-    const out = [`<div class="sec">확인하지 못한 영역 ${P.length}건</div>`]
-    if (!P.length) out.push('<div class="off">권한·한도로 확인하지 못한 영역이 없습니다.</div>')
+    const out = [NT_T('<div class="sec">확인하지 못한 영역 {0}건</div>', [P.length])]
+    if (!P.length) out.push(NT_T('<div class="off">권한·한도로 확인하지 못한 영역이 없습니다.</div>'))
     else {
       out.push('<table>' + P.map((p) =>
         // §3k K3: 사람 말만 글자로 — 원문 코드·AWS 메시지는 마우스를 올렸을 때(`title`).
         // §3k K5: 칸 = 곳(사람 말) | 못 읽은 종류(모르면 「일부」) · 이유 — 대상 id·`scope` 원어는 글자에 없다.
         `<tr title="${esc(p.code)} — ${esc(p.reason)}"><td class="k">${esc(partialPlace(p))}</td>` +
-        `<td>${esc(p.rtype ? typeWord(p.rtype) : '일부')} · ${esc(reasonWord(p.code))}</td></tr>`).join('') + '</table>')
+        `<td>${esc(p.rtype ? typeWord(p.rtype) : NT_T('일부'))} · ${esc(reasonWord(p.code))}</td></tr>`).join('') + '</table>')
     }
     // §3i: 어휘를 섞지 마라 — 「확인하지 못했다」(고객 권한)와 「아직 그리지 못하는 종류」(개발)는 다르다.
-    out.push('<div class="sec">이 화면에 못 그린 것</div>')
-    out.push(`<div class="off">캔버스에 세우지 못한 리소스 ${(S.unplaced || []).length}개 · ` +
-      `긋지 못한 관계 ${(S.unwired || []).length}개. ` +
-      (listRows().length ? '<span class="wlink" data-openlist>왼쪽 아래 「!」에서 확인하세요</span>' : '') + '</div>')
+    out.push(NT_T('<div class="sec">이 화면에 못 그린 것</div>'))
+    out.push(NT_T('<div class="off">캔버스에 세우지 못한 리소스 {0}개 · ', [(S.unplaced || []).length]) +
+      NT_T('긋지 못한 관계 {0}개. ', [(S.unwired || []).length]) +
+      (listRows().length ? NT_T('<span class="wlink" data-openlist>왼쪽 아래 「!」에서 확인하세요</span>') : '') + '</div>')
     return out.join('')
   }
   function dockHead () {
@@ -3247,18 +3247,18 @@
         if (!S.monitor || OBS_STALE || !OBSROWS.length) return null
         const row = wireRow(w)
         // 판정할 행이 없는 선도 칸이 있다 — 「잴 수 없다」 + 이유(§17.20 · 로드맵 §11.1 「모든 선이 셋 중 하나」). 색·배지는 그대로다
-        if (!row) return [['판정', LINE_UNMEASURED], ['이유', lineNoRowWhy(w)]]
+        if (!row) return [[NT_T('판정'), LINE_UNMEASURED], [NT_T('이유'), lineNoRowWhy(w)]]
         // 🔴 「판정」이 첫 줄이다(검사 132) — 그 뒤는 `wireGradeRows` 의 줄. 줄 = `[이름, 값, title, data-row]`
         // LB → 대상 선(§17.27) — 「대상」 줄 = 그 선 등록의 헬스 · 못 읽었으면 짓지 않는다.
         //   🔴 수 절은 LB 정보창 「대상」 줄과 **같은 함수**(`NT_AWS.targetsWord` · §17.11 · 사용자 결정 2026-10-22) — 여기서 따로 지으면
         //      헬스 체크를 끈 Lambda 선이 판정 「정상」 옆에 「1개 중 0개 정상」을 적는다(고객이 헷갈렸다). 시각은 LB 정보창이 말한다
         const lt = lineTargets(w)
-        const tg = !lt ? [] : lt.unread ? [['대상', '대상 상태를 읽지 못했습니다 — 개수를 표시하지 않습니다']]
-          : [['대상', lt.total ? NT_AWS.targetsWord(lt)[0] : '대상 없음(확인함)']]
+        const tg = !lt ? [] : lt.unread ? [[NT_T('대상'), NT_T('대상 상태를 읽지 못했습니다 — 개수를 표시하지 않습니다')]]
+          : [[NT_T('대상'), lt.total ? NT_AWS.targetsWord(lt)[0] : NT_T('대상 없음(확인함)')]]
         // 「사유」 줄(#150) — 엔진이 이유를 실어 보낸 행에만 · 고객 말 + 원문은 title(`lineWhy`)
         const lw = lineWhy(row)
-        return [['판정', wireObs(w, L) ? OBS_WORD.live : OBS_WORD[row.status] || row.status], ...tg,
-          ...(lw ? [['사유', lw.t, lw.title, 'linewhy']] : []),
+        return [[NT_T('판정'), wireObs(w, L) ? OBS_WORD.live : OBS_WORD[row.status] || row.status], ...tg,
+          ...(lw ? [[NT_T('사유'), lw.t, lw.title, 'linewhy']] : []),
           ...wireGradeRows(w, L).map(([k, v, r, t]) => [k, v, t, r])]
       },
       // 선 위 등급 배지(§17.20) — 글자는 `wireBadge`. 자리는 도식이 정한다
@@ -3400,7 +3400,7 @@
   const syncScope = () => {
     if (scBtn) {
       // 계정 ID·이름을 붙이지 마라(위 🔴). 「몇 개」만 말하고 `.on` 으로 좁혀졌음을 표시한다.
-      scBtn.textContent = SCOPE ? `계정: ${SCOPE.length}개` : '계정: 전체'
+      scBtn.textContent = SCOPE ? NT_T('계정: {0}개', [SCOPE.length]) : NT_T('계정: 전체')
       scBtn.classList.toggle('on', !!SCOPE)
     }
     if (!scEl) return
@@ -3416,7 +3416,7 @@
   // 🔴 계정 줄은 `<label>` 이 아니라 `<div>` 다 — label 을 누르면 브라우저가 안의 체크박스에 클릭을 한 번 더 보내 **두 번 켜고 끈다**(= 안 바뀜).
   //    체크박스는 표시일 뿐이다(`pointer-events: none` · 값은 `syncScope` 가 상태에서 쓴다).
   if (scEl) {
-    scEl.innerHTML = '<div class="sitem all" role="menuitemradio" data-scope="">전체</div><div class="msep"></div>' +
+    scEl.innerHTML = NT_T('<div class="sitem all" role="menuitemradio" data-scope="">전체</div><div class="msep"></div>') +
       accounts.map((a, i) => `<div class="sitem" role="menuitemcheckbox" data-scope="${esc(a.id)}">` +
         `<input type="checkbox" tabindex="-1" aria-hidden="true">${esc(acctLabel(i))}</div>`).join('')
   }
@@ -3547,9 +3547,9 @@
   //    같은 값이라 옛 저장소(조건부 연장 불가 · 상한을 한 번에 쓴다)에서도 고른 시간이 그대로 지켜진다.
   const LIVE_DURS = [30 * 60e3, 3600e3, 2 * 3600e3, 4 * 3600e3, 8 * 3600e3]
   // 사람 말 — 30분 · 1시간 · 2시간 … (함수 선언 — 배너가 첫 렌더에서 부른다)
-  function durWord (ms) { return ms < 3600e3 ? `${Math.round(ms / 60e3)}분` : `${Math.round(ms / 3600e3 * 10) / 10}시간` }
+  function durWord (ms) { return ms < 3600e3 ? NT_T('{0}분', [Math.round(ms / 60e3)]) : NT_T('{0}시간', [Math.round(ms / 3600e3 * 10) / 10]) }
   // 실시간을 끄는 버튼 — 켜 둔 것만 말한다(둘 다 켰으면 둘 다 꺼야 꺼진다)
-  const liveBtns = () => (S.monitor && S.util ? '«모니터링»·«사용률» 둘 다' : S.util ? '«사용률»' : '«모니터링»')
+  const liveBtns = () => (S.monitor && S.util ? NT_T('«모니터링»·«사용률» 둘 다') : S.util ? NT_T('«사용률»') : NT_T('«모니터링»'))
   // 🔴 제어 문서를 **통째로** 쓴다. 핸들러가 읽는 것은 `live`·`layer2`·`utilization`·`expiresAt` 넷뿐이라
   //    (`infra/state-lambda/handler.py` 의 `decide`) 지금은 잃는 것이 없다(`monitor`·`until` 은 화면만 읽는다 — 따라 보기).
   //    ADR 0005 의 `scope`·`accounts.extra` 를 핸들러가 읽게 되는 날 이 함수는 읽고-고쳐-쓰기로 바뀌어야 한다(제어 키 GET
@@ -3574,15 +3574,15 @@
         return { ok: true, etag }
       }
       if (ifMatch && (r.status === 412 || r.status === 409)) {
-        return { ok: false, conflict: true, why: `다른 창에서 먼저 변경했습니다(${r.status})` }
+        return { ok: false, conflict: true, why: NT_T('다른 창에서 먼저 변경했습니다({0})', [r.status]) }
       }
       if (r.status === 403) {
         return { ok: false, why: Date.now() >= LIVE_SLOT.urlUntil
-          ? '주소 서명이 만료됐습니다' : '저장소가 쓰기를 거부했습니다(403)' }
+          ? NT_T('주소 서명이 만료됐습니다') : NT_T('저장소가 쓰기를 거부했습니다(403)') }
       }
-      return { ok: false, why: `저장소 응답 ${r.status}` }
+      return { ok: false, why: NT_T('저장소 응답 {0}', [r.status]) }
     } catch (e) {
-      return { ok: false, blocked: true, why: '요청이 차단됐습니다(네트워크 또는 CORS)' }
+      return { ok: false, blocked: true, why: NT_T('요청이 차단됐습니다(네트워크 또는 CORS)') }
     } finally {
       LIVE.wIn--; LIVE.wseq++
     }
@@ -3605,18 +3605,18 @@
       r = await fetch(LIVE_SLOT.ctlGetUrl, { cache: 'no-store',
         headers: !fresh && LIVE.ctlSeen ? { 'if-none-match': LIVE.ctlSeen } : {} })
     } catch (e) {
-      return { kind: 'fail', why: '요청이 차단됐습니다(네트워크 또는 CORS)' }
+      return { kind: 'fail', why: NT_T('요청이 차단됐습니다(네트워크 또는 CORS)') }
     }
     if (wseq !== LIVE.wseq || LIVE.wIn) return { kind: 'stale' }
     if (r.status === 304) return { kind: 'same' }
     if (r.status === 403) {
-      return { kind: 'fail', why: Date.now() >= LIVE_SLOT.urlUntil ? '주소 서명이 만료됐습니다' : '저장소가 읽기를 거부했습니다(403)' }
+      return { kind: 'fail', why: Date.now() >= LIVE_SLOT.urlUntil ? NT_T('주소 서명이 만료됐습니다') : NT_T('저장소가 읽기를 거부했습니다(403)') }
     }
-    if (!r.ok) return { kind: 'fail', why: `저장소 응답 ${r.status}` }
+    if (!r.ok) return { kind: 'fail', why: NT_T('저장소 응답 {0}', [r.status]) }
     let doc = null
     try { doc = JSON.parse(await r.text()) } catch (e) { doc = null }
     if (wseq !== LIVE.wseq || LIVE.wIn) return { kind: 'stale' }
-    if (!doc || typeof doc !== 'object' || Array.isArray(doc)) return { kind: 'fail', why: '설정 문서의 형식이 올바르지 않습니다' }
+    if (!doc || typeof doc !== 'object' || Array.isArray(doc)) return { kind: 'fail', why: NT_T('설정 문서의 형식이 올바르지 않습니다') }
     const etag = r.headers.get('etag')
     if (etag && LIVE.ctlEtag && etag === LIVE.ctlEtag) return { kind: 'same', doc, etag }
     // 🔵 따라 보는 창의 `mine` 은 비어 있다(`liveFollow` 가 비운다) — 못 읽어 물러난 창만 자기 쓰기를 여기서 되찾는다.
@@ -3713,31 +3713,31 @@
     const doc = LIVE.doc
     if (!doc) {
       return now - LIVE.since > LIVE_STALE_MS
-        ? { phase: 'stale', why: `켠 지 ${Math.round((now - LIVE.since) / 60000)}분째 첫 관측이 오지 않습니다` }
-        : { phase: 'wait', why: '첫 관측을 기다리는 중 — 켜는 쓰기가 상태 함수를 바로 깨운다(옛 스택이면 다음 5분 주기)' }
+        ? { phase: 'stale', why: NT_T('켠 지 {0}분째 첫 관측이 오지 않습니다', [Math.round((now - LIVE.since) / 60000)]) }
+        : { phase: 'wait', why: NT_T('첫 관측을 기다리는 중 — 켜는 쓰기가 상태 함수를 바로 깨운다(옛 스택이면 다음 5분 주기)') }
     }
     if (LIVE.docAt < LIVE.since - LIVE_FRESH_MS) {
-      const old = `저장소의 마지막 문서는 ${msHm(LIVE.docAt)} 것이라 표시하지 않았습니다(켜기 전의 관측입니다)`
+      const old = NT_T('저장소의 마지막 문서는 {0} 것이라 표시하지 않았습니다(켜기 전의 관측입니다)', [msHm(LIVE.docAt)])
       return now - LIVE.since > LIVE_STALE_MS
-        ? { phase: 'stale', why: `켠 지 ${Math.round((now - LIVE.since) / 60000)}분째 새 관측이 오지 않습니다 — ${old}` }
-        : { phase: 'wait', why: `첫 관측을 기다리는 중 — ${old}` }
+        ? { phase: 'stale', why: NT_T('켠 지 {0}분째 새 관측이 오지 않습니다 — {1}', [Math.round((now - LIVE.since) / 60000), old]) }
+        : { phase: 'wait', why: NT_T('첫 관측을 기다리는 중 — {0}', [old]) }
     }
     if (now - LIVE.docAt > LIVE_STALE_MS) {
-      return { phase: 'stale', why: `마지막 관측 ${msHm(LIVE.docAt)} 뒤로 ` +
-        `${Math.round((now - LIVE.docAt) / 60000)}분째 새 관측이 오지 않습니다` }
+      return { phase: 'stale', why: NT_T('마지막 관측 {0} 뒤로 ', [msHm(LIVE.docAt)]) +
+        NT_T('{0}분째 새 관측이 오지 않습니다', [Math.round((now - LIVE.docAt) / 60000)]) }
     }
     // 🆕 짝의 **방향**(QA B P3 · 사용자 결정 2026-10-14). 짝 판정 자체는 그대로 `obsPairUp` 한 곳이다 — 여기서는 사람에게
     //    무엇을 말할지(기다림 / 최신 화면)만 고른다. 방향을 모르면(시각 판정 · 같은 시각) 옛 동작(`ok` + 짝 안 맞음 배너).
     const pp = pairOf(doc)
     if (pp.stale && pp.newer === 'page') {
-      const w = `이 구성도(${kstAt(T.run.collected_at)} 구조)가 상태 문서(${kstAt(doc.run.topology_collected_at)} 구조)보다 최신입니다 — ` +
-        '새 구성으로 다시 측정하는 중입니다'
+      const w = NT_T('이 구성도({0} 구조)가 상태 문서({1} 구조)보다 최신입니다 — ', [kstAt(T.run.collected_at), kstAt(doc.run.topology_collected_at)]) +
+        NT_T('새 구성으로 다시 측정하는 중입니다')
       return now - LIVE.since > LIVE_STALE_MS
-        ? { phase: 'stale', why: `켠 지 ${Math.round((now - LIVE.since) / 60000)}분째 새 구성의 관측이 오지 않습니다 — ${w}` }
+        ? { phase: 'stale', why: NT_T('켠 지 {0}분째 새 구성의 관측이 오지 않습니다 — {1}', [Math.round((now - LIVE.since) / 60000), w]) }
         : { phase: 'wait', why: w, pairWait: true }
     }
     if (pp.stale && pp.newer === 'obs') {
-      return { phase: 'moved', why: `상태 문서는 ${kstAt(doc.run.topology_collected_at)} 구조를, 이 그림은 ${kstAt(T.run.collected_at)} 구조를 보고 있다` }
+      return { phase: 'moved', why: NT_T('상태 문서는 {0} 구조를, 이 그림은 {1} 구조를 보고 있다', [kstAt(doc.run.topology_collected_at), kstAt(T.run.collected_at)]) }
     }
     return { phase: 'ok', why: '' }
   }
@@ -3748,7 +3748,7 @@
   function livePendWords () {
     if (!LIVE.on || !LIVE.doc) return []
     const ly = LIVE.doc.layers || {}
-    return [S.monitor && LIVE.layer2 && ly.metric !== true ? '모니터링 지표' : '', LIVE.util && ly.utilization !== true ? '사용률' : ''].filter(Boolean)
+    return [S.monitor && LIVE.layer2 && ly.metric !== true ? NT_T('모니터링 지표') : '', LIVE.util && ly.utilization !== true ? NT_T('사용률') : ''].filter(Boolean)
   }
   function liveLayersPending () {
     const ly = (LIVE.doc && LIVE.doc.layers) || {}
@@ -3777,7 +3777,7 @@
     const seq = LIVE.seq
     const before = LIVE.phase + '|' + LIVE.etag
     // 진행 표시(사용자 결정 2026-10-28) — 이 읽기 전에 무엇을 기다리고 있었나(첫 관측 · 막 켠 층)
-    const waited = LIVE.phase === 'wait' && !LIVE.pairWait ? '첫 관측' : LIVE.phase === 'ok' ? livePendWords().join('·') : ''
+    const waited = LIVE.phase === 'wait' && !LIVE.pairWait ? NT_T('첫 관측') : LIVE.phase === 'ok' ? livePendWords().join('·') : ''
     let fail = null
     let res = null
     LIVE.reads++
@@ -3785,7 +3785,7 @@
       res = await fetch(LIVE_SLOT.stateUrl, { cache: 'no-store',
         headers: LIVE.etag ? { 'if-none-match': LIVE.etag } : {} })
     } catch (e) {
-      fail = '요청이 차단됐습니다(네트워크 또는 CORS)'
+      fail = NT_T('요청이 차단됐습니다(네트워크 또는 CORS)')
     }
     // 끄거나 다시 켠 사이에 온 응답은 버린다 — 꺼진 화면에 상태를 다시 얹으면 안 된다.
     if (!LIVE.on || seq !== LIVE.seq) return liveInfo()
@@ -3794,17 +3794,17 @@
     } else if (res && res.status === 404) {
       LIVE.doc = null; LIVE.docAt = 0; LIVE.etag = null
     } else if (res && res.status === 403) {
-      fail = Date.now() >= LIVE_SLOT.urlUntil ? '주소 서명이 만료됐습니다 — 최신 index.html 을 다시 받아 주세요'
-        : '저장소가 읽기를 거부했습니다(403)'
+      fail = Date.now() >= LIVE_SLOT.urlUntil ? NT_T('주소 서명이 만료됐습니다 — 최신 index.html 을 다시 받아 주세요')
+        : NT_T('저장소가 읽기를 거부했습니다(403)')
     } else if (res && !res.ok) {
-      fail = `저장소 응답 ${res.status}`
+      fail = NT_T('저장소 응답 {0}', [res.status])
     } else if (res) {
       let doc = null
       try { doc = JSON.parse(await res.text()) } catch (e) { doc = null }
       if (!LIVE.on || seq !== LIVE.seq) return liveInfo()
       const at = doc && doc.run ? Date.parse(doc.run.observed_at) : NaN
       if (!doc || !Array.isArray(doc.observations) || !Number.isFinite(at)) {
-        fail = '상태 문서의 형식이 올바르지 않습니다(관측 시각·관측 목록이 없습니다)'
+        fail = NT_T('상태 문서의 형식이 올바르지 않습니다(관측 시각·관측 목록이 없습니다)')
       } else {
         LIVE.doc = doc; LIVE.docAt = at; LIVE.etag = res.headers.get('etag')
       }
@@ -3896,8 +3896,8 @@
     if (!LIVE_SLOT || LIVE.on || LIVE.busy) return liveInfo()
     const now = Date.now()
     if (liveUrlDead(now)) {
-      LIVE.note = '이 파일의 주소가 만료됐습니다 — 최신 index.html 을 다시 받으면 켤 수 있습니다'
-      LIVE.notePill = '⚠ 주소 만료 — 최신 index.html'
+      LIVE.note = NT_T('이 파일의 주소가 만료됐습니다 — 최신 index.html 을 다시 받으면 켤 수 있습니다')
+      LIVE.notePill = NT_T('⚠ 주소 만료 — 최신 index.html')
       LIVE.noteWarn = true
       syncChrome(L)
       return liveInfo()
@@ -3912,15 +3912,15 @@
     const w = await liveWrite({ live: true, layer2: !!layer2, utilization: !!opt.util, expiresAt: msIso(lease), monitor: !!opt.monitor, until: msIso(until) })
     LIVE.busy = false
     if (!w.ok) {
-      LIVE.note = `실시간을 켜지 못했습니다 — ${w.why} · ${opt.monitor ? '모니터링' : '사용률'}은 꺼진 상태 그대로입니다`
-      LIVE.notePill = '⚠ 실시간 못 켬'
+      LIVE.note = NT_T('실시간을 켜지 못했습니다 — {0} · {1}은 꺼진 상태 그대로입니다', [w.why, opt.monitor ? NT_T('모니터링') : NT_T('사용률')])
+      LIVE.notePill = NT_T('⚠ 실시간 못 켬')
       LIVE.noteWarn = true
       syncChrome(L)
       return liveInfo()
     }
     LIVE.seq++
     Object.assign(LIVE, { on: true, layer2: !!layer2, util: !!opt.util, setWhy: '', since: now, asked: now, until, untilBy, cap,
-      etag: null, doc: null, docAt: 0, phase: 'wait', why: '첫 관측을 기다리는 중', lastCheck: 0,
+      etag: null, doc: null, docAt: 0, phase: 'wait', why: NT_T('첫 관측을 기다리는 중'), lastCheck: 0,
       mode: 'lease', lease, ctlEtag: w.etag || null, renewWhy: '', ctlAt: now, ctlWhy: '', end: 0, doneWhat: '', doneReads: -1 })
     clearTimeout(LIVE.offT)
     LIVE.offT = setTimeout(() => { liveOff(LIVE.untilBy) }, until - now)
@@ -3946,24 +3946,24 @@
     Object.assign(LIVE, { on: false, util: false, setWhy: '', pollT: null, offT: null, renewT: null, phase: null, why: '', etag: null,
       doc: null, docAt: 0, mode: null, lease: 0, ctlEtag: null, renewWhy: '',
       ctlAt: 0, ctlSeen: null, ctlWhy: '', mine: [], end: 0, cap: 0, doneWhat: '', doneReads: -1 })
-    const again = ' · 다시 켜려면 «모니터링» 또는 «사용률»'
+    const again = NT_T(' · 다시 켜려면 «모니터링» 또는 «사용률»')
     // [줄 · 알약 · warn]. `user` 는 줄이 없다(누른 사람이 안다).
     const NOTE = {
       // 🆕 고른 시간을 말한다(사용자 결정 2026-10-28 — 「설정한 1시간이 지나 실시간이 꺼졌습니다」)
-      ttl: [`설정한 ${durWord(cap)}이 지나 ${msHm(until)} 에 실시간이 자동으로 꺼졌습니다${again}`, `실시간 꺼짐(설정한 ${durWord(cap)})`, false],
+      ttl: [NT_T('설정한 {0}이 지나 {1} 에 실시간이 자동으로 꺼졌습니다{2}', [durWord(cap), msHm(until), again]), NT_T('실시간 꺼짐(설정한 {0})', [durWord(cap)]), false],
       // 🆕 따라 보기(보강 4): 그 창이 고른 끝 · 다른 창이 끔 · 켠 창이 연장하지 않아 서버가 멈춤
-      end: [`켠 창이 정한 끝 시각(${msHm(until)})이 되어 실시간이 꺼졌습니다${again}`, '실시간 꺼짐(정한 시각)', false],
-      remote: [`다른 창에서 실시간을 껐습니다${again}`, '실시간 꺼짐(다른 창에서 끔)', false],
-      stopped: [`실시간이 멈췄습니다 — 켠 창이 ${msHm(lease)} 까지 연장하지 않았습니다(그 창을 닫았거나 잠들었습니다)${again}`,
-        '실시간 멈춤(켠 창이 연장 안 함)', false],
-      url: ['이 화면 파일의 주소가 만료돼 실시간이 꺼졌습니다 — 최신 index.html 을 다시 받으면 켤 수 있습니다',
-        '실시간 꺼짐(주소 만료)', false],
-      slept: [`절전 중에 실시간이 꺼졌습니다 — 이 창이 ${msHm(lease)} 까지 연장하지 못했습니다(컴퓨터 잠자기·탭 멈춤)${again}`,
-        '실시간 꺼짐(자는 동안)', false],
-      renew: [`연장 요청이 닿지 않아 ${msHm(lease)} 에 실시간이 꺼졌습니다 — ${renewWhy}${again}`,
-        '⚠ 실시간 꺼짐(연장 실패)', true],
-      conflict: ['다른 창에서 실시간 설정을 바꿨습니다 — 이 창은 덮어쓰지 않고 실시간 표시를 껐습니다 · 서버는 그 창이 설정한 대로 동작합니다' +
-        again, '실시간 꺼짐(다른 창에서 바꿈)', false],
+      end: [NT_T('켠 창이 정한 끝 시각({0})이 되어 실시간이 꺼졌습니다{1}', [msHm(until), again]), NT_T('실시간 꺼짐(정한 시각)'), false],
+      remote: [NT_T('다른 창에서 실시간을 껐습니다{0}', [again]), NT_T('실시간 꺼짐(다른 창에서 끔)'), false],
+      stopped: [NT_T('실시간이 멈췄습니다 — 켠 창이 {0} 까지 연장하지 않았습니다(그 창을 닫았거나 잠들었습니다){1}', [msHm(lease), again]),
+        NT_T('실시간 멈춤(켠 창이 연장 안 함)'), false],
+      url: [NT_T('이 화면 파일의 주소가 만료돼 실시간이 꺼졌습니다 — 최신 index.html 을 다시 받으면 켤 수 있습니다'),
+        NT_T('실시간 꺼짐(주소 만료)'), false],
+      slept: [NT_T('절전 중에 실시간이 꺼졌습니다 — 이 창이 {0} 까지 연장하지 못했습니다(컴퓨터 잠자기·탭 멈춤){1}', [msHm(lease), again]),
+        NT_T('실시간 꺼짐(자는 동안)'), false],
+      renew: [NT_T('연장 요청이 닿지 않아 {0} 에 실시간이 꺼졌습니다 — {1}{2}', [msHm(lease), renewWhy, again]),
+        NT_T('⚠ 실시간 꺼짐(연장 실패)'), true],
+      conflict: [NT_T('다른 창에서 실시간 설정을 바꿨습니다 — 이 창은 덮어쓰지 않고 실시간 표시를 껐습니다 · 서버는 그 창이 설정한 대로 동작합니다') +
+        again, NT_T('실시간 꺼짐(다른 창에서 바꿈)'), false],
     }[why] || ['', '', false]
     LIVE.note = NOTE[0]; LIVE.notePill = NOTE[1]; LIVE.noteWarn = NOTE[2]
     // 끄면 **구운 문서**로 돌아간다(배포본에는 없다 → 구조만).
@@ -3977,9 +3977,9 @@
     if (why === 'user') {
       const w = await liveWrite({ live: false })
       if (!w.ok && !LIVE.on) {
-        LIVE.note = `끄기 요청이 실패했습니다 — ${w.why} · 서버는 ${msHm(lease)} 에 자동으로 멈춥니다` +
-          '(그때까지 관측과 요금이 계속됩니다)'
-        LIVE.notePill = `⚠ 끄기 실패 — 서버 ${msHm(lease)} 까지`
+        LIVE.note = NT_T('끄기 요청이 실패했습니다 — {0} · 서버는 {1} 에 자동으로 멈춥니다', [w.why, msHm(lease)]) +
+          NT_T('(그때까지 관측과 요금이 계속됩니다)')
+        LIVE.notePill = NT_T('⚠ 끄기 실패 — 서버 {0} 까지', [msHm(lease)])
         LIVE.noteWarn = true
         syncChrome(L)
       }
@@ -4003,10 +4003,10 @@
       // 🆕 이 창이 주인으로 켜 둔 동안은 보기만 바꾼다 — 끝 시각은 켤 때 고른 그대로다(시간 칸을 숨긴다). 따라 보는 창이 바꾸면 새로 켜는 것과 같다.
       const own = LIVE.on && LIVE.mode !== 'follow'
       monPopEl.classList.toggle('own', own)
-      if (head && own) head.textContent = `실시간 갱신 — ${msHm(LIVE.until)} 까지(켤 때 고른 그대로) · 보기만 바꿉니다`
+      if (head && own) head.textContent = NT_T('실시간 갱신 — {0} 까지(켤 때 고른 그대로) · 보기만 바꿉니다', [msHm(LIVE.until)])
       else if (head) {
-        head.textContent = `실시간 갱신 — ${msHm(until)} 까지(${durWord(LIVE.dur)}) · 켜면 바로 첫 관측 · 그 뒤 5분마다 · ` +
-          '창을 닫으면 약 20분 안에 멈춥니다'
+        head.textContent = NT_T('실시간 갱신 — {0} 까지({1}) · 켜면 바로 첫 관측 · 그 뒤 5분마다 · ', [msHm(until), durWord(LIVE.dur)]) +
+          NT_T('창을 닫으면 약 20분 안에 멈춥니다')
       }
     }
     monPopEl.classList.toggle('on', next)
@@ -4132,8 +4132,8 @@
     fbar.innerHTML = S.qErr
       ? `<span class="qerr">${esc(S.qErr)}</span>`
       : (FILTER
-          ? `필터 «<b>${esc(S.filter)}</b>» 적용 중 — 노드 <b>${T.nodes.length - FILTER.size}</b>개를 ` +
-            '화면에서 제거했습니다 <span class="x" data-unfilter>필터 해제</span>'
+          ? NT_T('필터 «<b>{0}</b>» 적용 중 — 노드 <b>{1}</b>개를 ', [esc(S.filter), T.nodes.length - FILTER.size]) +
+            NT_T('화면에서 제거했습니다 <span class="x" data-unfilter>필터 해제</span>')
           : '') + (note && FILTER ? ' · ' : '') + note
   }
   // 파싱 실패는 조용한 «0건»이 되면 안 된다 — 그러면 사용자가 «없다»고 오판한다(§13-56·62).
@@ -4156,8 +4156,8 @@
     S.qErr = ''; syncFbar()
     const keep = filterSet(s)
     modal.querySelector('[data-msg]').innerHTML =
-      '이 조건에 맞지 않는 리소스를 <b>화면에서 제거</b>합니다.<br>' +
-      `«${esc(s)}» → 남는 노드 <b>${keep.size}</b>개 · 숨는 노드 <b>${T.nodes.length - keep.size}</b>개.` +
+      NT_T('이 조건에 맞지 않는 리소스를 <b>화면에서 제거</b>합니다.<br>') +
+      NT_T('«{0}» → 남는 노드 <b>{1}</b>개 · 숨는 노드 <b>{2}</b>개.', [esc(s), keep.size, T.nodes.length - keep.size]) +
       (keep.size ? '' : `<br><span class="qerr">${esc(COPY.empty)}</span>`)
     const tb = modal.querySelector('[data-buckets]')
     if (tb) {
@@ -4177,7 +4177,7 @@
       const bk = ev.target.closest('[data-key]')
       if (bk) {                              // 태그 버킷 클릭 → 그 키로 쿼리를 채운다(§13-62)
         const k = bk.dataset.key
-        if (k !== '(태그 없음)') {
+        if (k !== NT_T('(태그 없음)')) {
           S.search = 'tag:' + k
           document.getElementById('search').value = S.search
           askFilter(S.search)
