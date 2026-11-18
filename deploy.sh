@@ -1,23 +1,35 @@
 #!/usr/bin/env bash
-# 모니터링 계정 설치·갱신·삭제를 한 번에 — 설치 안내서(docs/install-guide.md) 1~3·5·6단계와 삭제를 대신 친다(#82).
+# Install, update and tear down the monitoring account in one command. It runs
+# stages 1 to 3, 5 and 6 of the deployment guide (docs/install-guide.md), and the
+# teardown, so you do not have to type them out yourself.
 #
-# 🔵 배포 모양은 그대로다: 스택 A(수집기) · 선택 스택 C(뷰어). 수집기는 **고객 버킷의 zip 에서만** 코드를
-#    가져온다(ADR 0003 D3) — 이 스크립트는 그 zip 을 만들고 올리고 스택을 올리는 손작업만 대신한다.
-# 🔵 소스 계정에는 이 스크립트를 쓰지 않는다. 끝에 출력하는 스택 B 명령(CLI 한 줄 · 콘솔 · StackSet)을
-#    그 계정(또는 조직) 관리자가 실행한다 — 저장소도 bash 도 요구하지 않는다.
+# The shape of the deployment is unchanged: stack A (the collector) and the
+# optional stack C (the viewer). The collector takes its code **only from a zip in
+# the customer's own bucket**, so all this script replaces is the manual work of
+# building that zip, uploading it and deploying the stacks.
 #
-# 🔴 지키는 것 (infra/tests/test_deploy_script.py 가 잰다)
-#    - 모든 `aws` 호출에 `--profile "$PROFILE" --region "$REGION"` 을 적는다. 둘 다 필수 인자이고 기본값이 없다 —
-#      셸 기본 프로필·리전으로 조용히 돌면 다른 계정·리전에 스택이 선다.
-#    - 계정 ID 를 파일에 쓰지 않는다. 화면에 찍히는 줄의 12자리는 끝 4자리만 남긴다(`mask`).
-#    - `--destroy` 는 확인 입력이 맞아야만 지운다. 건너뛰는 옵션이 없다.
-#    - IAM 사용자·액세스 키를 만들지 않는다. 자격 증명은 이름 있는 프로필(IAM Identity Center 권장)뿐이다.
+# This script is not for a source account. The administrator of that account, or
+# of the organization, runs the stack B command printed at the end, as a single
+# CLI line, in the console, or as a StackSet. That needs neither this repository
+# nor bash.
+#
+# What this script guarantees (infra/tests/test_deploy_script.py measures it):
+#    - Every `aws` call carries `--profile "$PROFILE" --region "$REGION"`. Both are
+#      required arguments with no default, because running quietly on the shell's
+#      default profile and Region would raise stacks in another account or Region.
+#    - No account ID is written to a file. Any 12-digit number on a line that goes
+#      to the screen keeps its last four digits only (`mask`).
+#    - `--destroy` deletes only when the confirmation input matches. There is no
+#      option to skip it.
+#    - No IAM user and no access key are created. The only credentials are a
+#      named profile, for which IAM Identity Center is recommended.
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")" && pwd)
 OUT=${OUT:-$ROOT/out}
 POLL_SECONDS=${POLL_SECONDS:-15}
-# 시험이 가짜 빌더를 꽂는 자리 — 기본은 저장소의 빌더다(그 빌더를 복제하지 않는다).
+# Where a test plugs in a fake builder. The default is the builder in this
+# repository, and the tests never copy it.
 STATE_LAMBDA_BUILDER=${STATE_LAMBDA_BUILDER:-$ROOT/infra/build-state-lambda.sh}
 LINK_ISSUER=$ROOT/infra/issue-viewer-link.sh
 
@@ -29,7 +41,8 @@ TEMPLATE_B=$ROOT/infra/stack-b-member-role.yaml
 TEMPLATE_C=$ROOT/infra/stack-c-viewer.yaml
 PKG_KEY=nettopo-source.zip
 CFN_PREFIX=cfn-templates
-# CloudFormation 이 본문(`TemplateBody`)으로 받는 상한. 넘는 템플릿은 `--s3-bucket` 을 거쳐야 한다.
+# The limit CloudFormation accepts in the body (`TemplateBody`). A template over
+# that has to go through `--s3-bucket`.
 TEMPLATE_BODY_LIMIT=51200
 GUIDE_TROUBLE="docs/install-guide.md#문제-해결"
 
@@ -106,15 +119,22 @@ USAGE
 }
 
 # ── AWS CloudShell ──────────────────────────────────────────────────────────────────────────────
-# CloudShell 에는 이름 있는 프로필이 없다 — 콘솔에 로그인한 권한이 기본 자격 증명이다. 그래서 거기서만 --profile 을
-# 생략할 수 있다(그 밖에서는 지금처럼 필수 — 셸 기본 자격 증명으로 조용히 다른 계정에 서는 것을 막는다).
-#   신호 두 가지: AWS_EXECUTION_ENV=CloudShell(AWS CLI 사용자 에이전트가 쓰는 값 · 문서로는 확인하지 못했다) ·
-#   홈 폴더 /home/cloudshell-user(사용자 실측 2026-10-26: 설치 출력의 경로가 /home/cloudshell-user/… 였다).
-#   🔴 프로필 없는 셸에서 `--profile default` 는 「The config profile (default) could not be found」로 멈춘다(실측 재현).
+# CloudShell has no named profile: the permissions you signed in to the console
+# with are the default credentials. That is the one place `--profile` may be
+# omitted. Everywhere else it stays required, so that the shell's default
+# credentials cannot quietly raise stacks in another account.
+#   Two signals identify it: AWS_EXECUTION_ENV=CloudShell, the value the AWS CLI
+#   user agent uses, and the home directory /home/cloudshell-user, which is what
+#   the installation output showed when this was measured.
+#   In a shell with no profile, `--profile default` stops with "The config profile
+#   (default) could not be found", which is why the wrapper below removes the pair
+#   rather than passing an empty value.
 IN_CLOUDSHELL=0
 if [ "${AWS_EXECUTION_ENV:-}" = CloudShell ] || [ "$HOME" = /home/cloudshell-user ]; then IN_CLOUDSHELL=1; fi
-# 모든 aws 호출은 `--profile "$PROFILE" --region "$REGION"` 을 적는다(시험이 잰다). 프로필을 생략한 CloudShell 실행이면
-# 이 감싸개가 빈 `--profile ""` 한 쌍만 빼고 넘긴다 — 호출 자리마다 분기를 두지 않는다.
+# Every aws call writes out `--profile "$PROFILE" --region "$REGION"`, and the
+# tests measure that. On a CloudShell run with no profile, this wrapper drops the
+# empty `--profile ""` pair and passes the rest through, which keeps every call
+# site free of a branch.
 aws() {
   if [ -n "$PROFILE" ]; then
     command aws "$@"
@@ -129,8 +149,9 @@ aws() {
   command aws "${args[@]}"
 }
 
-# ── 출력 ────────────────────────────────────────────────────────────────────────────────────────
-# 12자리 숫자(계정 ID 모양)는 끝 4자리만 남긴다. 더 긴 숫자열(타임스탬프 등)은 건드리지 않는다.
+# ── output ──────────────────────────────────────────────────────────────────────────────────────
+# A 12-digit number, the shape of an account ID, keeps its last four digits only.
+# A longer run of digits, such as a timestamp, is left alone.
 ACCOUNT_LIKE='(^|[^0-9])([0-9]{12})([^0-9]|$)'
 mask() {
   local s=$1 out="" m
@@ -140,7 +161,8 @@ mask() {
     s="${BASH_REMATCH[3]}${s#*"$m"}"
   done
   out="$out$s"
-  # 프로필을 생략한 CloudShell 실행 — 안내 명령에 남는 빈 `--profile ` 을 지운다(그대로 따라 치면 그 명령이 멈춘다).
+  # On a CloudShell run with no profile, strip the empty `--profile ` left in the
+  # commands we print, since typing one out as it stands would stop.
   [ -n "$PROFILE" ] || out=${out//--profile  /}
   printf '%s\n' "$out"
 }
@@ -155,7 +177,8 @@ die() {
   echo "도움말: ./deploy.sh --help" >&2
   exit 2
 }
-# 실패 한 줄: 「N단계 <무엇> 실패: <이유>」 + 안내서 문제 해결 표의 행.
+# One line on failure: which stage failed, what failed and why, plus the row to
+# read in the troubleshooting table of the guide.
 fail() {
   local where=$1 what=$2 reason=$3 row=$4
   reason=$(printf '%s' "$reason" | tr '\n\t' '  ' | sed 's/  */ /g; s/^ //; s/ $//')
@@ -165,7 +188,7 @@ fail() {
   exit 1
 }
 
-# ── 인자 ────────────────────────────────────────────────────────────────────────────────────────
+# ── arguments ───────────────────────────────────────────────────────────────────────────────────
 PROFILE="" REGION="" BUCKET="" REGIONS="" ACCOUNTS="" TAGS_ARG="" PACKAGE="" VIEWER_KEY="" DAYS="" LOG_READERS=""
 DRY_RUN=0 MONITORING=0 VIEWER=0 ACTION=install KEY_OP="" NO_OVERLAP=0
 EXTERNAL_ID="" ORG_ID="" NARROW_VIEWER=0
@@ -218,17 +241,22 @@ fi
   || die "--bucket 이 S3 버킷 이름 모양이 아닙니다: $BUCKET"
 [ -z "$TAGS_ARG" ] || [[ $TAGS_ARG =~ ^[^=,]+=[^,]*(,[^=,]+=[^,]*)*$ ]] \
   || die "--tags 는 Key=Value 를 쉼표로 이어 적어 주세요"
-# 스택 B ExternalId · 스택 A MemberExternalId 의 AllowedPattern(`^[-\w+=,.@:/]{2,1224}$`)과 같은 모양 — 틀린 값을 변경 세트
-# 거절까지 끌고 가지 않는다. `\w` 는 풀어 적고(bash 정규식에 없는 플랫폼이 있다) 길이는 따로 잰다(macOS 정규식은
-# `{m,n}` 상한이 255 라 `{2,1224}` 를 오류로 본다 → 모든 값이 거절된다). 값은 오류 줄에 찍지 않는다.
+# The same shape as the AllowedPattern on stack B's ExternalId and stack A's
+# MemberExternalId (`^[-\w+=,.@:/]{2,1224}$`), so that a wrong value is caught here
+# rather than dragged all the way to a change set rejection. `\w` is spelled out,
+# because some platforms lack it in a bash regex, and the length is measured
+# separately, because the macOS regex caps `{m,n}` at 255 and so treats
+# `{2,1224}` as an error, which would reject every value. The value itself never
+# appears on the error line.
 if [ -n "$EXTERNAL_ID" ]; then
   [ "${#EXTERNAL_ID}" -ge 2 ] && [ "${#EXTERNAL_ID}" -le 1224 ] && [[ $EXTERNAL_ID =~ ^[-A-Za-z0-9_+=,.@:/]+$ ]] \
     || die "--external-id 는 영문·숫자와 _+=,.@:/- 로 된 2~1224자여야 합니다(스택 B ExternalId 와 같은 규칙)"
 fi
 [ -z "$ORG_ID" ] || [[ $ORG_ID =~ ^o-[a-z0-9]{10,32}$ ]] \
   || die "--org-id 는 AWS Organizations 조직 ID 모양(o- 뒤 영문 소문자·숫자 10~32자)이어야 합니다"
-# 두 값은 출력되는 스택 B 명령에 들어간다 — 화면 출력은 12자리 숫자를 계정 ID 로 보고 가리므로(mask), 그런 숫자가 든 값은
-# 따라 칠 명령이 조용히 틀어진다. 그 전에 멈춘다.
+# Both values go into the stack B command we print. Screen output treats any
+# 12-digit number as an account ID and masks it, so a value containing one would
+# make the command quietly wrong to type out. Stop before that happens.
 for _v in "$EXTERNAL_ID" "$ORG_ID"; do
   [[ ! $_v =~ $ACCOUNT_LIKE ]] \
     || die "--external-id·--org-id 에 12자리 숫자(계정 ID 모양)가 있습니다 — 화면에서 가려져 출력되는 스택 B 명령이 틀어집니다. 다른 값을 주세요"
@@ -240,37 +268,45 @@ if [ "$ACTION" != install ]; then
     || die "--$ACTION 에는 --profile·--region·--bucket·--dry-run 만 함께 줄 수 있습니다"
 fi
 if [ "$VIEWER" = 1 ]; then
-  # 링크 수명은 관리자가 고른다 — issue-viewer-link.sh 와 같은 원칙이라 기본값을 두지 않는다.
+  # The administrator chooses how long a link lives, so there is no default here,
+  # on the same principle as issue-viewer-link.sh.
   if [ "$KEY_OP" = retire-old-key ]; then
-    # 옛 키 빼기는 링크를 만들지 않는다 — 새 키 링크는 교체 때 이미 냈다.
+    # Retiring the old key issues no link: the new key's link was already issued
+    # at rotation.
     [ -z "$DAYS" ] && [ -z "$VIEWER_KEY" ] || die "--retire-old-key 는 링크를 만들지 않습니다 — --days·--viewer-key 를 빼고 실행해 주세요"
   else
     [ -n "$DAYS" ] || die "--viewer 에는 --days <일수> 가 필요합니다(링크 수명, 기본값 없음)"
     [[ $DAYS =~ ^[1-9][0-9]*$ ]] || die "--days 는 1 이상의 정수여야 합니다"
   fi
-  # 스택 C 의 LogReaderPrincipalArns AllowedPattern 과 같은 모양 — 틀린 값을 변경 세트 거절까지 끌고 가지 않는다.
-  # 와일드카드(`role/*`)를 받으면 ArnNotLike 예외가 계정 전체로 번진다(#81).
+  # The same shape as stack C's LogReaderPrincipalArns AllowedPattern, so that a
+  # wrong value is caught here rather than at a change set rejection. Accepting a
+  # wildcard (`role/*`) would spread the ArnNotLike exception across the whole
+  # account.
   READER_ARN='arn:aws[a-z-]*:iam::[0-9]{12}:(role|user)/[A-Za-z0-9+=.@_/-]+'
   [ -z "$LOG_READERS" ] || [[ $LOG_READERS =~ ^$READER_ARN(,$READER_ARN)*$ ]] \
     || die "--log-readers 는 IAM 역할·사용자 ARN 을 공백 없이 쉼표로 이어 적어 주세요(와일드카드·assumed-role 세션 ARN 불가): $LOG_READERS"
 else
   [ -z "$DAYS" ] && [ -z "$VIEWER_KEY" ] && [ -z "$LOG_READERS" ] \
     || die "--days·--viewer-key·--log-readers 는 --viewer 와 함께 씁니다"
-  # 좁힐 주소·배포 ID 는 스택 C 의 출력이다 — 스택 C 를 올리는 실행에서만 읽는다.
+  # The address and distribution ID to narrow to are outputs of stack C, so they
+  # are read only on a run that deploys stack C.
   [ "$NARROW_VIEWER" = 0 ] || die "--narrow-viewer 는 --viewer 와 함께 씁니다(스택 C 의 주소·배포 ID 로 스택 A 를 좁힙니다)"
 fi
 if [ -n "$KEY_OP" ] || [ "$NO_OVERLAP" = 1 ]; then
   [ "$VIEWER" = 1 ] || die "--rotate-key·--retire-old-key·--no-overlap 은 --viewer 와 함께 씁니다"
   [ "$NO_OVERLAP" = 0 ] || [ "$KEY_OP" = rotate-key ] || die "--no-overlap 은 --rotate-key 와 함께 씁니다"
-  # 키 교체는 스택 C 만 바꾼다 — 유출 대응이 수집(수 분)을 기다리지 않게 스택 A·수집 단계를 타지 않는다.
+  # Rotating the key changes stack C alone. It skips stack A and the collection
+  # stage, so that responding to a leak does not wait the several minutes a
+  # collection takes.
   [ "$MONITORING" = 0 ] && [ -z "$PACKAGE" ] && [ -z "$REGIONS" ] && [ -z "$ACCOUNTS" ] && [ -z "$TAGS_ARG" ] && [ -z "$BUCKET" ] \
     || die "키 교체는 스택 C 만 바꿉니다 — --bucket·--regions·--accounts·--tags·--package·--monitoring 과 함께 쓸 수 없습니다"
   [ -z "$EXTERNAL_ID" ] && [ -z "$ORG_ID" ] && [ "$NARROW_VIEWER" = 0 ] \
     || die "키 교체는 스택 C 만 바꿉니다 — --external-id·--org-id·--narrow-viewer 와 함께 쓸 수 없습니다"
 fi
-# 기본 비밀키 경로(out/viewer-<자리>.pem)는 스택 C 의 KeyLabel 을 읽은 뒤 정한다(viewer · rotate_key).
+# The default private key path (out/viewer-<slot>.pem) is decided after reading
+# stack C's KeyLabel.
 
-# ── 0단계 · 준비물과 자격 증명 ───────────────────────────────────────────────────────────────────
+# ── stage 0: prerequisites and credentials ──────────────────────────────────────────────────────
 ACCOUNT="" PARTITION=""
 preflight() {
   step "0단계 · 준비물과 자격 증명 확인"
@@ -292,12 +328,14 @@ preflight() {
   ACCOUNT=$(printf '%s' "$ident" | awk '{print $1}')
   PARTITION=$(printf '%s' "$ident" | awk '{print $2}' | cut -d: -f2)
   [[ $ACCOUNT =~ ^[0-9]{12}$ ]] || fail "0단계" "자격 증명 확인" "계정 ID 를 읽지 못했습니다" "deploy.sh 가 0단계 자격 증명 확인에서 멈춤"
-  # 계정 ID 는 이 셸 변수에만 있다 — 파일에 쓰지 않고, 화면에는 mask 를 거친다.
+  # The account ID lives in this shell variable only. It is never written to a
+  # file, and anything going to the screen passes through mask.
   say "모니터링 계정 $ACCOUNT · 리전 $REGION · $([ -n "$PROFILE" ] && echo "프로필 $PROFILE" || echo "CloudShell 로그인 권한")$([ "$DRY_RUN" = 1 ] && echo ' · 시험 실행(--dry-run)')"
 }
 
-# ── 스택 조회 ───────────────────────────────────────────────────────────────────────────────────
-# NONE = 스택 없음. 없음이 아닌 조회 실패(권한 등)는 멈춘다 — 「없음」으로 오판하면 새로 만들려 든다.
+# ── stack lookups ───────────────────────────────────────────────────────────────────────────────
+# NONE means there is no stack. A lookup that fails for any other reason, such as
+# permissions, stops: misreading it as "no stack" would set about creating one.
 stack_status() {
   local out
   if out=$(aws cloudformation describe-stacks --stack-name "$1" --query 'Stacks[0].StackStatus' \
@@ -309,7 +347,8 @@ stack_status() {
     fail "0단계" "스택 $1 조회" "$out" "deploy.sh 가 0단계 자격 증명 확인에서 멈춤"
   fi
 }
-# 스택의 출력·파라미터 하나. 조회가 실패하면 aws 오류를 한 줄로 알리고 멈춘다(빈 값으로 넘어가지 않는다).
+# One output or parameter of a stack. If the lookup fails, report the aws error on
+# one line and stop, rather than carrying on with an empty value.
 stack_field() { # <스택> <Outputs|Parameters> <키>
   local kind=$2 field=OutputKey value=OutputValue out
   [ "$kind" = Outputs ] || { field=ParameterKey; value=ParameterValue; }
@@ -321,13 +360,15 @@ stack_field() { # <스택> <Outputs|Parameters> <키>
 }
 stack_output() { stack_field "$1" Outputs "$2"; }
 stack_parameter() { stack_field "$1" Parameters "$2"; }
-# 스택 이벤트에서 처음 실패한 리소스의 이유(가장 최근 것부터 본다).
+# The reason the first resource failed, taken from the stack events, which are
+# read newest first.
 stack_failure_reason() {
   aws cloudformation describe-stack-events --stack-name "$1" \
     --query "StackEvents[?contains(ResourceStatus, 'FAILED') && ResourceStatusReason != null] | [0].[LogicalResourceId, ResourceStatusReason]" \
     --output text --profile "$PROFILE" --region "$REGION" 2> /dev/null | sed 's/^None.*$//' || true
 }
-# 스택이 지금 손댈 수 있는 상태인가. 진행 중·생성 실패 상태면 이유와 함께 멈춘다.
+# Whether the stack can be touched right now. If it is in progress or failed to
+# create, stop and say why.
 check_stack_usable() {
   local stack=$1 where=$2 status
   status=$(stack_status "$stack")
@@ -342,8 +383,10 @@ check_stack_usable() {
   esac
 }
 
-# ── 태그 ────────────────────────────────────────────────────────────────────────────────────────
-# `deploy` 는 --tags 를 빼면 기존 태그를 지운다. --tags 를 주면 그것을, 안 주면 기존 스택 태그를 다시 넘긴다.
+# ── tags ────────────────────────────────────────────────────────────────────────────────────────
+# `deploy` deletes the existing tags when --tags is left out. So pass the given
+# tags when --tags is present, and pass the existing stack tags again when it is
+# not.
 TAGS=()
 resolve_tags() {
   TAGS=()
@@ -357,7 +400,9 @@ resolve_tags() {
   status=$(stack_status "$1")
   case "$status" in
     NONE | REVIEW_IN_PROGRESS)
-      # 새로 만드는 스택(예: 나중에 얹는 스택 C)은 다시 읽을 태그가 없다 — 스택 A 의 태그를 물려받는다(실측 2026-10-22: 스택 C Tags=[])
+      # A stack being created, such as a stack C added later, has no tags to read
+      # back, so it inherits stack A's tags. Measured: stack C came out with
+      # Tags=[].
       if [ "$1" != "$STACK_A" ]; then resolve_tags "$STACK_A"; fi
       return ;;
   esac
@@ -367,9 +412,11 @@ resolve_tags() {
     --output text --profile "$PROFILE" --region "$REGION")
 }
 
-# ── 배포 ────────────────────────────────────────────────────────────────────────────────────────
-# cfn_deploy <단계> <무엇> <문제 해결 행> <스택> <템플릿> <capability|-> [파라미터=값 ...]
-# 멱등: 바뀐 것이 없으면 빈 변경 세트로 끝난다. 적지 않은 파라미터는 이전 값이 유지된다.
+# ── deployment ──────────────────────────────────────────────────────────────────────────────────
+# cfn_deploy <stage> <what> <troubleshooting row> <stack> <template>
+#            <capability|-> [parameter=value ...]
+# Idempotent: with nothing changed it ends on an empty change set. A parameter not
+# written out keeps its previous value.
 cfn_deploy() {
   local where=$1 what=$2 row=$3 stack=$4 template=$5 caps=$6
   shift 6
@@ -379,18 +426,23 @@ cfn_deploy() {
   resolve_tags "$stack"
   [ ${#TAGS[@]} -eq 0 ] || args+=(--tags "${TAGS[@]}")
   if [ "$BUCKET_READY" = 1 ]; then
-    # 템플릿은 패키지 버킷을 거친다(본문 한도와 무관하게 늘 같은 길) — 영어 한 벌이라 S3 경유 시 `?` 문제가 없다.
+    # Templates always go through the package bucket, the same path whatever the
+    # body limit says. They are English throughout, so nothing turns into a `?` on
+    # the way through S3.
     args+=(--s3-bucket "$BUCKET" --s3-prefix "$CFN_PREFIX")
   elif [ "$(wc -c < "$template")" -gt "$TEMPLATE_BODY_LIMIT" ]; then
     fail "$where" "$what" "템플릿이 본문 한도($TEMPLATE_BODY_LIMIT B)를 넘는데 올릴 버킷이 아직 없습니다(--dry-run 첫 설치)" "$row"
   fi
   [ "$DRY_RUN" = 0 ] || args+=(--no-execute-changeset)
   if [ "$DRY_RUN" = 1 ]; then say "$what — $stack (변경 세트만 만듭니다)"; else say "$what — $stack (수 분 걸립니다)"; fi
-  # 출력은 변수로 받는다 — 변경 세트 ARN 에 계정 ID 가 있어 파일에도, 가리지 않은 화면에도 두지 않는다.
+  # The output is captured into a variable, because a change set ARN contains the
+  # account ID and so belongs neither in a file nor on an unmasked screen.
   local out rc=0
   out=$(aws cloudformation deploy "${args[@]}" --profile "$PROFILE" --region "$REGION" 2>&1) || rc=$?
   if [ "$rc" -ne 0 ]; then
-    # 변경 세트 단계의 거절(검증 오류 등)은 deploy 출력에, 실행 단계의 실패는 스택 이벤트에 이유가 있다.
+    # A rejection at the change set stage, such as a validation error, explains
+    # itself in the deploy output; a failure at the execution stage explains
+    # itself in the stack events.
     local reason
     reason=$(printf '%s\n' "$out" | grep -E 'An error occurred|Status: FAILED|Waiter .* failed' | tail -1 || true)
     [ -n "$reason" ] || reason=$(stack_failure_reason "$stack")
@@ -414,7 +466,7 @@ cfn_deploy() {
     --profile "$PROFILE" --region "$REGION" 2>&1 | sed 's/^/    /' | mask_stream
 }
 
-# ── 1단계 · 패키지 버킷 ─────────────────────────────────────────────────────────────────────────
+# ── stage 1: the package bucket ─────────────────────────────────────────────────────────────────
 BUCKET_READY=0
 resolve_bucket() {
   [ -n "$BUCKET" ] && return
@@ -428,7 +480,8 @@ resolve_bucket() {
   return 0
 }
 bucket_policy() {
-  # 공개 정책이 아니다(Deny 뿐) — TLS 가 아닌 요청을 막는다(인프라 불변식 · 스택 A·C 버킷과 같은 규칙).
+  # This is not a public policy: it is Deny only, and it blocks requests that are
+  # not over TLS. The stack A and stack C buckets follow the same rule.
   printf '{"Version":"2012-10-17","Statement":[{"Sid":"DenyInsecureTransport","Effect":"Deny","Principal":"*","Action":"s3:*","Resource":["arn:%s:s3:::%s","arn:%s:s3:::%s/*"],"Condition":{"Bool":{"aws:SecureTransport":"false"}}}]}' \
     "$PARTITION" "$BUCKET" "$PARTITION" "$BUCKET"
 }
@@ -446,7 +499,8 @@ ensure_bucket() {
   local out
   if out=$(aws s3api head-bucket --bucket "$BUCKET" --expected-bucket-owner "$ACCOUNT" \
     --profile "$PROFILE" --region "$REGION" 2>&1); then
-    # 있는 버킷이면 공개 차단 네 항목이 전부 켜져 있어야 쓴다 — 코드가 들어가는 버킷이다. 설정은 바꾸지 않는다.
+    # An existing bucket is used only when all four public access blocks are on,
+    # since this is the bucket the code goes into. The setting is never changed.
     local pab
     pab=$(aws s3api get-public-access-block --bucket "$BUCKET" --expected-bucket-owner "$ACCOUNT" \
       --query 'PublicAccessBlockConfiguration.[BlockPublicAcls,IgnorePublicAcls,BlockPublicPolicy,RestrictPublicBuckets]' \
@@ -502,7 +556,7 @@ ensure_bucket() {
   BUCKET_READY=1
 }
 
-# ── 1단계 · 배포 패키지 ─────────────────────────────────────────────────────────────────────────
+# ── stage 1: the deployment package ─────────────────────────────────────────────────────────────
 put_object() { # <로컬 파일> <키> <단계 이름>
   local out
   if [ "$DRY_RUN" = 1 ]; then
@@ -543,7 +597,8 @@ upload_state_lambda() {
     printf '%s\n' "$log" | tail -5 | mask_stream >&2
     fail "5단계" "상태 Lambda 패키지 빌드" "$(printf '%s' "$log" | grep -v '^$' | tail -1)" "build-state-lambda.sh 가 \"pip 이 없다\"로 멈춤"
   }
-  # 빌더가 출력하는 「S3 키」(내용 해시가 든 키 — 같은 키면 Lambda 코드가 갱신되지 않는다).
+  # The S3 key the builder prints. It contains a hash of the contents, so an
+  # unchanged key means the Lambda code is not updated.
   STATE_KEY=$(printf '%s\n' "$log" | grep -Eo 'lambda/state-observer-[0-9a-f]{12}\.zip' | tail -1 || true)
   [ -n "$STATE_KEY" ] || fail "5단계" "상태 Lambda 패키지 빌드" "빌더 출력에서 S3 키를 찾지 못했습니다" "build-state-lambda.sh 가 \"pip 이 없다\"로 멈춤"
   [ -s "$OUT/${STATE_KEY#lambda/}" ] || fail "5단계" "상태 Lambda 패키지 빌드" "zip 이 없습니다: $OUT/${STATE_KEY#lambda/}" "build-state-lambda.sh 가 \"pip 이 없다\"로 멈춤"
@@ -551,7 +606,7 @@ upload_state_lambda() {
   put_object "$OUT/${STATE_KEY#lambda/}" "$STATE_KEY" "상태 Lambda 패키지"
 }
 
-# ── 2단계 · 스택 A ──────────────────────────────────────────────────────────────────────────────
+# ── stage 2: stack A ────────────────────────────────────────────────────────────────────────────
 deploy_stack_a() {
   step "2단계 · 스택 A (수집기)"
   check_stack_usable "$STACK_A" "2단계"
@@ -559,12 +614,14 @@ deploy_stack_a() {
   [ -z "$REGIONS" ] || params+=("TargetRegions=$REGIONS")
   [ -z "$ACCOUNTS" ] || params+=("TargetAccounts=$ACCOUNTS")
   [ -z "$STATE_KEY" ] || params+=("StateLambdaSourceKey=$STATE_KEY")
-  # 선택 보강 — 준 때만 넘긴다. 생략하면 넘기지 않아 이전 값이 남는다(MemberExternalId · ViewerOrigin · ViewerDistributionId).
+  # The optional hardening parameters are passed only when given. Left out, they
+  # are not passed and so keep their previous values (MemberExternalId,
+  # ViewerOrigin, ViewerDistributionId).
   [ -z "$EXTERNAL_ID" ] || params+=("MemberExternalId=$EXTERNAL_ID")
   cfn_deploy "2단계" "스택 A 배포" "2단계 스택 A 배포 실패" "$STACK_A" "$TEMPLATE_A" CAPABILITY_IAM "${params[@]}"
 }
 
-# ── 3단계 · 수집 1회 ─────────────────────────────────────────────────────────────────────────────
+# ── stage 3: one collection ─────────────────────────────────────────────────────────────────────
 ARTIFACT_BUCKET=""
 read_stack_a_outputs() {
   ARTIFACT_BUCKET=$(stack_output "$STACK_A" ArtifactBucketName)
@@ -601,7 +658,7 @@ collect() {
   done
   echo >&2
   if [ "$status" != SUCCEEDED ]; then
-    # shellcheck disable=SC2016  # 역따옴표는 JMESPath 리터럴이다
+    # shellcheck disable=SC2016  # the backticks are a JMESPath literal
     out=$(aws codebuild batch-get-builds --ids "$build_id" \
       --query 'builds[0].phases[?phaseStatus!=null && phaseStatus!=`SUCCEEDED`] | [0].[phaseType, contexts[0].message]' \
       --output text --profile "$PROFILE" --region "$REGION" 2>&1) || out=""
@@ -609,8 +666,11 @@ collect() {
     fail "3단계" "수집 빌드($status)" "$out" "3단계 수집 빌드 실패"
   fi
   if [ -n "$SIGNER" ]; then
-    # 모니터링을 켠 설치는 빌드가 unsigned/index.html 을 쓰고, 빌드 성공 직후 서명 함수가 index.html 로 게시한다.
-    # 빌드 산출물보다 먼저 쓰인 index.html(직전 판)을 받지 않도록 게시를 기다린다.
+    # On an installation with monitoring on, the build writes
+    # unsigned/index.html and the signing function publishes it as index.html
+    # right after the build succeeds. Wait for that publication, so as not to
+    # download an index.html written before this build, which would be the
+    # previous version.
     local unsigned page tries=0
     unsigned=$(s3_last_modified unsigned/index.html)
     while :; do
@@ -627,8 +687,10 @@ collect() {
   say "다이어그램을 받았습니다: $OUT/index.html"
 }
 
-# 최신 다이어그램만 받는다 — 수집·배포 없이 S3 의 index.html → out/index.html(사용자 요청 2026-10-26).
-#   설치와 --collect 는 끝에 이미 받아 온다. 이건 그 뒤 한 시간마다 자동 갱신된 그림을 다시 받을 때 쓴다.
+# Download the latest diagram only: S3's index.html to out/index.html, with no
+# collection and no deployment.
+#   An installation and --collect already download it at the end. This is for
+#   fetching the diagram again later, after the hourly schedule has refreshed it.
 download() {
   step "최신 다이어그램 받기"
   check_stack_usable "$STACK_A" "다운로드"
@@ -649,7 +711,8 @@ download() {
   say "최신 다이어그램을 받았습니다${when:+ (S3 갱신 시각 $when)} — 수집은 한 시간마다 자동으로 돕니다"
 }
 
-# 마지막 안내 — 다이어그램을 어디서 여는지. CloudShell 안의 파일은 그 자리에서 브라우저로 열 수 없다.
+# The closing note: where to open the diagram. A file inside CloudShell cannot be
+# opened in a browser from there.
 diagram_hint() {
   [ "$DRY_RUN" = 0 ] && [ -f "$OUT/index.html" ] || return 0
   if [ "$IN_CLOUDSHELL" = 1 ]; then
@@ -660,7 +723,7 @@ diagram_hint() {
   fi
 }
 
-# ── 6단계 · 스택 C 와 보는 링크 ─────────────────────────────────────────────────────────────────
+# ── stage 6: stack C and the viewing link ───────────────────────────────────────────────────────
 viewer() {
   step "6단계 · CloudFront 공유 (스택 C)"
   check_stack_usable "$STACK_C" "6단계"
@@ -673,7 +736,8 @@ viewer() {
       slot=${slot:-k1}
       ;;
   esac
-  # 자리마다 파일이 하나다 — k2 자리로 교체한 스택은 out/viewer-k2.pem 으로 서명한다.
+  # One file per slot: a stack rotated into the k2 slot signs with
+  # out/viewer-k2.pem.
   VIEWER_KEY=${VIEWER_KEY:-$OUT/viewer-$slot.pem}
   if [ ! -f "$VIEWER_KEY" ]; then
     case "$c_status" in
@@ -695,14 +759,18 @@ viewer() {
     NONE | REVIEW_IN_PROGRESS) ;;
     *)
       current=$(stack_parameter "$STACK_C" ViewerPublicKeyPem)
-      # 공개키만 바꾸면 갱신이 실패하고 롤백된다(KeyLabel 을 함께 바꿔야 한다) — 그 전에 멈춘다.
+      # Changing the public key alone makes the update fail and roll back, since
+      # KeyLabel has to change with it. Stop before that happens.
       [ "$(printf '%s' "$current" | flat)" = "$(printf '%s' "$pub" | flat)" ] \
         || fail "6단계" "서명 키 확인" "$VIEWER_KEY 가 스택 C 의 공개키(자리 $slot)와 짝이 아닙니다. 키 교체는 ./deploy.sh --viewer --rotate-key 로 합니다" "6단계 서명 키 확인 실패"
       ;;
   esac
-  # PreviousPublicKeyPem·KeyLabel 은 넘기지 않는다(이전 값 유지) — 겹침 교체 중에 다시 실행해도 옛 키가 남는다.
+  # PreviousPublicKeyPem and KeyLabel are not passed, so they keep their previous
+  # values, which means the old key survives a re-run during an overlapping
+  # rotation.
   local params=("ArtifactBucketName=$ARTIFACT_BUCKET" "ViewerPublicKeyPem=$pub")
-  # 적지 않으면 넘기지 않는다 — 콘솔에서 적어 둔 읽는 사람 목록이 다시 실행할 때 지워지지 않게(이전 값 유지).
+  # Not written out means not passed, so that a list of readers entered in the
+  # console is not wiped by a re-run.
   [ -z "$LOG_READERS" ] || params+=("LogReaderPrincipalArns=$LOG_READERS")
   cfn_deploy "6단계" "스택 C 배포" "6단계 스택 C 배포 실패" "$STACK_C" "$TEMPLATE_C" - "${params[@]}"
   [ "$NARROW_VIEWER" = 0 ] || narrow_viewer
@@ -715,9 +783,12 @@ viewer() {
   [ -z "$prev_id" ] || say "겹침 교체 중입니다 — 옛 키($prev_id)는 옛 링크가 만료된 뒤 ./deploy.sh --profile $PROFILE --region $REGION --viewer --retire-old-key 로 빼 주세요"
 }
 
-# --narrow-viewer — 스택 A 를 만들 때는 스택 C 의 주소·배포 ID 를 모른다. 그래서 스택 A 의 기본은 버킷 CORS 가 아무
-# CloudFront 도메인을, 버킷 정책이 이 계정의 아무 배포의 index.html 읽기를 받는다(안내서 「선택 보강」). 스택 C 를 올린 뒤
-# 그 출력으로 스택 A 를 한 번 더 갱신해 둘 다 이 배포 하나로 좁힌다. 다른 파라미터는 넘기지 않는다(이전 값 유지).
+# --narrow-viewer: when stack A is created, stack C's address and distribution ID
+# are not yet known. So stack A starts out with a bucket CORS that accepts any
+# CloudFront domain and a bucket policy that lets any distribution in this account
+# read index.html. Once stack C is up, stack A is updated once more from its
+# outputs to narrow both down to that one distribution. No other parameter is
+# passed, so the rest keep their previous values.
 narrow_viewer() {
   step "6단계 · 스택 A 를 이 CloudFront 배포로 좁히기 (--narrow-viewer)"
   local domain dist
@@ -740,21 +811,34 @@ issue_link() { # <비밀키>
   link=$("$LINK_ISSUER" --stack "$STACK_C" --key "$1" --days "$DAYS" \
     --profile "$PROFILE" --region "$REGION") || fail "6단계" "링크 발급" "issue-viewer-link.sh 실패" "6단계 링크 발급 실패"
   echo
-  # 🔴 `${DAYS}` 중괄호 필수 — macOS /bin/bash 3.2 는 UTF-8 로캘에서 「일」의 첫 바이트를 변수 이름으로 읽어 `set -u` 에 걸린다(실측 2026-10-22)
+  # The braces in `${DAYS}` are required: in a UTF-8 locale, macOS /bin/bash 3.2
+  # reads the first byte of the following multi-byte character as part of the
+  # variable name and then trips `set -u`.
   echo "보는 링크 (${DAYS}일 · 가진 사람은 누구나 볼 수 있습니다 — 비밀번호처럼 다뤄 주세요):"
-  # 링크는 mask 를 거치지 않는다 — 서명 안의 숫자열이 바뀌면 링크가 403 이 된다. 링크에는 계정 ID 가 없다.
+  # The link does not go through mask: altering a run of digits inside the
+  # signature would make the link return 403. A link carries no account ID.
   printf '%s\n' "$link"
   say "다시 발급: infra/issue-viewer-link.sh --stack $STACK_C --key $1 --days <일수> --profile $PROFILE --region $REGION"
 }
 
-# ── 6단계 · 서명 키 교체 (#141) ─────────────────────────────────────────────────────────────────
-# 스택 C 에는 키 자리가 둘(k1·k2)이다. CloudFront 는 올린 공개키 값을 못 바꾸므로 교체 = 빈 자리에 새 키를 넣기다.
-#   겹침:     KeyLabel=빈 자리 · ViewerPublicKeyPem=새 키 · PreviousPublicKeyPem=지금 키 → 키 그룹에 둘 다 · 새 링크 = 새 키
-#   옛 키 빼기: PreviousPublicKeyPem="" → 옛 자리 삭제 · 옛 링크 403
-#   겹침 없이: KeyLabel=빈 자리 · ViewerPublicKeyPem=새 키 · PreviousPublicKeyPem="" → 옛 키가 같은 갱신에서 빠진다(유출 대응)
-# 🔴 PreviousPublicKeyPem 은 스택에 저장된 ViewerPublicKeyPem 과 **바이트까지 같아야** 한다. 한 글자라도 다르면
-#    CloudFormation 이 옛 자리를 제자리 수정으로 계획하고 CloudFront 가 거절한다(롤백 — 옛 링크는 그대로 산다).
-# 발급 기록 — issue-viewer-link.sh 가 링크마다 「만료 · Key-Pair-Id · 발급 시각」을 남기는 곳(같은 경로를 쓴다).
+# ── stage 6: rotating the signing key ───────────────────────────────────────────────────────────
+# Stack C has two key slots, k1 and k2. CloudFront cannot change the value of a
+# public key once uploaded, so rotating means putting the new key in the empty
+# slot.
+#   Overlapping:  KeyLabel=the empty slot, ViewerPublicKeyPem=the new key,
+#                 PreviousPublicKeyPem=the current key, which leaves both in the
+#                 key group and signs new links with the new key.
+#   Retire old:   PreviousPublicKeyPem="", which deletes the old slot and makes
+#                 the old links return 403.
+#   No overlap:   KeyLabel=the empty slot, ViewerPublicKeyPem=the new key,
+#                 PreviousPublicKeyPem="", which drops the old key in the same
+#                 update. This is the response to a leak.
+# PreviousPublicKeyPem has to be **byte-identical** to the ViewerPublicKeyPem
+# stored in the stack. One character out and CloudFormation plans the old slot as
+# an in-place modification, which CloudFront rejects, and the update rolls back,
+# leaving the old links alive.
+# The issue log is where issue-viewer-link.sh records the expiry, Key-Pair-Id and
+# issue time of every link. Both use the same path.
 LINK_LEDGER="${XDG_STATE_HOME:-$HOME/.local/state}/nettopo/viewer-links.log"
 KEY_TMP=""
 trap '[ -z "$KEY_TMP" ] || rm -f "$KEY_TMP"' EXIT
@@ -762,7 +846,9 @@ flat() { tr -d ' \t\r\n'; }
 other_slot() { if [ "$1" = k2 ]; then echo k1; else echo k2; fi; }
 utc() { date -u -d "@$1" '+%Y-%m-%d %H:%M UTC' 2> /dev/null || date -u -r "$1" '+%Y-%m-%d %H:%M UTC'; }
 
-# 파라미터 값을 바이트 그대로 EXACT 에 담는다. text 출력은 $( ) 가 끝 줄바꿈을 지워 저장값과 달라질 수 있어 JSON 으로 받는다.
+# Put the parameter value into EXACT byte for byte. The text output is read as
+# JSON, because `$( )` strips the trailing newline and that would differ from the
+# stored value.
 EXACT=""
 stack_parameter_exact() { # <스택> <키>
   local out
@@ -776,10 +862,14 @@ stack_parameter_exact() { # <스택> <키>
   fi
   out=${out#\"}
   out=${out%\"}
-  # PEM 은 base64·공백·줄바꿈뿐이다 — JSON 이스케이프는 \n \r \t 만 나와야 한다(다른 것이면 추측하지 않고 멈춘다).
+  # A PEM holds nothing but base64, spaces and newlines, so the only JSON escapes
+  # that may appear are \n, \r and \t. Anything else makes this stop rather than
+  # guess.
   [[ $out != *\\[!nrt]* ]] || fail "스택 조회" "$1 의 $2" "값에 예상 밖 이스케이프가 있습니다" "deploy.sh 가 0단계 자격 증명 확인에서 멈춤"
-  # 🔴 빈 값을 printf -v 로 넘기지 않는다 — macOS /bin/bash 3.2 는 `printf -v X '%b' ""` 에서 X 를 비우지 않고
-  #    이전 값을 남긴다(실측 2026-10-23: 처음 설치한 스택의 --rotate-key 가 「이미 겹침 중」으로 거절됐다)
+  # Never pass an empty value through printf -v: in macOS /bin/bash 3.2,
+  # `printf -v X '%b' ""` leaves X at its previous value instead of emptying it.
+  # Measured: --rotate-key on a freshly installed stack was rejected as already
+  # overlapping.
   if [ -n "$out" ]; then printf -v EXACT '%b' "$out"; else EXACT=""; fi
 }
 
@@ -804,13 +894,16 @@ read_key_state() {
   say "지금 키: 자리 $KEY_SLOT · $KEY_ID$([ -z "$KEY_PREV" ] || echo " · 겹침 중(옛 키 $KEY_PREV_ID)")"
 }
 
-# <Key-Pair-Id> → 「가장 늦은 만료(epoch) 건수」. 이 PC(이 사용자)에서 낸 링크만 셈한다.
+# Key-Pair-Id to the latest expiry as an epoch, plus how many links carry it.
+# Only links issued from this machine, by this user, are counted.
 ledger_latest() {
   { [ ! -f "$LINK_LEDGER" ] || cat "$LINK_LEDGER"; } \
     | awk -F'\t' -v id="$1" '$2 == id { n++; if ($1 + 0 > m) m = $1 + 0 } END { printf "%d %d\n", m, n }'
 }
 
-# 링크를 끊는 변경(겹침 없는 교체 · 옛 키 빼기)은 스택 이름을 그대로 입력해야 한다. 건너뛰는 옵션이 없다(--destroy 와 같다).
+# A change that breaks links, meaning a rotation with no overlap or retiring the
+# old key, requires typing the stack name out. There is no option to skip it, the
+# same rule as for --destroy.
 confirm_key_change() { # <무엇이 끊기나>
   local answer=""
   echo >&2
@@ -834,7 +927,8 @@ rotate_key() {
   new_slot=$(other_slot "$KEY_SLOT")
   key=${VIEWER_KEY:-$OUT/viewer-$new_slot.pem}
   if [ -n "$VIEWER_KEY" ] && [ -f "$VIEWER_KEY" ]; then
-    # 받은 새 키 — 지금 키나 물러나던 키면 교체가 아니다.
+    # The new key we were given. If it is the current key or the one being
+    # retired, this is not a rotation.
     pub=$(openssl rsa -in "$VIEWER_KEY" -pubout 2> /dev/null) \
       || fail "6단계" "서명 키 읽기" "RSA 비밀키가 아닙니다: $VIEWER_KEY" "6단계 서명 키 확인 실패"
     mine=$(printf '%s' "$pub" | flat)
@@ -844,13 +938,17 @@ rotate_key() {
     say "받은 새 키를 넣습니다: $VIEWER_KEY → 자리 $new_slot"
   else
     if [ -f "$key" ]; then
-      # 기본 경로의 남은 파일 = 키 그룹에 없는 옛 키(지난 교체의 잔재) 또는 지금 물러나는 키. 지금 키면 멈춘다.
+      # A file left at the default path is either an old key no longer in the key
+      # group, left over from an earlier rotation, or the key now being retired.
+      # If it is the current key, stop.
       mine=$(openssl rsa -in "$key" -pubout 2> /dev/null | flat || true)
       [ "$mine" != "$(printf '%s' "$KEY_PEM" | flat)" ] \
         || fail "6단계" "서명 키 교체" "$key 가 지금 서명 키입니다 — 덮어쓰면 지금 링크를 더 낼 수 없습니다. --viewer-key 로 새 키 경로를 주세요" "6단계 서명 키 확인 실패"
     fi
     mkdir -p "$(dirname "$key")"
-    # 새 키는 임시 파일에 만들고 스택 갱신이 끝난 뒤에 제자리로 옮긴다 — 갱신이 실패하면 원래 파일이 그대로 남는다.
+    # The new key is created in a temporary file and moved into place only after
+    # the stack update finishes, so a failed update leaves the original file as it
+    # was.
     KEY_TMP=$(mktemp "$(dirname "$key")/.viewer-$new_slot.XXXXXX")
     (umask 077 && openssl genrsa -out "$KEY_TMP" 2048 2> /dev/null) \
       || fail "6단계" "서명 키 만들기" "openssl genrsa 실패" "6단계 서명 키 확인 실패"
@@ -871,7 +969,9 @@ rotate_key() {
   local leak_params=("PreviousPublicKeyPem=")
   [ -z "$LOG_READERS" ] || leak_params+=("LogReaderPrincipalArns=$LOG_READERS")
   if [ -n "$KEY_PREV" ]; then
-    # 겹침 중의 유출 대응 — 빈 자리가 없다. 물러나던 키를 먼저 빼고(갱신 1) 새 키로 옮기며 지금 키를 뺀다(갱신 2).
+    # Responding to a leak during an overlap: there is no empty slot. So first
+    # drop the key that was being retired, then move to the new key and drop the
+    # current one, which takes two updates.
     say "1/2 · 물러나던 옛 키($KEY_PREV_ID)를 먼저 뺍니다 — 두 자리가 다 차 있어 새 키를 넣을 자리가 없습니다"
     cfn_deploy "6단계" "옛 키 빼기" "6단계 스택 C 배포 실패" "$STACK_C" "$TEMPLATE_C" - "${leak_params[@]}"
     if [ "$DRY_RUN" = 1 ]; then
@@ -888,12 +988,15 @@ rotate_key() {
     say "키 파일·링크를 건너뜁니다(--dry-run)"
     return
   fi
-  # 갱신이 끝났다 = 스택에 새 공개키가 있다 → 아래 검사보다 먼저 비밀키를 제자리에 둔다(검사가 멈춰도 키는 남는다).
+  # The update finishing means the stack holds the new public key, so put the
+  # private key in place before the checks below. That way the key survives even
+  # if a check stops.
   if [ -n "$KEY_TMP" ]; then
     mv -f "$KEY_TMP" "$key" || { KEY_TMP=""; fail "6단계" "서명 키 저장" "새 비밀키를 $key 로 옮기지 못했습니다(임시 파일은 남겨 두었습니다)" "6단계 서명 키 확인 실패"; }
     KEY_TMP=""
   fi
-  # 갱신이 말한 대로 됐는지 출력으로 잰다 — 겹침이면 옛 키 ID 가 그대로 남아 있어야 옛 링크가 산다.
+  # Measure from the outputs that the update did what it said. On an overlap, the
+  # old key ID has to still be there for the old links to keep working.
   local new_id prev_id
   new_id=$(stack_output "$STACK_C" ViewerKeyPairId)
   prev_id=$(stack_output "$STACK_C" PreviousKeyPairId)
@@ -955,9 +1058,12 @@ retire_old_key() {
   say "옛 키를 뺐습니다 — 키 그룹 = $KEY_ID 하나. 옛 비밀키 $OUT/viewer-$(other_slot "$KEY_SLOT").pem 은 이제 어떤 링크도 만들지 못합니다(지워도 됩니다)"
 }
 
-# ── 소스 계정용 템플릿과 명령 ───────────────────────────────────────────────────────────────────
-# 소스 계정·조직 관리자는 저장소를 받지 않았다(#82 댓글) → 스택 B·C 템플릿을 out/templates/ 에 복사해 넘긴다.
-# 서명 URL(자격 증명 세션과 함께 만료)·버킷 공유(패키지 버킷 정책을 다른 계정에 연다)는 쓰지 않는다.
+# ── templates and commands for the source accounts ──────────────────────────────────────────────
+# The administrator of a source account, or of the organization, has not been
+# given this repository, so the stack B and C templates are copied into
+# out/templates/ to hand over. Neither a signed URL, which expires with the
+# credential session, nor bucket sharing, which opens the package bucket policy to
+# another account, is used for this.
 sha256_of() {
   if command -v sha256sum > /dev/null; then sha256sum "$@"; else shasum -a 256 "$@"; fi
 }
@@ -973,21 +1079,28 @@ handoff() {
       NONE | REVIEW_IN_PROGRESS) ;;
       *)
         [ -n "$regions" ] || regions=$(stack_parameter "$STACK_A" TargetRegions)
-        # 이전 실행에서 넣은 외부 ID 는 스택 A 에 남아 있다 — 생략한 실행의 스택 B 명령에서 빠지면 새로 붙는 소스 계정의
-        # 역할만 외부 ID 조건 없이 선다.
+        # An external ID set on an earlier run is still on stack A. If it were
+        # left out of the stack B command on a run that omits it, only the roles
+        # of newly added source accounts would come up without the external ID
+        # condition.
         [ -n "$external" ] || external=$(stack_parameter "$STACK_A" MemberExternalId)
         ;;
     esac
   fi
   regions=${regions:-<수집 리전 목록>}
-  # 계정 ID 는 화면에도 끝 4자리만 — 명령에는 자리표시만 두고, 전체 값은 받는 사람에게 따로 알린다.
+  # An account ID keeps only its last four digits on screen as well, so the
+  # command carries a placeholder and the full value is passed to the recipient
+  # separately.
   local hub="<모니터링 계정 ID …${ACCOUNT:8}>"
-  # mask 를 거친다 — 프로필을 생략한 CloudShell 실행이면 안내 명령의 빈 `--profile ` 을 지운다.
+  # Pass it through mask, which on a CloudShell run with no profile strips the
+  # empty `--profile ` from the commands we print.
   handoff_text "$hub" "$regions" "$external" "$ORG_ID" | mask_stream
 }
 handoff_text() { # <hub 자리표시> <리전 목록> <외부 ID|""> <조직 ID|"">
   local hub=$1 regions=$2 over="" json="" console=""
-  # 선택 보강 — 값이 있을 때만 두 명령(CLI 한 줄 · StackSet)에 같은 파라미터를 붙인다. 없으면 출력은 이 기능 전과 바이트까지 같다.
+  # The optional hardening parameters are appended to both commands, the single
+  # CLI line and the StackSet, only when a value is present. Without one, the
+  # output is byte-identical to what it was before this feature existed.
   if [ -n "$3" ]; then
     over+=" ExternalId=$3"
     json+=",{\"ParameterKey\":\"ExternalId\",\"ParameterValue\":\"$3\"}"
@@ -1012,7 +1125,9 @@ handoff_text() { # <hub 자리표시> <리전 목록> <외부 ID|""> <조직 ID|
   (콘솔: CloudFormation → 스택 생성 → 템플릿 파일 업로드 → 위 두 값$console · 「IAM 리소스 … 승인」 체크)
 
 조직 전체라면 조직 관리자가 StackSet 으로(안내서 4-C · activate-organizations-access 를 먼저 한 번):
-  # StackSets 위임 관리자 계정에서 실행하면 두 명령 끝에 --call-as DELEGATED_ADMIN 을 붙입니다(관리 계정이면 그대로)
+  # Running from a StackSets delegated administrator account means appending
+  # --call-as DELEGATED_ADMIN to both commands. From the management account they
+  # stay as they are.
   aws cloudformation create-stack-set --stack-set-name $STACK_B \\
     --template-body file://stack-b-member-role.yaml --permission-model SERVICE_MANAGED \\
     --auto-deployment Enabled=true,RetainStacksOnAccountRemoval=false --capabilities CAPABILITY_NAMED_IAM \\
@@ -1026,12 +1141,13 @@ handoff_text() { # <hub 자리표시> <리전 목록> <외부 ID|""> <조직 ID|
 EOF
 }
 
-# ── 삭제 ────────────────────────────────────────────────────────────────────────────────────────
-# 버전까지 전부 지운다(1,000개씩 반복). 버전 관리가 없는 버킷도 같은 길로 지워진다.
+# ── teardown ────────────────────────────────────────────────────────────────────────────────────
+# Delete everything including the versions, a thousand at a time. A bucket with no
+# versioning is deleted along the same path.
 empty_and_delete_bucket() {
   local bucket=$1 batch out
   while :; do
-    # shellcheck disable=SC2016  # 역따옴표는 JMESPath 리터럴이다
+    # shellcheck disable=SC2016  # the backticks are a JMESPath literal
     batch=$(aws s3api list-object-versions --bucket "$bucket" --max-items 1000 \
       --query '{Objects: [(Versions || `[]`)[].{Key: Key, VersionId: VersionId}, (DeleteMarkers || `[]`)[].{Key: Key, VersionId: VersionId}][], Quiet: `true`}' \
       --output json --profile "$PROFILE" --region "$REGION" 2>&1) || {
@@ -1041,7 +1157,9 @@ empty_and_delete_bucket() {
     printf '%s' "$batch" | grep -q '"Key"' || break
     out=$(aws s3api delete-objects --bucket "$bucket" --delete "$batch" \
       --profile "$PROFILE" --region "$REGION" 2>&1) || fail "삭제" "버킷 $bucket 비우기" "$out" "삭제 실패"
-    # Quiet 모드는 실패한 객체만 돌려준다 — 종료 코드는 0 이라 따로 본다(안 보면 같은 목록을 끝없이 돈다).
+    # Quiet mode returns only the objects that failed, and the exit code stays 0,
+    # so it is inspected separately. Without that, this would loop over the same
+    # list forever.
     if printf '%s' "$out" | grep -q '"Errors"'; then fail "삭제" "버킷 $bucket 비우기" "$out" "삭제 실패"; fi
   done
   out=$(aws s3api delete-bucket --bucket "$bucket" --profile "$PROFILE" --region "$REGION" 2>&1) \
@@ -1104,10 +1222,12 @@ destroy() {
   say "삭제가 끝났습니다. 서명 비밀키($OUT/viewer-k*.pem) · 발급 기록($LINK_LEDGER) · out/ 는 이 PC 에 남아 있습니다 — 필요 없으면 직접 지워 주세요"
 }
 
-# ── 실행 ────────────────────────────────────────────────────────────────────────────────────────
+# ── main ────────────────────────────────────────────────────────────────────────────────────────
 preflight
 if [ -n "$KEY_OP" ]; then
-  # 키 교체는 스택 C 만 — 스택 A·수집·소스 계정 안내를 타지 않는다(유출 대응이 수집을 기다리지 않게).
+  # Rotating the key touches stack C alone. It skips stack A, the collection and
+  # the source account instructions, so that responding to a leak does not wait
+  # for a collection.
   if [ "$KEY_OP" = rotate-key ]; then rotate_key; else retire_old_key; fi
   exit 0
 fi

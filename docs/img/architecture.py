@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-"""설치 안내서의 아키텍처 그림(architecture.png · architecture.en.png)을 만든다.
+"""Builds the architecture diagrams for the deployment guide
+(architecture.png and architecture.en.png).
 
-AWS 공식 Architecture Icons 패키지(https://aws.amazon.com/architecture/icons/)의
-그룹·서비스·리소스 아이콘을 쓰고, 배치는 Graphviz 가 한다.
+It uses the group, service and resource icons from the official AWS Architecture
+Icons package (https://aws.amazon.com/architecture/icons/), and Graphviz does the
+layout.
 
-준비:
-  1. Graphviz 설치 (예: dnf install graphviz / brew install graphviz)
-  2. 아이콘 패키지 zip 을 받아 풀고 그 폴더를 ICONS 환경 변수로 준다
-     (안의 Architecture-Group-Icons_* 등 폴더 이름의 날짜는 ICON_RELEASE 로 맞춘다)
+Setup:
+  1. Install Graphviz (for example dnf install graphviz or brew install graphviz)
+  2. Download and unpack the icon package zip, then point the ICONS environment
+     variable at that folder. The dates in the folder names inside it, such as
+     Architecture-Group-Icons_*, are matched through ICON_RELEASE.
 
-실행:
+Running it:
   ICONS=~/aws-icons python3 docs/img/architecture.py ko docs/img/architecture.png
   ICONS=~/aws-icons python3 docs/img/architecture.py en docs/img/architecture.en.png
 """
@@ -139,7 +142,8 @@ def group(name: str, key: str, text: str, color: str, dashed: bool) -> str:
 
 
 def service(name: str, key: str, lines: list[str]) -> str:
-    """서비스 아이콘 64px 아래에 설명. AWS 다이어그램의 기본 모양."""
+    """A caption below a 64px service icon, which is the standard shape in an AWS
+    diagram."""
     rows = "<BR/>".join(lines)
     return (
         f'{name} [shape=plain, margin=0, label=<<TABLE border="0" cellborder="0" '
@@ -151,7 +155,8 @@ def service(name: str, key: str, lines: list[str]) -> str:
 
 
 def person(name: str, key: str, lines: list[str]) -> str:
-    """사용자 아이콘 왼쪽, 설명 오른쪽. 선이 아이콘에 닿게 한다."""
+    """The user icon on the left and the caption on the right, with the line
+    meeting the icon."""
     rows = "<BR/>".join(lines)
     return (
         f'{name} [shape=plain, margin=0, label=<<TABLE border="0" cellborder="0" '
@@ -163,7 +168,7 @@ def person(name: str, key: str, lines: list[str]) -> str:
 
 
 def edge_label(text: str, right_gap: int) -> str:
-    """선 왼쪽의 글자와 선 사이에 여백을 둔다."""
+    """Puts space between a label to the left of a line and the line itself."""
     return (
         '<<TABLE border="0" cellborder="0" cellspacing="0" cellpadding="0"><TR>'
         f'<TD>{text}</TD><TD width="{right_gap}"></TD>'
