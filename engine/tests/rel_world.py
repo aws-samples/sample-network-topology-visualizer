@@ -1,22 +1,26 @@
-"""배치 D(스키마 2.10.0 · ADR 0002 §12)의 가짜 세계 — 「가리킨다/넘긴다」 관계 모양 전부를 한 VPC 에 둔다.
+"""A fake world for the "points at" and "hands off to" relations (schema
+2.10.0), holding every relation shape in one VPC.
 
-`test_relations_d.py` 가 이 세계로 엔진을 재고, 같은 세계를 엔진에 돌린 산출물이 **그대로** `fixtures/relations.json`
-(렌더러 하네스 `rel` 페이지 입력 · 검사 152~156)이다 — `test_the_fixture_is_this_world_collected` 가 바이트를 대조한다
-(`NETTOPO_REGEN_FIXTURE=1` 이면 다시 쓴다). 🔴 손으로 고치지 않는다.
+`test_relations_d.py` measures the engine against this world, and running the
+engine over the same world produces `fixtures/relations.json` byte for byte;
+`test_the_fixture_is_this_world_collected` compares those bytes, and rewrites
+the fixture when `NETTOPO_REGEN_FIXTURE=1` is set. Do not edit the fixture by
+hand.
 
-계정 = 마스킹된 예시 계열(`111122223333` · 불변식 ⑤). 모양:
+The account numbers come from the reserved example range (`111122223333`).
+The shape is:
 
-| 축 | 자원 | 엔진이 내는 것 |
+| Axis | Resources | What the engine produces |
 |---|---|---|
-| ① 접두사 목록 | 앱 테이블: `corp-onprem`(고객 관리형 · CIDR 둘 → VGW) · `partner-nets`(고객 관리형 · **항목 읽기 거부** → TGW) · S3(AWS 관리형 → 게이트웨이 엔드포인트) · 주 테이블(데이터 서브넷): S3 → 게이트웨이 엔드포인트 | 테이블 속성 `prefix_lists`·`prefix_list_entries`·`prefix_list_entries_unread` · 앱 테이블 `partial`(항목 거부) |
-| ② 탄력적 IP | bastion EC2(인스턴스 연결) · NAT(ENI · 「Interface for NAT Gateway nat-…」) · `pub-alb` 서비스 관리형(ENI · 「ELB app/pub-alb/…」) · game EC2(GA 의 EIP 엔드포인트) · 연결 없는 EIP · 이 세계에 없는 ENI 에 붙은 EIP | `eip_association` 넷 · `associated` false 하나 · `association_unresolved` 「<eni> no_eni」 하나 |
-| ③ API Gateway | REST `orders-api`: VPC 링크 `orders-link` → `edge-nlb` · 단계 변수 링크 · HTTP `web-http`: VPC 링크 `web-link` → `int-alb` 리스너 · Cloud Map 통합 | `vpc_link` 둘 · `unresolved_vpc_links` 「${stageVariables.vpcLinkId} stage_variable」·「srv-… cloud_map」 |
-| ④ RDS 프록시 | `rel-proxy-aurora`(데이터 a·b · TRACKED_CLUSTER `rel-aurora` + 멤버 둘) · `rel-proxy-orders`(데이터 a · `orders-db` + 이 세계에 없는 `legacy-db`) | `proxy_target` 둘(클러스터 선 하나 · 인스턴스 선 하나) · `target_instance_ids` · `unresolved_proxy_targets` 「legacy-db not_collected」 |
-| ⑤ Global Accelerator | `rel-ga`(TCP 443): us-east-1 = `pub-alb` · game EIP · 이 세계에 없는 `retired-nlb` · eu-west-1 = 수집 범위 밖 ALB · eu-west-2 = 빈 그룹 | `accelerator_endpoint` 둘(→ `pub-alb` · → game EC2 `via_eip`) · `unresolved_endpoints` 「retired-nlb not_collected」·「eu-alb not_in_scope eu-west-1」 · `empty_endpoint_regions` |
-| ⑥ TGW Connect(#129 · 2.11.0) | `rel-sdwan` = VPC 어태치먼트 위 GRE(피어 둘 — 하나는 지워짐) · `rel-sdwan-dx` = DX 게이트웨이 어태치먼트 위 · `rel-sdwan-gone` = 이 세계에 없는 전송 어태치먼트 위 | `connect_transport` 둘 · `connect_peers` · `unresolved_refs` 「<전송 id>」 하나 |
-| ⑦ Cloud WAN(#129) | 코어 네트워크 `rel-core`(us-west-2 API): 이 VPC(prod) · 수집 범위 밖 eu-west-1 VPC · 이 세계에 없는 VPC · Connect 연결 · 지우는 중 연결 · 앱 테이블 10.200.0.0/16 → `CoreNetworkArn` | `core_network_attachment` 하나 · `unresolved_attachments` 「… not_in_scope eu-west-1」·「… not_collected」 · `other_attachments` 하나 · 라우트 → 코어 네트워크 |
-| ⑧ VPC Lattice(#129) | 서비스 네트워크 `rel-sn`: 이 VPC · 이 세계에 없는 VPC · 서비스 `orders-svc`(EC2 · ALB · Lambda · IP · 이 세계에 없는 EC2) · `status-svc`(빈 대상 그룹) · 이 세계에 없는 서비스 | `lattice_vpc_association` 하나 · `lattice_service_association` 둘 · `lattice_target` 셋 · 까닭 줄 |
-| ⑨ WAF 웹 ACL(2.12.0 · ADR 0014) | 리전 범위 `rel-waf-edge`: `pub-alb`(ALB 쪽 `GetWebACLForResource`) · `orders-api` 스테이지 prod·beta · 이 세계에 없는 API 스테이지 · 리전 범위 `rel-waf-idle`(붙은 곳 없음) · CloudFront 범위 `rel-waf-cf`(us-east-1 API · 배포 없음) | `waf_protection` 둘(→ `pub-alb` · → `orders-api` `stages`) · `unresolved_protected` 「… not_collected」 · 글로벌 web ACL 카드 하나 |
+| ① Prefix lists | App table: `corp-onprem`, customer-managed with two CIDRs, to the VGW; `partner-nets`, customer-managed, **whose entries cannot be read**, to the TGW; S3, AWS-managed, to a gateway endpoint. Main table, used by the data subnets: S3 to a gateway endpoint | The table attributes `prefix_lists`, `prefix_list_entries` and `prefix_list_entries_unread`, with the app table marked `partial` because its entries were denied |
+| ② Elastic IPs | The bastion EC2 instance, associated by instance; the NAT gateway, by ENI, described as "Interface for NAT Gateway nat-…"; the service-managed `pub-alb`, by ENI, described as "ELB app/pub-alb/…"; the game EC2 instance, through the EIP endpoint of a Global Accelerator; an EIP with no association; and an EIP attached to an ENI that is absent from this world | Four `eip_association` edges, one with `associated` false, and one `association_unresolved` of "<eni> no_eni" |
+| ③ API Gateway | REST API `orders-api`, with the VPC link `orders-link` to `edge-nlb` and a link held in a stage variable; HTTP API `web-http`, with the VPC link `web-link` to an `int-alb` listener and a Cloud Map integration | Two `vpc_link` edges, and `unresolved_vpc_links` of "${stageVariables.vpcLinkId} stage_variable" and "srv-… cloud_map" |
+| ④ RDS proxies | `rel-proxy-aurora` in data a and b, with a TRACKED_CLUSTER target of `rel-aurora` and its two members; `rel-proxy-orders` in data a, with `orders-db` and `legacy-db`, which is absent from this world | Two `proxy_target` edges, one to the cluster and one to the instance, plus `target_instance_ids` and `unresolved_proxy_targets` of "legacy-db not_collected" |
+| ⑤ Global Accelerator | `rel-ga` on TCP 443: in us-east-1, `pub-alb`, the game EIP, and `retired-nlb`, which is absent from this world; in eu-west-1, an ALB outside the collection scope; in eu-west-2, an empty endpoint group | Two `accelerator_endpoint` edges, one to `pub-alb` and one to the game EC2 instance `via_eip`, plus `unresolved_endpoints` of "retired-nlb not_collected" and "eu-alb not_in_scope eu-west-1", and `empty_endpoint_regions` |
+| ⑥ TGW Connect (2.11.0) | `rel-sdwan`, GRE over a VPC attachment with two peers, one of them deleted; `rel-sdwan-dx`, over a Direct Connect gateway attachment; `rel-sdwan-gone`, over a transport attachment that is absent from this world | Two `connect_transport` edges, `connect_peers`, and one `unresolved_refs` entry holding the transport id |
+| ⑦ Cloud WAN | The core network `rel-core`, read through the us-west-2 API: this VPC, tagged prod; a eu-west-1 VPC outside the collection scope; a VPC absent from this world; a Connect attachment; an attachment being deleted; and the app table sending 10.200.0.0/16 to a `CoreNetworkArn` | One `core_network_attachment` edge, `unresolved_attachments` of "… not_in_scope eu-west-1" and "… not_collected", one entry in `other_attachments`, and a route to the core network |
+| ⑧ VPC Lattice | The service network `rel-sn`: this VPC; a VPC absent from this world; the service `orders-svc` with EC2, ALB, Lambda and IP targets plus an EC2 instance absent from this world; `status-svc` with an empty target group; and a service absent from this world | One `lattice_vpc_association`, two `lattice_service_association`, three `lattice_target` edges, and the reason rows |
+| ⑨ WAF web ACLs (2.12.0) | Regional scope `rel-waf-edge`, covering `pub-alb` through `GetWebACLForResource` on the ALB side, the `orders-api` prod and beta stages, and an API stage absent from this world; regional scope `rel-waf-idle`, attached to nothing; CloudFront scope `rel-waf-cf`, read through the us-east-1 API, with no distributions | Two `waf_protection` edges, one to `pub-alb` and one to the `orders-api` `stages`, plus `unresolved_protected` of "… not_collected" and one card for the global web ACL |
 """
 
 from __future__ import annotations
@@ -44,7 +48,8 @@ RT_PUB = "rtb-0rel1234abcd0071"
 RT_APP = "rtb-0rel1234abcd0072"
 RT_MAIN = "rtb-0rel1234abcd0073"
 VPCE_S3 = "vpce-0rel1234abcd0081"
-# ① 접두사 목록 — AWS 관리형 S3 · 고객 관리형 둘(하나는 항목 읽기가 거부된다)
+# ① Prefix lists: AWS-managed S3 and two customer-managed lists, one of
+#     which has its entries denied.
 PL_S3 = "pl-0rel1234abcd0101"
 PL_CORP = "pl-0rel1234abcd0102"
 PL_PARTNER = "pl-0rel1234abcd0103"
@@ -63,7 +68,7 @@ NAT = "nat-0abc1234def70011"
 NAT_ENI = "eni-0abc1234def70021"
 ALB_ENI = "eni-0abc1234def70022"
 GONE_ENI = "eni-0abc1234def70029"
-# ② 탄력적 IP
+# ② Elastic IPs
 EIP = {
     "bastion": "eipalloc-0abc1234def70101",
     "nat": "eipalloc-0abc1234def70102",
@@ -73,14 +78,14 @@ EIP = {
     "orphan": "eipalloc-0abc1234def70106",
 }
 # ③ API Gateway
-REST_API = "a1b2c3d4e5"  # pragma: allowlist secret — 가짜 API id(비밀 아님)
-HTTP_API = "f6e5d4c3b2"  # pragma: allowlist secret — 가짜 API id(비밀 아님)
+REST_API = "a1b2c3d4e5"  # pragma: allowlist secret - a fake API id, not a secret
+HTTP_API = "f6e5d4c3b2"  # pragma: allowlist secret - a fake API id, not a secret
 VPC_LINK = "vl0abc1"
 VPC_LINK_V2 = "v2l0abc1"
 CLOUD_MAP_ARN = (
     f"arn:aws:servicediscovery:{REGION}:{ACCOUNT}:service/srv-0abc1234def70201"
 )
-# ④ RDS 프록시
+# ④ RDS proxies
 RDS = "orders-db"
 AURORA = "rel-aurora"
 AURORA_MEMBERS = ("rel-aurora-1", "rel-aurora-2")
@@ -91,8 +96,10 @@ GA_ARN = f"arn:aws:globalaccelerator::{ACCOUNT}:accelerator/0a1b2c3d-1111-2222-3
 GA_LISTENER = f"{GA_ARN}/listener/0abc1234"
 
 
-# ⑥ TGW Connect(#129) — SD-WAN 어플라이언스 주소(이 세계에 그 EC2 는 없다 — 피어 주소는 글자일 뿐이다 · 데이터 서브넷 → NAT 라우트 선 자리를 비운다) ·
-#   DX 게이트웨이(전송 어태치먼트 둘째 꼴)
+# ⑥ TGW Connect: the SD-WAN appliance addresses. That EC2 instance is absent
+#     from this world, since a peer address is only text, and the data subnet
+#     leaves the slot for its NAT route edge empty. The Direct Connect gateway
+#     is the second shape a transport attachment can take.
 SDWAN_IP = "10.30.12.20"
 DXGW = "0d0e0f00-1111-2222-3333-0abc1234def7"
 DX_ATT = "tgw-attach-0rel1234abcd0054"
@@ -121,7 +128,7 @@ FN_ARN = f"arn:aws:lambda:{REGION}:{ACCOUNT}:function:{FN}"
 GONE_INSTANCE = "i-0abc1234def70099"
 LATTICE_IP = "10.30.11.99"
 _LAT = f"arn:aws:vpc-lattice:{REGION}:{ACCOUNT}"
-# ⑨ WAF 웹 ACL(2.12.0 · ADR 0014)
+# ⑨ WAF web ACLs (2.12.0)
 _WAF = f"arn:aws:wafv2:{REGION}:{ACCOUNT}"
 WAF_EDGE = "0rel1234-aaaa-bbbb-cccc-0rel0waf0401"
 WAF_IDLE = "0rel1234-aaaa-bbbb-cccc-0rel0waf0402"
@@ -129,9 +136,7 @@ WAF_CF = "0rel1234-aaaa-bbbb-cccc-0rel0waf0403"
 WAF_EDGE_ARN = f"{_WAF}:regional/webacl/rel-waf-edge/{WAF_EDGE}"
 WAF_IDLE_ARN = f"{_WAF}:regional/webacl/rel-waf-idle/{WAF_IDLE}"
 WAF_CF_ARN = f"arn:aws:wafv2:us-east-1:{ACCOUNT}:global/webacl/rel-waf-cf/{WAF_CF}"
-WAF_GONE_API = (
-    "q9w8e7r6t5"  # pragma: allowlist secret — 이 세계에 없는 가짜 API id(비밀 아님)
-)
+WAF_GONE_API = "q9w8e7r6t5"  # pragma: allowlist secret - a fake API id absent from this world, not a secret
 
 
 def _tags(name: str) -> list[dict[str, str]]:
@@ -208,7 +213,8 @@ def world() -> FakeAws:
                     "GatewayId": VPCE_S3,
                     "State": "active",
                 },
-                # ⑦ Cloud WAN — 라우트 대상이 코어 네트워크 ARN 으로만 온다(#129)
+                # ⑦ Cloud WAN: the route target arrives only as a core
+                #     network ARN.
                 {
                     "DestinationCidrBlock": CORE_CIDR,
                     "CoreNetworkArn": CORE_ARN,
@@ -218,7 +224,8 @@ def world() -> FakeAws:
             "Tags": _tags("rel-app-rt"),
         },
         {
-            # 주 라우트 테이블 — 데이터 서브넷이 연관 선 없이 쓴다
+            # The main route table, used by the data subnets with no
+            # association of their own.
             "RouteTableId": RT_MAIN,
             "VpcId": VPC,
             "Associations": [
@@ -259,7 +266,8 @@ def world() -> FakeAws:
             "MaxEntries": 5,
             "OwnerId": ACCOUNT,
         },
-        # 이 VPC 가 안 쓰는 AWS 관리형 목록 — 고르지 않는다(이름 표에 섞이지 않는다)
+        # An AWS-managed list this VPC does not use. It is not picked up, so
+        # it cannot end up in the name table.
         {
             "PrefixListId": "pl-0rel1234abcd0199",
             "AddressFamily": "IPv4",
@@ -753,7 +761,10 @@ def world() -> FakeAws:
                 "State": "available",
                 "Tags": [],
             },
-            # ⑥ DX 게이트웨이 어태치먼트(Connect 의 둘째 전송) · Connect 셋(VPC 위 · DX 위 · 이 세계에 없는 전송 위)
+            # ⑥ The Direct Connect gateway attachment, which is Connect's
+            #     second transport, and three Connect attachments: one over
+            #     the VPC, one over Direct Connect, and one over a transport
+            #     absent from this world.
             {
                 "TransitGatewayAttachmentId": DX_ATT,
                 "TransitGatewayId": TGW,
@@ -824,7 +835,8 @@ def world() -> FakeAws:
                 65020,
                 "branch-dx",
             ),
-            # 지워진 피어 — 목록에 남아도 싣지 않는다
+            # A deleted peer. Even when it is still listed, we do not carry
+            # it.
             {
                 **_peer(
                     PEER_DELETED,
@@ -874,7 +886,9 @@ def world() -> FakeAws:
 def _peer(
     pid: str, att: str, tgw_ip: str, peer_ip: str, cidr: str, asn: int, name: str
 ) -> dict[str, Any]:
-    """TGW Connect 피어(GRE 터널 하나 + BGP 세션 둘) — BGP 상태 값은 구조에 새면 안 된다(`BgpStatus`)."""
+    """TGW Connect peers: one GRE tunnel and two BGP sessions. The BGP state
+    value (`BgpStatus`) must not leak into the structure document.
+    """
     base = cidr.rsplit(".", 1)[0]
     return {
         "TransitGatewayAttachmentId": att,
@@ -907,7 +921,7 @@ def _peer(
 
 
 def _overlay() -> dict[str, Any]:
-    """⑦ Cloud WAN · ⑧ VPC Lattice 의 응답(#129)."""
+    """The responses for ⑦ Cloud WAN and ⑧ VPC Lattice."""
 
     def att(
         aid: str, kind: str, arn: str, seg: str, loc: str, state: str = "AVAILABLE"
@@ -1067,7 +1081,8 @@ def _overlay() -> dict[str, Any]:
             tg("tg-0rel1234abcd0343", "orders-fn", "LAMBDA", None, [orders]),
             tg("tg-0rel1234abcd0344", "orders-ip", "IP", 8080, [orders]),
             tg("tg-0rel1234abcd0345", "status-empty", "INSTANCE", 80, [status]),
-            # 이 쌍의 서비스가 쓰지 않는 그룹 — 대상을 묻지 않는다
+            # A group this pair's service does not use, so its targets are
+            # never asked for.
             tg("tg-0rel1234abcd0349", "unused", "INSTANCE", 80, []),
         ],
         "lattice_targets": {
@@ -1096,7 +1111,9 @@ def _overlay() -> dict[str, Any]:
 
 
 def _waf() -> dict[str, Any]:
-    """⑨ WAF 웹 ACL(2.12.0 · ADR 0014) — 리전 범위 둘 · CloudFront 범위 하나 · `pub-alb` 의 web ACL(ALB 쪽 사실)."""
+    """⑨ WAF web ACLs (2.12.0): two regional scopes, one CloudFront scope,
+    and the web ACL of `pub-alb`, which is a fact read from the ALB side.
+    """
 
     def summary(name: str, acl_id: str, arn: str) -> dict[str, Any]:
         return {"Name": name, "Id": acl_id, "ARN": arn, "LockToken": f"lock-{acl_id}"}

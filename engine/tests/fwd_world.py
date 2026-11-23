@@ -1,20 +1,22 @@
-"""넘김 선(스키마 2.8.0 · 사용자 결정 2026-10-20 P1-3·P1-4)의 가짜 세계 — 검사 VPC 와 바퀴살 VPC 하나씩.
+"""A fake world for forwarding edges: one inspection VPC and one spoke VPC.
 
-`test_forwarding.py` 가 이 세계로 엔진을 재고, 같은 세계를 엔진에 돌린 산출물이 **그대로** `fixtures/forwarding.json`
-(렌더러 하네스 입력 · 검사 149)이다 — `test_the_fixture_is_this_world_collected` 가 바이트를 대조한다
-(`NETTOPO_REGEN_FIXTURE=1` 이면 다시 쓴다). 계정 = 마스킹된 예시 계열(`111122223333` · 불변식 ⑤).
+`test_forwarding.py` measures the engine against this world, and running the
+engine over the same world produces `fixtures/forwarding.json` byte for byte;
+`test_the_fixture_is_this_world_collected` compares those bytes, and rewrites
+the fixture when `NETTOPO_REGEN_FIXTURE=1` is set. The account numbers come
+from the reserved example range (`111122223333`).
 
-| 무엇 | 모양 | 잇는 것 |
+| What | Shape | What it links |
 |---|---|---|
-| 바퀴살 VPC `fwd-spoke` | 서브넷 `gwlbe-a`(GWLB 엔드포인트) · `app-a`(앱 EC2 · 기본 라우트 → GWLB 엔드포인트) · `edge-a`(→ IGW) | 라우트 `app-a` → `vpce-…401`(이미 있던 `route` 엣지) |
-| GWLB 엔드포인트 `vpce-…401` | `GatewayLoadBalancer` · 서비스 `vpce-svc-…aaa` | `endpoint_provider` → `inspect-gwlb`(제공자 = 검사 VPC 의 GWLB · 서비스 이름으로) |
-| GWLB 엔드포인트 `vpce-…403` | 서비스 `vpce-svc-…ccc`(제공자를 수집하지 않았다) | 선 없음 · `unresolved_refs` = 그 서비스 이름 |
-| 검사 VPC `fwd-inspection` | GWLB `inspect-gwlb`(서브넷 `appl-a`) · 대상 그룹 `appliance-tg`(instance · GENEVE 6081) | `load_balancer_target` → 어플라이언스 EC2(#116) |
-| 엔드포인트 서비스 구성 | `vpce-svc-…aaa` → `inspect-gwlb` ARN(제공자 계정 = 같은 계정) | LB 속성 `endpoint_service_names` |
-| 인터페이스 엔드포인트 `vpce-…404`(P2-1) | 서비스 `vpce-svc-…bbb` — 제공자 = 검사 VPC 의 NLB `partner-nlb`(엔드포인트 서비스 구성) | `endpoint_provider` → `partner-nlb` · 주인 계정 = 이 계정 |
-| 인터페이스 엔드포인트 `vpce-…405`(P2-1) | 서비스 `vpce-svc-…ddd` — 범위 밖 파트너 계정 `444455556666` | 선 없음 · `unresolved_refs` · `service_owner` = 파트너 계정 |
-| NVA `nva-1`(P2-2 · `edge-a` 의 EC2) | 앱 라우트 테이블 `10.99.0.0/16` → `eni-…7601`(그 인스턴스의 ENI — AWS 는 인스턴스 라우트에도 ENI 를 준다) · `10.98.0.0/16` → 없는 ENI | `route` → `ec2_instance`(`via_eni`) · 없는 ENI = `unresolved_route_targets` |
-| Network Firewall `spoke-fw`(P1-4) | 방화벽 서브넷 `fw-a` · 엔드포인트 `vpce-…402`(AWS 관리 GWLB 엔드포인트 · `SyncStates` 의 `EndpointId`) | 라우트 `web-a` → `vpce-…402` · `endpoint_provider` → 방화벽(`firewall_endpoint`) |
+| Spoke VPC `fwd-spoke` | Subnets `gwlbe-a` (GWLB endpoint), `app-a` (application EC2, default route to the GWLB endpoint) and `edge-a` (to the IGW) | Route `app-a` to `vpce-…401`, an edge of the existing `route` kind |
+| GWLB endpoint `vpce-…401` | `GatewayLoadBalancer`, service `vpce-svc-…aaa` | `endpoint_provider` to `inspect-gwlb`, matched by service name, so the provider is the GWLB in the inspection VPC |
+| GWLB endpoint `vpce-…403` | Service `vpce-svc-…ccc`, whose provider was not collected | No edge; `unresolved_refs` holds that service name |
+| Inspection VPC `fwd-inspection` | GWLB `inspect-gwlb` (subnet `appl-a`) and target group `appliance-tg` (instance targets, GENEVE 6081) | `load_balancer_target` to the appliance EC2 |
+| Endpoint service configuration | `vpce-svc-…aaa` to the `inspect-gwlb` ARN, provider account the same account | The load balancer attribute `endpoint_service_names` |
+| Interface endpoint `vpce-…404` | Service `vpce-svc-…bbb`, provided by `partner-nlb`, the NLB in the inspection VPC, through an endpoint service configuration | `endpoint_provider` to `partner-nlb`, owner account this account |
+| Interface endpoint `vpce-…405` | Service `vpce-svc-…ddd` in partner account `444455556666`, which is out of scope | No edge; `unresolved_refs`, and `service_owner` is the partner account |
+| NVA `nva-1`, an EC2 instance in `edge-a` | The application route table sends `10.99.0.0/16` to `eni-…7601`, that instance's ENI, because AWS reports an ENI for instance routes as well, and `10.98.0.0/16` to an ENI that does not exist | `route` to `ec2_instance` (`via_eni`); the missing ENI lands in `unresolved_route_targets` |
+| Network Firewall `spoke-fw` | Firewall subnet `fw-a` and endpoint `vpce-…402`, an AWS-managed GWLB endpoint taken from `EndpointId` in `SyncStates` | Route `web-a` to `vpce-…402`, and `endpoint_provider` to the firewall (`firewall_endpoint`) |
 """
 
 from __future__ import annotations
@@ -28,7 +30,7 @@ REGION = "us-east-1"
 SPOKE = "vpc-0abc1234def57001"
 INSPECT = "vpc-0abc1234def57002"
 SN = {
-    # 이름: (id, CIDR, AZ, VPC)
+    # name: (id, CIDR, AZ, VPC)
     "gwlbe-a": ("subnet-0abc1234def57011", "10.30.0.0/24", "us-east-1a", SPOKE),
     "app-a": ("subnet-0abc1234def57012", "10.30.1.0/24", "us-east-1a", SPOKE),
     "edge-a": ("subnet-0abc1234def57013", "10.30.3.0/24", "us-east-1a", SPOKE),
@@ -49,7 +51,7 @@ IF_EP_PARTNER = "vpce-0abc1234def57405"
 SVC_NLB = f"com.amazonaws.vpce.{REGION}.vpce-svc-0abc1234def57bbb"
 SVC_PARTNER = f"com.amazonaws.vpce.{REGION}.vpce-svc-0abc1234def57ddd"
 PARTNER = "444455556666"
-NFW_SVC = f"com.amazonaws.vpce.{REGION}.vpce-svc-0abc1234def57fff"  # AWS 계정이 제공한다 — 이 세계의 엔드포인트 서비스 구성에 없다
+NFW_SVC = f"com.amazonaws.vpce.{REGION}.vpce-svc-0abc1234def57fff"  # provided by an AWS account, so it has no endpoint service configuration in this world
 FW_NAME = "spoke-fw"
 FW_ARN = f"arn:aws:network-firewall:{REGION}:{ACCOUNT}:firewall/{FW_NAME}"
 SVC = f"com.amazonaws.vpce.{REGION}.vpce-svc-0abc1234def57aaa"
@@ -120,21 +122,25 @@ def world(
             "fwd-app-rt",
             ["app-a"],
             [
-                # 바퀴살 앱 서브넷의 기본 라우트 → GWLB 엔드포인트(검사를 거쳐 나간다). AWS 는 엔드포인트 대상을 `GatewayId` 에
-                #   싣는다(ap-southeast-2 qa-lb-targets 실측 2026-10-20 — `VpcEndpointId` 가 아니다)
+                # The spoke application subnet's default route goes to the GWLB
+                #   endpoint, so traffic leaves through inspection. AWS reports
+                #   an endpoint target in `GatewayId`, not in `VpcEndpointId`.
                 {
                     "DestinationCidrBlock": "0.0.0.0/0",
                     "GatewayId": GWLBE,
                     "State": "active",
                 },
-                # 사내망 → NVA(P2-2) — 인스턴스로 보낸 라우트에도 AWS 는 `NetworkInterfaceId` 를 같이 준다
+                # On-premises range to the NVA. AWS reports a
+                #   `NetworkInterfaceId` for instance routes as well.
                 {
                     "DestinationCidrBlock": "10.99.0.0/16",
                     "InstanceId": NVA,
                     "NetworkInterfaceId": NVA_ENI,
                     "State": "active",
                 },
-                # 묻는 ENI 가 없다(다른 계정 ENI · 막 지운 ENI 의 전파 지연) — 주인을 지어내지 않는다
+                # The ENI being asked about is absent, either because it belongs
+                #   to another account or because a just-deleted ENI has not
+                #   propagated yet. We do not invent an owner for it.
                 {
                     "DestinationCidrBlock": "10.98.0.0/16",
                     "NetworkInterfaceId": GONE_ENI,
@@ -148,7 +154,8 @@ def world(
             "fwd-web-rt",
             ["web-a"],
             [
-                # 웹 서브넷의 기본 라우트 → Network Firewall 엔드포인트(P1-4 · 같은 `GatewayId` 자리)
+                # The web subnet's default route goes to the Network Firewall
+                #   endpoint, which sits in the same `GatewayId` field.
                 {
                     "DestinationCidrBlock": "0.0.0.0/0",
                     "GatewayId": NFW_EP,
@@ -256,7 +263,8 @@ def world(
                 (GWLBE_ORPHAN, SVC_ORPHAN, "partner-gwlbe"),
             ]
         ]
-        # 인터페이스 엔드포인트(P2-1) — 같은 계정 NLB 가 제공하는 서비스 · 범위 밖 파트너 서비스
+        # Interface endpoints: one service provided by an NLB in the same
+        # account, one partner service that is out of scope.
         + [
             {
                 "VpcEndpointId": eid,
@@ -274,7 +282,8 @@ def world(
                 (IF_EP_PARTNER, SVC_PARTNER, "saas-partner"),
             ]
         ]
-        # 방화벽 엔드포인트 — AWS 가 관리하는 GWLB 엔드포인트(DescribeVpcEndpoints 에 `RequesterManaged` 로 나온다 · us-east-1 실측 2026-10-20)
+        # The firewall endpoint is an AWS-managed GWLB endpoint, which
+        # DescribeVpcEndpoints reports as `RequesterManaged`.
         + [
             {
                 "VpcEndpointId": NFW_EP,
@@ -371,7 +380,7 @@ def world(
             SVC_PARTNER: PARTNER,
             **(consumer_services or {}),
         },
-        # NVA 의 ENI(P2-2) — 부착 인스턴스가 주인이다
+        # The NVA's ENI, owned by the instance it is attached to.
         network_interfaces=[
             {
                 "NetworkInterfaceId": NVA_ENI,
