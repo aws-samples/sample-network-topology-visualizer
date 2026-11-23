@@ -1,23 +1,38 @@
-"""2층(지표) 축 — ADR 0008 의 검사(D2 A급 지표 · D3 차단 신호 · D6 창 전체 · D8 구간 지표).
+"""The metric layer axis: A-grade metrics, blocking signals, the whole window
+and span metrics.
 
-🔴 **이 파일의 이유는 「2층은 실패하지 않고 조용히 빈다」는 실측이다**(ADR 0006 §O7-1 함정 1:
-차원 이름을 틀려도 `dp=0` + `StatusCode: Complete` + `Messages` 없음). 그래서 「실계정에서 돌려
-봤고 에러가 없었다」는 2층이 동작한다는 증거가 **되지 못한다** — 차원 상수가 통째로 틀려도 같은
-화면이 나온다(전부 `up`, 전부 「흐름 없음」). 판별력은 여기서만 만들어진다: `fakes.FakeCloudWatch`
-는 등록한 차원과 **정확히** 일치할 때만 값을 주고, 틀리면 실제 API 처럼 조용히 빈 배열을 준다.
+The reason this file exists is what a real account showed: the metric layer
+does not fail, it quietly comes back empty. Get a dimension name wrong and the
+response is still no data points, `StatusCode: Complete` and no `Messages`. So
+"we ran it against a real account and there were no errors" is no evidence that
+the metric layer works. With the dimension constants wrong from end to end the
+screen looks exactly the same: everything `up`, everything showing no traffic.
+The power to tell those apart is created only here. `fakes.FakeCloudWatch`
+returns a value only when the dimensions match exactly, and when they do not it
+hands back an empty array quietly, just as the real API does.
 
-잣대 4개가 서로를 잡는다:
-1. **정본 ↔ 기대값 ↔ 코드** — 프로브 상수를 이 파일의 기대표와 비교하고, 그 기대표의 모든 이름이
-   ADR 0008 D2·D3 표에 실제로 적혀 있는지 다시 확인한다. 한쪽만 고치면 FAIL 한다.
-2. **쿼리 모양** — `period=60` · 창 **900초**(D6) · 창의 끝 = **스냅샷 시각** · 사다리 없음 ·
-   **같은 계열은 한 번만 산다**(요금은 요청한 지표 수로 매겨진다).
-3. **판정** — 흐른다(`live`) / 쟀고 0(`up`+`datapoints: 0`) / 빈 배열(`up`+`?`) / 통과 0 + 드롭
-   (`down`) / 막혔다(`up`+`partial`) / 지표 없는 종류(조용함). 🔴 **드롭 > 0 은 흐름을 부정하지
-   않는다**(D3)와 🔴 **빈 배열이 1층 `up` 을 덮지 않는다**가 이 층의 핵심 계약이다.
-4. **구간(엣지) 지표** — ADR 0008 D8 의 본체다. 「2층 전용」 엣지 3종은 **2층이 답했을 때만 행이
-   생기고**, 못 쟀으면 **행이 없다**(D1 의 E). 어태치먼트↔VPC 선은 잰 대상이 달라서
-   `evidence.observed_on` 으로 「연역」이라고 적는다(D1 의 B). 이 잣대가 0 이던 동안 실계정
-   445행 중 2층 근거를 가진 엣지 행이 **0** 이었고, 화면의 초록 선 14개는 전부 종단 추론이었다.
+Four measures catch each other:
+
+1. The source of truth against the expectations against the code. The probe
+   constants are compared with the expectation table in this file, and then
+   every name in that table is checked to really appear in the design tables.
+   Changing only one side fails.
+2. The shape of the query: `period=60`, a 900-second window, the window ending
+   at the snapshot moment, no ladder of retries, and each series bought exactly
+   once, since the bill is by the number of metrics requested.
+3. The verdict: flowing (`live`), measured and zero (`up` with
+   `datapoints: 0`), an empty array (`up` with a question mark), no throughput
+   with drops (`down`), blocked (`up` with `partial`), and a type with no
+   metrics (quiet). The two central contracts of this layer are that drops
+   above zero do not negate traffic, and that an empty array does not override
+   an `up` from the structure tier.
+4. Span metrics on edges, which is the body of the span design. The three
+   metric-layer-only edge types get a row only when the metric layer answered,
+   and no row at all when it could not measure. The attachment to VPC line
+   measures a different target, so it records that it is a deduction through
+   `evidence.observed_on`. While this measure did not exist, zero of 445 rows
+   from a real account had metric-layer evidence, and all fourteen green lines
+   on the screen were inferred from their endpoints.
 """
 
 from __future__ import annotations
@@ -96,12 +111,15 @@ SCHEMA = json.loads(
 
 
 def _adr6() -> str:
-    """ADR 0006 — 내부 설계 문서라 공개 트리에는 없다. 쓰는 테스트만 사유를 적고 건너뛴다(import 때 읽지 않는다)."""
+    """The observation design document, which is internal and absent from the
+    public tree. Only the tests that use it record a reason and skip; it is not
+    read at import time.
+    """
     return read_or_skip("docs/adr/0006-observation-schema.md")
 
 
 def _adr8() -> str:
-    """ADR 0008 — 위와 같다."""
+    """The span metric design document, handled the same way."""
     return read_or_skip("docs/adr/0008-flow-verdict.md")
 
 
@@ -117,7 +135,8 @@ ATTACH3 = "tgw-attach-0ccc3333dddd0000"
 ATTACH_ID = f"transit_gateway_attachment/{ACCOUNT}/{REGION}/{ATTACH}"
 ATTACH2_ID = f"transit_gateway_attachment/{ACCOUNT}/{REGION}/{ATTACH2}"
 ATTACH3_ID = f"transit_gateway_attachment/{ACCOUNT}/{REGION}/{ATTACH3}"
-# DXGW 어태치먼트(`fakes.py` — 2.1.0 부터 대상 노드가 있다 · ADR 0010). 노드·TGW 선이 계획된다.
+# The Direct Connect gateway attachment, which has had a target node since
+# 2.1.0. Both the node and the TGW line are planned.
 ATTACH_DX = "tgw-attach-0ddd4444eeee1111"
 ATTACH_DX_ID = f"transit_gateway_attachment/{ACCOUNT}/{REGION}/{ATTACH_DX}"
 ENDPOINT = "vpce-0bbb2222cccc8888"
@@ -129,19 +148,22 @@ VPC_ID = f"vpc/{ACCOUNT}/{REGION}/{APP_VPC}"
 PUBLIC_SUBNET_ID = f"subnet/{ACCOUNT}/{REGION}/{PUBLIC_SUBNET}"
 PRIVATE_SUBNET_ID = f"subnet/{ACCOUNT}/{REGION}/{PRIVATE_SUBNET}"
 
-# 「2층 전용」 엣지(ADR 0008 D8-1). 🔴 이 선들은 1층 근거가 없다 — 지표가 답하지 않으면 **행이
-# 없는 것**이 정답이고, `up` 을 적으면 근거 0 인 주장이 된다.
+# The metric-layer-only edges. These lines have no evidence from the structure
+# tier, so when the metrics do not answer, having no row is the right answer.
+# Writing `up` would be a claim with nothing behind it.
 ATTACH_TGW_EDGE = f"attachment|{ATTACH_ID}|{TGW_ID}"
 ATTACH_VPC_EDGE = f"attachment|{ATTACH_ID}|{VPC_ID}"
 ATTACH2_TGW_EDGE = f"attachment|{ATTACH2_ID}|{TGW_ID}"
-# 2.6.0 — ATTACH2 는 VPN 어태치먼트다(`fakes.py`). 대상 노드(`vpn_connection`)가 생겨 그 쪽 선도 계획된다 —
-# 어태치먼트 차원 지표는 VPN 어태치먼트에도 똑같이 나온다(VPC 쪽 선과 같은 차원).
+# ATTACH2 is a VPN attachment. It has a target node, `vpn_connection`, so the
+# line on that side is planned as well. The attachment-dimension metrics appear
+# for a VPN attachment just the same, on the same dimensions as the VPC line.
 ATTACH2_VPN_EDGE = (
     f"attachment|{ATTACH2_ID}|vpn_connection/{ACCOUNT}/{REGION}/vpn-0aaa1111bbbb3333"
 )
 ATTACH_DX_TGW_EDGE = f"attachment|{ATTACH_DX_ID}|{TGW_ID}"
-# 2026-10-13 — DXGW 가 관측 대상이 되어(1층 · ADR 0006 §O7 「DX 3종」) 상태 스냅샷에도 DXGW 노드가 있다 → DXGW 쪽 선도
-# 계획된다. VPN 쪽 선(위 `ATTACH2_VPN_EDGE`)과 같은 차원 · 같은 취급이다.
+# The Direct Connect gateway became an observation target in the structure
+# tier, so the state snapshot holds a node for it too and the line on its side
+# is planned. Same dimensions and same treatment as the VPN line above.
 ATTACH_DX_DXGW_EDGE = (
     f"attachment|{ATTACH_DX_ID}|direct_connect_gateway/{ACCOUNT}/global/{DXGW_TGW}"
 )
@@ -152,9 +174,11 @@ ALB_PRIVATE_EDGE = f"load_balancer_placement|{ALB_ID}|{PRIVATE_SUBNET_ID}"
 NLB_EGRESS_EDGE = f"load_balancer_placement|{NLB_ID}|subnet/{ACCOUNT}/{REGION}/subnet-0ddd4444eeee5555"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 기대표 — 🔴 **이것이 정본의 사본이 아니라 «기대값»이다.** 코드와 비교하고(아래 첫 검사) 그
-# 다음 ADR 0008 표에 실제로 적혀 있는지 또 비교한다(둘째 검사). 한 곳만 고치면 FAIL 한다.
-# (프로브 키, namespace, 차원 이름 순서, 흐름 지표, 차단 지표)
+# The expectation table. This is not a copy of the source of truth but the
+# expectation itself. It is compared with the code in the first check below, and
+# then checked again against what the design tables actually say in the second.
+# Changing only one side fails.
+# (probe key, namespace, order of dimension names, flow metric, blocking metric)
 # ─────────────────────────────────────────────────────────────────────────────
 EXPECTED_PROBES: dict[
     str, tuple[str, tuple[str, ...], tuple[str, ...], tuple[str, ...]]
@@ -221,15 +245,19 @@ EXPECTED_PROBES: dict[
     ),
 }
 
-# 🔴 **ALB 계열엔 차단 지표가 없다** → `down` 을 만들 수 없다. 표가 아니라 사실이고(D3 의 ALB 행은
-# `HTTPCode_ELB_5XX_Count`·`HealthyHostCount` 인데 둘 다 타깃그룹 차원이 있어야 뜻이 있다 = D10),
-# 아래 `test_an_alb_placement_can_never_say_down` 이 그 사실을 화면 언어로 고정한다.
+# The ALB family has no blocking metric, so it cannot produce `down`. That is a
+# fact rather than a table: the ALB row lists `HTTPCode_ELB_5XX_Count` and
+# `HealthyHostCount`, and both are meaningless without a target group
+# dimension. `test_an_alb_placement_can_never_say_down` below pins that fact
+# down in the language of the screen.
 NO_BLOCK_PROBES = {"load_balancer:application", "load_balancer_placement:application"}
 
-# 🔴 **드롭을 읽는 것과 드롭으로 「막혔다」를 적는 것은 다르다.** 여기 적힌 것만 판정을 `down` 으로
-# 만들 수 있고(ADR 0008 D3 차단 신호표), 나머지 드롭은 화면에 「드롭 N」 배지로만 쓰인다. NAT 이
-# 유일한 차이다 — 갓 만든 NAT 이 생성 직후 3분에 49패킷을 드롭하므로(랩 A1 실측 · 정정 5)
-# `PacketsDropCount` 로 막혔다고 적으면 **정상인 새 NAT 이 빨갛게 된다**.
+# Reading a drop and recording a block because of a drop are different things.
+# Only what is listed here can turn a verdict into `down`; every other drop is
+# used on screen as a drop-count badge and nothing more. The NAT gateway is the
+# one difference: a freshly created NAT gateway drops 49 packets in the three
+# minutes after creation, so recording a block from `PacketsDropCount` would
+# turn a healthy new NAT gateway red.
 EXPECTED_BLOCKING_DROPS: dict[str, tuple[str, ...]] = {
     "nat_gateway": ("ErrorPortAllocation",),
     "transit_gateway": ("PacketDropCountBlackhole", "PacketDropCountNoRoute"),
@@ -246,9 +274,11 @@ EXPECTED_BLOCKING_DROPS: dict[str, tuple[str, ...]] = {
     "load_balancer_placement:network": ("RejectedFlowCount",),
 }
 
-# 🔴 **「들어왔다」만 세는 통과량**(ADR 0008 정정 1-2). 여기 적힌 지표는 혼자서 흐름을 증명하지
-# 못한다 — TGW 의 `BytesIn` 은 블랙홀로 전량 버려져도 420 이었다(랩 B3 · 정정 1). 이 표에서 빠지면
-# 블랙홀 구간이 초록이고, 표에 없는 것이 붙으면 잘 도는 구간이 「판정 못 함」으로 떨어진다.
+# Throughput metrics that count only what arrived. A metric listed here cannot
+# prove traffic on its own: the `BytesIn` of a TGW read 420 while every byte was
+# being discarded into a blackhole. Dropping a metric from this table turns a
+# blackholed span green, and adding one that does not belong drops a perfectly
+# healthy span to unjudgeable.
 EXPECTED_ARRIVAL_ONLY: dict[str, tuple[str, ...]] = {
     "transit_gateway": ("BytesIn",),
     "transit_gateway_attachment": ("BytesIn",),
@@ -260,7 +290,8 @@ NLB_DIMENSION = "net/old-nlb/60dc6c495c0c9199"
 ENDPOINT_DIMENSIONS = {
     "VPC Id": APP_VPC,
     "VPC Endpoint Id": ENDPOINT,
-    # 🔴 값은 리터럴 `Interface` 다(§O7-1) — 소문자로 바꿔 보내면 조합이 없다.
+    # The value is the literal `Interface`. Sent in lowercase there is no such
+    # combination.
     "Endpoint Type": "Interface",
     "Service Name": f"com.amazonaws.{REGION}.ssm",
 }
@@ -270,9 +301,12 @@ def _attachment_dimensions(attachment: str) -> dict[str, str]:
     return {"TransitGateway": CORE_TGW, "TransitGatewayAttachment": attachment}
 
 
-# 🔴 대상 → (프로브 키, 차원 값). **차원 값은 1층 응답에서** 만든 것이어야 한다(§O7-1 마지막 열).
-# 여기 적힌 것이 곧 `plan()` 의 기대값이고, `FakeCloudWatch` 의 계열 키도 여기서 만든다 — 그래서
-# 코드의 차원 상수가 한 글자라도 드리프트하면 계열이 안 맞아 판정 검사가 **같이** 빨개진다.
+# Target to (probe key, dimension value). A dimension value has to be built from
+# the structure-tier response.
+# What is written here is both the expectation for `plan()` and the source of the
+# series keys in `FakeCloudWatch`, so a single character of drift in the
+# dimension constants leaves the series unmatched and turns the verdict checks
+# red along with it.
 TARGETS: dict[str, tuple[str, dict[str, str]]] = {
     ALB_ID: ("load_balancer:application", {"LoadBalancer": ALB_DIMENSION}),
     NLB_ID: ("load_balancer:network", {"LoadBalancer": NLB_DIMENSION}),
@@ -308,7 +342,8 @@ TARGETS: dict[str, tuple[str, dict[str, str]]] = {
     ),
 }
 
-# `failed` NLB 은 배치 선을 만들지 않는다(ADR 0002 §3) → 그 선을 재려면 상태를 바꿔야 한다.
+# A `failed` NLB builds no placement line, so measuring that line means
+# changing its state first.
 NLB_TARGETS: dict[str, tuple[str, dict[str, str]]] = {
     NLB_EGRESS_EDGE: (
         "load_balancer_placement:network",
@@ -316,9 +351,11 @@ NLB_TARGETS: dict[str, tuple[str, dict[str, str]]] = {
     ),
 }
 
-FLOW_VALUES = [4096.0, 0.0, 2048.0]  # 창 합계 6144 · 0 이 아닌 지점 2개
+FLOW_VALUES = [4096.0, 0.0, 2048.0]  # window total 6144, two non-zero points
 
-# 값이 있는 대상(= 흐른다). 🔴 「전부 0 dp 는 결함」 규칙이 있으므로 기본 대조군은 비어 있지 않다.
+# The targets that have values, meaning they carry traffic. Because a document
+# where every target has zero data points counts as a defect, the default
+# control case is not empty.
 FLOWING = (NAT_ID, TGW_ID, ATTACH_ID, ENDPOINT_ID, ALB_ID)
 
 
@@ -328,7 +365,9 @@ def _probe_of(target_id: str) -> str:
 
 
 def _flow_metric(target_id: str) -> str:
-    """그 대상에서 **혼자 흐름을 증명하는** 첫 통과량 — 「들어옴만 센다」 지표는 건너뛴다."""
+    """The first throughput metric that proves traffic on its own for that
+    target, skipping the ones that count only what arrived.
+    """
     probe = _probe_of(target_id)
     arrival = EXPECTED_ARRIVAL_ONLY.get(probe, ())
     return next(m for m in EXPECTED_PROBES[probe][2] if m not in arrival)
@@ -346,10 +385,12 @@ def _key(target_id: str, metric: str) -> tuple[Any, ...]:
 def _series(
     *entries: tuple[str, str, list[float]], flowing: tuple[str, ...] = FLOWING
 ) -> dict:
-    """대상 id → 지표 계열. 등록하지 않은 대상·지표는 **빈 배열**이 온다(= 확인 불가).
+    """Target id to metric series. A target or metric that was not registered
+    comes back as an empty array, meaning it could not be confirmed.
 
-    `flowing` 은 「그 대상의 첫 흐름 지표에 `FLOW_VALUES`」의 줄임이고, `entries` 는
-    `(대상, 지표, 값)` 을 직접 적는다(드롭·게이지·0 계열을 만들 때 쓴다).
+    `flowing` is shorthand for putting `FLOW_VALUES` on that target's first flow
+    metric, and `entries` writes `(target, metric, values)` directly, which is
+    how the drop, gauge and all-zero series are built.
     """
     out: dict[Any, list[float]] = {}
     for target_id in flowing:
@@ -363,8 +404,10 @@ def _snapshot(resource_types: tuple[str, ...], at: str, **overrides: Any) -> Any
     scope = Scope(
         account_ids=(ACCOUNT,), regions=(REGION,), resource_types=resource_types
     )
-    # 🔴 상태 단(observe CLI)은 상태 탐침을 켜고 돈다(`cli.py` 의 `with_state=True`) — 구조 단은 끈다.
-    # 끈 채로 관측하면 RDS·ECS 등이 「규칙에 없는 값 None」(개발)이 된다(W3 실측).
+    # The state tier, the observe CLI, runs with the state probes on
+    # (`with_state=True` in `cli.py`), while the structure tier runs with them
+    # off. Observing with them off leaves RDS, ECS and others reporting a value
+    # of None that no rule covers.
     return collect(
         scope,
         factory(FakeAws(**overrides)),
@@ -386,7 +429,9 @@ def _observe(
     at: str = OBSERVED_AT,
     **overrides: Any,
 ) -> tuple[dict[str, Any], MetricLayer]:
-    """생산과 같은 순서: 구조 12종 → 상태 10종 → 2층 → 판정."""
+    """The same order production uses: twelve structure types, then ten state
+    types, then the metric layer, then the verdict.
+    """
     topology = _snapshot(
         SUPPORTED_RESOURCE_TYPES, STRUCTURE_AT, **overrides
     ).to_document()
@@ -407,7 +452,9 @@ def _observe(
 
 
 def _active_nlb() -> list[dict[str, Any]]:
-    """상태만 `active` 로 바꾼 LB 목록 — NLB 배치 선을 존재하게 만든다."""
+    """The load balancer list with only the state changed to `active`, which is
+    what makes the NLB placement line exist.
+    """
     balancers = copy.deepcopy(LOAD_BALANCERS)
     balancers[1]["State"] = {"Code": "active"}
     return balancers
@@ -429,14 +476,17 @@ def _valid(document: dict[str, Any]) -> None:
     jsonschema.Draft202012Validator(SCHEMA).validate(document)
 
 
-# ---------------------------------------------------------------- 정본 ↔ 기대값 ↔ 코드
+# ------------- the source of truth, the expectations and the code
 
 
 def _adr8_table(heading: str) -> dict[str, list[list[str]]]:
-    """ADR 0008 의 한 절에서 **첫 표**를 읽는다 → {첫 칸 라벨: [열별 백틱 이름 목록]}.
+    """Read the first table of one section of the design document into a mapping
+    of first-cell label to the backticked names in each column.
 
-    🔴 파싱이 깨지면 아래 검사들이 **빈 집합끼리 비교해 통과한다**(통과가 아니라 미측정). 그래서
-    `test_adr8_tables_are_parseable` 이 행 수와 열 내용을 따로 잰다.
+    If the parsing breaks, the checks below compare two empty sets and pass,
+    which is not a pass but an absence of measurement. So
+    `test_adr8_tables_are_parseable` measures the row count and the column
+    contents separately.
     """
     section = _adr8().split(heading, 1)[-1].split("\n### ", 1)[0]
     rows: dict[str, list[list[str]]] = {}
@@ -444,7 +494,7 @@ def _adr8_table(heading: str) -> dict[str, list[list[str]]]:
     for line in section.splitlines():
         if not line.startswith("|"):
             if started:
-                break  # 절에 표가 둘 이상이면 첫 표에서 멈춘다
+                break  # with more than one table in a section, stop at the first
             continue
         started = True
         if line.startswith("|-"):
@@ -459,8 +509,9 @@ def _adr8_table(heading: str) -> dict[str, list[list[str]]]:
     return rows
 
 
-# 프로브 → 그 프로브를 뒷받침하는 ADR 0008 표의 행 라벨. 🔴 어태치먼트 행은 지표를 「같은 지표」
-# 라고만 적으므로 TGW 행과 **함께** 본다(그것이 그 칸의 뜻이다).
+# Probe to the row labels in the design table that back it. The attachment row
+# describes its metrics only as the same metrics, so it is read together with
+# the TGW row, which is what that cell means.
 D2_BACKING: dict[str, tuple[str, ...]] = {
     "nat_gateway": ("NAT GW",),
     "transit_gateway": ("TGW",),
@@ -488,25 +539,28 @@ D3_BACKING: dict[str, tuple[str, ...]] = {
 
 def test_adr8_tables_are_parseable():
     d2, d3 = _adr8_table("### D2."), _adr8_table("### D3.")
-    assert len(d2) == 18, f"D2 표에서 읽은 행 {len(d2)}개: {sorted(d2)}"
-    assert len(d3) == 9, f"D3 표에서 읽은 행 {len(d3)}개: {sorted(d3)}"
-    # 라벨을 못 읽으면 아래 「뒷받침」 검사가 KeyError 도 못 내고 조용해진다.
+    assert len(d2) == 18, f"read {len(d2)} rows from the D2 table: {sorted(d2)}"
+    assert len(d3) == 9, f"read {len(d3)} rows from the D3 table: {sorted(d3)}"
+    # If the labels cannot be read, the backing check below goes quiet without
+    # even raising KeyError.
     assert set(D2_BACKING) == set(EXPECTED_PROBES)
     for labels in D2_BACKING.values():
         for label in labels:
-            assert label in d2, f"D2 표에 「{label}」 행이 없다 — 라벨이 바뀌었다"
+            assert label in d2, f"the D2 table has no {label!r} row; the label changed"
     for labels in D3_BACKING.values():
         for label in labels:
-            assert label in d3, f"D3 표에 「{label}」 행이 없다"
+            assert label in d3, f"the D3 table has no {label!r} row"
     assert d2["TGW"][0] == ["AWS/TransitGateway", "BytesIn", "BytesOut"]
     assert "TransitGatewayAttachment" in d2["TGW 어태치먼트 = 구간"][1]
 
 
 def test_probe_constants_are_exactly_the_expected_table():
-    """🔴 코드 ↔ 기대표. 차원 이름·순서·지표 이름·역할이 하나라도 다르면 FAIL.
+    """The code against the expectation table. A single difference in dimension
+    name, order, metric name or role fails.
 
-    사람이 보는 결과로 말하면: 차원 이름이 한 글자 틀린 구간은 **영원히 회색**이고 아무 에러도
-    나지 않는다(실측 §O7-1 함정 1). 그래서 화면으로는 절대 발견되지 않는다.
+    Put in terms of what somebody sees: a span with one character wrong in a
+    dimension name stays grey for ever and raises no error at all. So it can
+    never be found from the screen.
     """
     probes = {**NODE_PROBES, **EDGE_PROBES}
     assert set(probes) == set(EXPECTED_PROBES)
@@ -530,101 +584,129 @@ def test_probe_constants_are_exactly_the_expected_table():
             if ref.role == ROLE_FLOW and ref.arrival_only
         )
         assert arrival == EXPECTED_ARRIVAL_ONLY.get(key, ()), key
-        # 「들어옴만 센다」가 붙은 프로브는 **차단 드롭을 가져야 한다** — 없으면 「재서 0」을 증명할
-        # 길이 없어 그 대상은 영원히 「판정 못 함」이다.
+        # A probe whose metric counts only what arrived has to have a blocking
+        # drop. Without one there is no way to prove measured and zero, and that
+        # target stays unjudgeable for ever.
         if arrival:
-            assert blocking, f"{key}: 들어옴만 세는 지표가 있는데 차단 드롭이 없다"
-        # 🔴 `down` 을 만들 수 없는 프로브는 「드롭을 안 읽는 것」이 아니라 **「차단 신호로 쓰는
-        # 드롭이 없는 것」**이다. `not drops` 로 재면 NAT 처럼 배지 전용 드롭만 읽는 프로브가
-        # 생겼을 때 조용히 통과한다.
+            assert blocking, (
+                f"{key}: has a metric that counts only arrivals but no blocking drop"
+            )
+        # A probe that cannot produce `down` is not one that reads no drops but
+        # one that has no drop it uses as a blocking signal. Measuring with
+        # `not drops` would pass quietly once a probe appears that, like the NAT
+        # gateway, reads a drop for the badge only.
         assert (key in NO_BLOCK_PROBES) == (not blocking), key
-        # 구간 프로브는 차원이 2개 이상이어야 한다 — 그것이 ADR 0008 D8-1 의 자격 조건이다.
+        # A span probe needs two or more dimensions, which is what qualifies it
+        # as one.
         if key in EDGE_PROBES:
             assert len(probe.dimensions) >= 2, (
-                f"{key}: 구간을 특정하지 못하는 차원 조합"
+                f"{key}: this dimension combination does not identify a span"
             )
 
 
 def test_reporting_is_pinned_per_namespace_and_metric():
-    """🔴 발행 규칙(`reporting`)을 눈으로만 관리하면 조용히 뒤집힌다.
+    """Managing the publishing rule (`reporting`) by eye alone lets it flip
+    quietly.
 
-    사람이 보는 결과로 말하면: 이 값 하나가 「이 구간은 이 15분 동안 트래픽이 없었습니다」와
-    「이 구간은 읽지 못했습니다 — 지표 발행 설정을 확인하세요」를 가른다. 지표 이름이 같아도
-    네임스페이스마다 다르다는 것이 실측이다(2026-09-25: NLB `ProcessedBytes` 는 0 을 발행하고
-    ALB `ProcessedBytes` 는 발행하지 않는다) → 그래서 기대표의 키가 (네임스페이스, 지표)다.
+    Put in terms of what somebody sees: this one value decides between "this
+    span carried no traffic during these fifteen minutes" and "this span could
+    not be read, check the metric publishing settings". A real account showed
+    that the same metric name behaves differently per namespace: the NLB
+    `ProcessedBytes` publishes zero while the ALB `ProcessedBytes` does not.
+    That is why the expectation table is keyed on (namespace, metric).
 
-    `always` 로 적을 자격은 **문서 인용 또는 실계정 실측**뿐이다(근거는 `metrics.py` 의
-    「`reporting=` 의 근거」 주석). 근거 없이 올리면 조용한 창이 전부 「흐름 없음」으로 확정된다.
+    The only things that qualify a metric to be written `always` are a quotation
+    from the documentation or a measurement against a real account; the
+    reasoning lives in the comments of `metrics.py`. Raising one without
+    evidence settles every quiet window as carrying no traffic.
     """
     expected = {
-        # 문서: "All metrics are always reported."
+        # Documentation: "All metrics are always reported."
         ("AWS/TransitGateway", "BytesIn"): REPORT_ALWAYS,
         ("AWS/TransitGateway", "BytesOut"): REPORT_ALWAYS,
         ("AWS/TransitGateway", "PacketDropCountBlackhole"): REPORT_ALWAYS,
         ("AWS/TransitGateway", "PacketDropCountNoRoute"): REPORT_ALWAYS,
-        # 문서: "The endpoint received traffic during the one-minute period."
+        # Documentation: "The endpoint received traffic during the one-minute period."
         ("AWS/PrivateLinkEndpoints", "BytesProcessed"): REPORT_NONZERO_ONLY,
         ("AWS/PrivateLinkEndpoints", "NewConnections"): REPORT_NONZERO_ONLY,
         ("AWS/PrivateLinkEndpoints", "PacketsDropped"): REPORT_NONZERO_ONLY,
-        # 문서 + 실측(180분 중 9개만 존재 · 0 값 0개)
+        # Documentation, plus a measurement: only 9 points existed out of 180
+        # minutes, and none of them were zero
         ("AWS/ApplicationELB", "ProcessedBytes"): REPORT_NONZERO_ONLY,
-        # 문서: "Reported if there are registered targets." + 실측(0개)
+        # Documentation: "Reported if there are registered targets.", plus a
+        # measurement that found none
         ("AWS/ApplicationELB", "RequestCount"): REPORT_CONDITIONAL,
-        # 실측(180분 · 0 값 157/179·86/179·179/179 · AZ 차원도 전부 0) — 문서 머리말이 틀렸다
+        # Measured over 180 minutes: 157/179, 86/179 and 179/179 of the points
+        # were zero, and every point on the AZ dimension was zero too. The
+        # introduction to the documentation is wrong here.
         ("AWS/NetworkELB", "ProcessedBytes"): REPORT_ALWAYS,
         ("AWS/NetworkELB", "NewFlowCount"): REPORT_ALWAYS,
         ("AWS/NetworkELB", "ActiveFlowCount"): REPORT_ALWAYS,
         ("AWS/NetworkELB", "RejectedFlowCount"): REPORT_ALWAYS,
-        # 실측(24시간 1,440개 전부 0)
+        # Measured over 24 hours: all 1,440 points were zero
         ("AWS/NATGateway", "PacketsDropCount"): REPORT_ALWAYS,
-        # 랩 A1 실측 승격 2026-09-26 — 트래픽 0 NAT 을 73분 재서 **72점 전부 0**
-        # (`docs/verification-lab.md:141,148`). 이전 값 `unknown` 은 「24시간 내내 트래픽이 있어
-        # 0 이 될 기회가 없었다」는 미측정이었고, 랩이 그 기회를 만들어 닫았다.
+        # Promoted from a lab measurement: a NAT gateway with no traffic
+        # measured over 73 minutes gave 72 points, all of them zero. The
+        # previous value, `unknown`, reflected an absence of measurement, since
+        # traffic ran for the whole 24 hours and there was never a chance for a
+        # zero. The lab created that chance and closed it.
         ("AWS/NATGateway", "BytesInFromSource"): REPORT_ALWAYS,
         ("AWS/NATGateway", "BytesOutToDestination"): REPORT_ALWAYS,
-        # 🔴 미측정 — 같은 73분에 36~37점만 왔고 간격이 불규칙했다(포트 고갈이 없으면 계열이
-        # 띄엄띄엄이다) → 「없음」을 「0」으로 읽으면 안 된다
+        # Not measured: over the same 73 minutes only 36 to 37 points arrived,
+        # at irregular intervals, because without port exhaustion the series is
+        # sparse. Absence must not be read as zero here.
         ("AWS/NATGateway", "ErrorPortAllocation"): REPORT_UNKNOWN,
     }
     seen = set()
-    # 🔴 dict 로 접지 않고 **프로브마다** 잰다 — 같은 (네임스페이스, 지표)를 노드 프로브와 배치
-    # 프로브가 서로 다르게 적어도 dict 비교는 마지막 값만 보고 통과한다.
+    # Measured per probe rather than folded into a dict. If a node probe and a
+    # placement probe wrote the same (namespace, metric) differently, a dict
+    # comparison would see only the last value and pass.
     for probe in (*NODE_PROBES.values(), *EDGE_PROBES.values()):
         for ref in probe.metrics:
             key = (probe.namespace, ref.name)
             assert key in expected, (
-                f"{probe.key}: 발행 규칙 기대표에 「{ref.name}」이 없다"
+                f"{probe.key}: the publishing-rule table has no entry for {ref.name!r}"
             )
             assert ref.reporting == expected[key], f"{probe.key} · {ref.name}"
             seen.add(key)
-    assert seen == set(expected), "기대표에만 있는 항목 — 지표가 사라졌는데 표가 남았다"
+    assert seen == set(expected), (
+        "an entry exists only in the expectation table, so a metric disappeared "
+        "while the table stayed"
+    )
 
 
 def test_expected_probes_are_backed_by_the_adr():
-    """🔴 기대표 ↔ 정본. 기대표의 모든 지표·차원 이름이 ADR 0008 표에 적혀 있어야 한다.
+    """The expectation table against the source of truth: every metric and
+    dimension name in the expectation table has to appear in the design tables.
 
-    위 검사만 있으면 둘이 **같이** 틀릴 수 있다(기대표를 코드에 맞춰 고치면 통과한다). 정본은
-    ADR 이고, 여기가 그 방향을 잡는다.
+    With only the check above, both could be wrong together, since editing the
+    expectation table to match the code would make it pass. The design document
+    is the source of truth, and this is what fixes that direction.
     """
     d2, d3 = _adr8_table("### D2."), _adr8_table("### D3.")
     for key, (namespace, dimensions, flows, drops) in EXPECTED_PROBES.items():
         d2_names = {n for label in D2_BACKING[key] for cell in d2[label] for n in cell}
-        assert namespace in d2_names, f"{key}: D2 표에 namespace 가 없다"
+        assert namespace in d2_names, f"{key}: the D2 table has no namespace"
         for name in (*dimensions, *flows):
-            assert name in d2_names, f"{key}: D2 표에 「{name}」이 없다"
+            assert name in d2_names, f"{key}: the D2 table has no {name!r}"
         if not drops:
             continue
         d3_names = {n for label in D3_BACKING[key] for cell in d3[label] for n in cell}
         for name in drops:
-            assert name in d3_names, f"{key}: D3 차단 신호표에 「{name}」이 없다"
+            assert name in d3_names, (
+                f"{key}: the D3 blocking-signal table has no {name!r}"
+            )
 
 
 def test_every_observed_type_is_measured_or_declared_metricless():
-    """🔴 「아직 안 만들었다」를 「지표가 없다」로 조용히 섞지 않는다 — 합집합이 10종을 덮는다.
+    """Do not quietly conflate "not built yet" with "has no metrics"; together
+    the two sets have to cover all ten types.
 
-    이 검사가 실측으로 잡은 것(2026-09-25): 프로브를 노드/엣지로 쪼개면서 **어태치먼트 노드의
-    2층 프로브가 사라졌다**. 화면에서는 어태치먼트 박스만 영원히 회색이고 그 양쪽 선은 초록이
-    되는데, 아무 에러도 나지 않아 눈으로는 「트래픽이 없구나」로 읽힌다.
+    What this check caught: while splitting the probes into node and edge
+    probes, the metric-layer probe of the attachment node disappeared. On screen
+    the attachment box alone stays grey for ever while the lines on both sides
+    go green, and since no error appears it reads to the eye as there being no
+    traffic.
     """
     measured = {key.split(":", 1)[0] for key in NODE_PROBES}
     assert measured | set(NO_METRIC_TYPES) | set(METRIC_PENDING_TYPES) == set(
@@ -636,10 +718,12 @@ def test_every_observed_type_is_measured_or_declared_metricless():
 
 
 def test_o7_node_table_says_which_types_have_no_metric():
-    """ADR 0006 §O7 노드 표의 2층 열이 「없음」인 종류 == `NO_METRIC_TYPES`.
+    """The types whose metric-layer column in the node table reads none have to
+    be exactly `NO_METRIC_TYPES`.
 
-    표에 지표를 적고 코드가 안 읽으면(또는 반대로) 화면에서 구별되지 않는다 — 둘 다 「흐름을
-    모른다」로 보인다.
+    Writing a metric in the table that the code does not read, or the other way
+    round, is indistinguishable on screen: both look like not knowing whether
+    there is traffic.
     """
     section = _adr6().split("**노드** (1차 12종", 1)[-1].split("**엣지**", 1)[0]
     silent: set[str] = set()
@@ -656,34 +740,42 @@ def test_o7_node_table_says_which_types_have_no_metric():
         if len(names) != 1 or names[0] not in OBSERVED_RESOURCE_TYPES:
             continue
         seen += 1
-        # 🔵 로 시작하는 2층 칸 = 지표는 적었지만 프로브가 아직 없다(`METRIC_PENDING_TYPES`).
+        # A metric-layer cell with a marker means a metric is written down but
+        # there is no probe for it yet (`METRIC_PENDING_TYPES`).
         if cells[2].startswith("없음"):
             silent.add(names[0])
         elif cells[2].startswith("🔵"):
             pending.add(names[0])
         else:
             measured.add(names[0])
-    assert seen == len(OBSERVED_RESOURCE_TYPES), f"표에서 읽은 관측 대상 행 {seen}개"
+    assert seen == len(OBSERVED_RESOURCE_TYPES), (
+        f"read {seen} observation-target rows from the table"
+    )
     assert silent == set(NO_METRIC_TYPES)
     assert pending == set(METRIC_PENDING_TYPES)
     assert measured == {key.split(":", 1)[0] for key in NODE_PROBES}
 
 
 def test_metric_only_edge_types_match_the_edge_probes():
-    """§O7 엣지 표가 「2층 전용」이라고 적은 종류 == 엣지 프로브를 가진 종류.
+    """The types the edge table marks as metric-layer-only have to be exactly
+    the types that have an edge probe.
 
-    어긋나면 두 가지로 조용히 틀린다: 프로브는 있는데 「2층 전용」이 아니면 1층 근거를 요구받아
-    행이 사라지고, 반대면 **행 자체가 만들어지지 않는다**(화면에 그 선의 상태가 없다).
+    A mismatch is wrong quietly in two ways. A type with a probe that is not
+    marked metric-layer-only is asked for structure-tier evidence and its row
+    disappears. The other way round, no row is built at all, and the screen has
+    no state for that line.
     """
     assert {key.split(":", 1)[0] for key in EDGE_PROBES} == set(METRIC_ONLY_EDGES)
 
 
 def test_no_probe_uses_the_state_or_health_roles_yet():
-    """🔴 래칫 — 상태·건강 역할은 지금 **어느 프로브도 쓰지 않는다**(VPN·DX 는 D10 의 몫).
+    """A ratchet: no probe currently uses the state or health roles, which
+    belong to the VPN and Direct Connect work.
 
-    그래서 그 판정 경로는 `_fold` 단위 검사로만 재고 있다. 이 줄이 FAIL 하는 날이 **종단**
-    검사를 추가할 날이다 — 역할만 붙이고 종단을 안 재면, 상태가 0 인데 화면이 초록인 경우를
-    아무 검사도 잡지 못한다.
+    So that verdict path is measured only by unit checks on `_fold`. The day
+    this line fails is the day to add an end-to-end check. Attaching the role
+    without measuring end to end would leave nothing to catch the case where
+    the state is zero and the screen is green.
     """
     roles = {
         ref.role
@@ -693,14 +785,17 @@ def test_no_probe_uses_the_state_or_health_roles_yet():
     assert roles == {ROLE_FLOW, ROLE_DROP}
 
 
-# ---------------------------------------------------------------- 쿼리 계획
+# ------------------------------------------------------------ query planning
 
 
 def test_plan_builds_every_target_and_dimension_from_layer_one():
-    """차원 값이 1층 응답에서 나오는지 — 그리고 **엣지도 계획된다**(ADR 0008 D8 의 본체).
+    """Whether the dimension values come from the structure-tier response, and
+    whether edges are planned as well, which is the body of the span design.
 
-    🔴 옛 판은 노드만 순회했고, 그래서 실계정 445행 중 2층 근거를 가진 엣지 행이 **0** 이었다.
-    선이 2층을 받을 통로 자체가 없었던 것이고, 그 빈자리를 화면이 종단 추론으로 메웠다.
+    An older version walked only the nodes, which is why zero of 445 rows from a
+    real account had metric-layer evidence on an edge. There was no path for a
+    line to receive the metric layer at all, and the screen filled that gap by
+    inferring from the endpoints.
     """
     state = _snapshot(OBSERVED_RESOURCE_TYPES, OBSERVED_AT)
     queries, unbuildable = plan(state)
@@ -714,7 +809,8 @@ def test_plan_builds_every_target_and_dimension_from_layer_one():
     }
     assert built == TARGETS
     assert "arn:" not in built[ALB_ID][1]["LoadBalancer"]
-    # 정렬은 코드가 한다(불변식 ②): 노드 묶음 → 엣지 묶음, 각각 id 순.
+    # The code does the sorting: the node group first, then the edge group,
+    # each in id order.
     kinds = [q.target_kind for q in queries]
     assert kinds == ["node"] * 10 + ["edge"] * 10, kinds
     for kind in ("node", "edge"):
@@ -723,11 +819,14 @@ def test_plan_builds_every_target_and_dimension_from_layer_one():
 
 
 def test_the_vpc_side_of_an_attachment_is_marked_as_deduced():
-    """🔴 같은 값을 두 선에 쓰면서 **한쪽은 「연역」이라고 적는다**(ADR 0008 D1 의 B · D8-2).
+    """The same value is used on two lines, and on one of them it is recorded as
+    a deduction.
 
-    지표의 차원이 이름 대는 것은 「TGW ↔ 어태치먼트」다. 「어태치먼트 ↔ VPC」는 그 바이트가 VPC
-    경계를 넘었다는 **연역**이므로, 화면이 배지로 그렇게 말할 수 있게 데이터에 적어야 한다
-    (불변식 ③). 아무 표시 없이 복사하는 것이 폐기된 종단 추론이 한 일이다.
+    What the metric's dimensions name is the TGW and the attachment. That those
+    bytes crossed the VPC boundary is a deduction about the attachment and the
+    VPC, so it has to be written into the data for the screen to say so with a
+    badge. Copying it across with no marking at all is what the discarded
+    endpoint inference did.
     """
     state = _snapshot(OBSERVED_RESOURCE_TYPES, OBSERVED_AT)
     queries, _ = plan(state)
@@ -736,11 +835,15 @@ def test_the_vpc_side_of_an_attachment_is_marked_as_deduced():
 
 
 def test_identical_series_are_bought_once():
-    """🔴 요금은 「요청한 지표 수」로 매겨진다 — 같은 계열을 세 번 보내면 세 번 낸다.
+    """The bill is by the number of metrics requested, so sending the same
+    series three times is paid for three times.
 
-    어태치먼트 하나의 계열은 **세 대상**의 답이다(어태치먼트 박스 · TGW 쪽 선 · VPC 쪽 선).
-    접지 않으면 어태치먼트당 4개가 아니라 12개를 사고, 그래도 화면은 똑같아서 아무도 모른다.
-    🔴 접는 것은 요청이고 판정은 대상별로 남는다 — 세 대상이 **전부** 답을 받아야 한다.
+    The series of one attachment answers for three targets: the attachment box,
+    the line on the TGW side and the line on the VPC side. Without folding, each
+    attachment buys twelve metrics rather than four, and the screen looks
+    identical, so nobody notices.
+    What is folded is the request; the verdict stays per target, and all three
+    targets have to receive an answer.
     """
     cw = FakeCloudWatch(_series())
     state = _snapshot(OBSERVED_RESOURCE_TYPES, OBSERVED_AT)
@@ -759,20 +862,23 @@ def test_identical_series_are_bought_once():
         )
         for q in cw.calls[0]["MetricDataQueries"]
     ]
-    assert len(sent) == len(set(sent)), "같은 계열을 두 번 샀다"
+    assert len(sent) == len(set(sent)), "the same series was bought twice"
     attachment = [s for s in sent if ("TransitGatewayAttachment", ATTACH) in s[2]]
     assert len(attachment) == 4, (
         attachment
-    )  # BytesIn·BytesOut·드롭 2 — 3대상 × 4 가 아니다
+    )  # BytesIn, BytesOut and two drops; not three targets times four
     for target_id in (ATTACH_ID, ATTACH_TGW_EDGE, ATTACH_VPC_EDGE):
-        # 같은 계열 하나를 세 대상이 **나눠 받는다** — 기본 대조군이 값을 준 통과량이 셋 모두에 있다.
+        # Three targets share one series, so the throughput the default control
+        # case gave a value to appears on all three.
         assert layer.readings_for(target_id)[_flow_metric(ATTACH_ID)].measured, (
             target_id
         )
 
 
 def test_types_without_metrics_are_not_queried():
-    """지표가 없는 종류와 **Gateway 형** 엔드포인트는 아예 묻지 않는다(§O7: Interface 만)."""
+    """A type with no metrics, and a Gateway-type endpoint, are never asked
+    about at all; only Interface endpoints are.
+    """
     state = _snapshot(OBSERVED_RESOURCE_TYPES, OBSERVED_AT)
     queries, _ = plan(state)
     asked = {q.resource_type for q in queries}
@@ -781,11 +887,15 @@ def test_types_without_metrics_are_not_queried():
 
 
 def test_a_missing_dimension_value_is_reported_not_guessed():
-    """🔴 차원을 만들 수 없으면 **빈 값으로 부르지 않는다** — 그러면 「흐름 없음」과 같아진다.
+    """When a dimension cannot be built, do not call with an empty value; that
+    comes out the same as there being no traffic.
 
-    1층이 `TransitGatewayId` 를 안 준 어태치먼트는 노드와 VPC 쪽 선이 **못 물어보는 대상**이 된다
-    (TGW 쪽 선은 그 id 로 그리는 선이라 구조에 아예 없다 — `collect` 가 만들지 못한다). 조용히
-    건너뛰면 그 둘이 「트래픽 없음」으로 보이고, 고칠 사람은 개발자인데 화면은 아무 말도 하지 않는다.
+    For an attachment whose structure tier gave no `TransitGatewayId`, the node
+    and the line on the VPC side become targets that cannot be asked about. The
+    line on the TGW side is drawn from that id, so it is absent from the
+    structure entirely and `collect` cannot build it. Skipping them quietly
+    leaves both looking as though they carry no traffic, and the person who has
+    to fix it is a developer while the screen says nothing.
     """
     attachments = copy.deepcopy(TRANSIT_GATEWAY_ATTACHMENTS)
     del attachments[0]["TransitGatewayId"]
@@ -803,7 +913,8 @@ def test_a_missing_dimension_value_is_reported_not_guessed():
     )
     assert layer.unbuildable == dict(unbuildable)
     stuck = _by_id(document)[ATTACH_ID]
-    # 1층 근거는 온전하므로 `up` 이고, 2층이 없다는 사실은 사유로 남는다.
+    # The structure-tier evidence is intact, so it is `up`, and that the metric
+    # layer is missing stays in the reason.
     assert stuck["status"] == "up"
     assert stuck["partial"] is True
     assert [r["code"] for r in stuck["partial_reasons"]] == ["api_error"]
@@ -811,24 +922,29 @@ def test_a_missing_dimension_value_is_reported_not_guessed():
 
 
 def test_request_pins_the_period_and_the_window():
-    """`period=60` 고정 · 창 **900초**(ADR 0008 D6) · **사다리 없음**.
+    """A fixed `period=60`, a 900-second window and no ladder of retries.
 
-    🔴 창의 끝은 벽시계가 아니라 **스냅샷 시각**이다(불변식 ②) — 벽시계를 읽으면 같은 입력이
-    다른 문서를 만든다. 사다리가 생기면 호출이 2회가 되므로 호출 수도 같이 잰다.
+    The window ends at the snapshot moment rather than at the wall clock;
+    reading the wall clock would make the same input produce different
+    documents. A ladder would make two calls, so the call count is measured
+    alongside it.
     """
     cw = FakeCloudWatch(_series())
     state = _snapshot(OBSERVED_RESOURCE_TYPES, OBSERVED_AT)
     _layer(cw, state)
-    assert len(cw.calls) == 1, "재시도·사다리가 생겼다(period 를 올려 다시 부르지 마라)"
+    assert len(cw.calls) == 1, (
+        "a retry or a ladder appeared; do not raise the period and call again"
+    )
     call = cw.calls[0]
     assert call["EndTime"].isoformat() == "2026-09-23T00:05:00+00:00"
     assert (call["EndTime"] - call["StartTime"]).total_seconds() == WINDOW_SECONDS
-    assert WINDOW_SECONDS == 900, "D6 이 승인한 창은 15분이다"
+    assert WINDOW_SECONDS == 900, "the approved window is fifteen minutes"
     assert {q["MetricStat"]["Period"] for q in call["MetricDataQueries"]} == {
         PERIOD_SECONDS
     }
     assert PERIOD_SECONDS == 60
-    # 🔴 NLB 의 `ActiveFlowCount` 는 게이지다 — `Sum` 이면 표본 수만큼 부풀어 오른다.
+    # The NLB `ActiveFlowCount` is a gauge, so `Sum` inflates it by the number
+    # of samples.
     stats = {
         q["MetricStat"]["Metric"]["MetricName"]: q["MetricStat"]["Stat"]
         for q in call["MetricDataQueries"]
@@ -838,21 +954,23 @@ def test_request_pins_the_period_and_the_window():
     assert stats["PacketDropCountBlackhole"] == "Sum"
 
 
-# ---------------------------------------------------------------- 판정
+# --------------------------------------------------------------- the verdict
 
 
 def test_flowing_targets_become_live():
     document, _ = _observe(FakeCloudWatch(_series()))
     observations = _by_id(document)
-    # 🔴 대상이 문서에 없으면 아래 for 가 **한 번도 돌지 않고 통과한다**(통과가 아니라 미측정).
+    # If the target is absent from the document the loop below never runs once
+    # and passes, which is not a pass but an absence of measurement.
     assert set(FLOWING) <= set(observations), set(FLOWING) - set(observations)
     for target_id in FLOWING:
         observed = observations[target_id]
         assert observed["status"] == "live", observed
-        # `live` 의 근거는 지표다 — 스키마가 `metric` + `datapoints ≥ 1` 을 요구한다.
+        # The evidence behind `live` is a metric; the schema requires `metric`
+        # with at least one data point.
         assert observed["evidence"]["api"] == METRIC_API
         assert observed["evidence"]["metric"] == _flow_metric(target_id)
-        assert observed["evidence"]["datapoints"] == 2  # FLOW_VALUES 중 0 이 아닌 수
+        assert observed["evidence"]["datapoints"] == 2  # non-zero points in FLOW_VALUES
         assert observed["evidence"]["window_seconds"] == WINDOW_SECONDS
         assert observed["partial"] is False
     _valid(document)
@@ -860,28 +978,36 @@ def test_flowing_targets_become_live():
 
 
 def test_the_window_is_folded_not_read_from_one_end():
-    """🔴 판정은 **창 전체**를 접은 값이다(ADR 0008 D6) — 어느 한 칸이 아니다.
+    """The verdict folds the whole window rather than reading any single slot.
 
-    옛 판은 「값이 있는 마지막 지점」(최신 우선 배열의 `[0]`)으로 판정했고, 그래서 1분 단위
-    깜빡임이 그대로 선의 색이 됐다(15분 중 14분을 흘렸는데 마지막 1분이 0 이면 회색). 반대로
-    배열을 뒤에서 읽으면 15분 전 값으로 지금을 말한다. **접으면 정렬 방향과 무관해진다.**
+    An older version judged on the last data point that had a value, `[0]` of
+    the newest-first array, so a one-minute flicker became the colour of the
+    line: traffic for fourteen of fifteen minutes with a zero in the last one
+    came out grey. Reading the array from the other end instead describes now
+    with a value from fifteen minutes ago. Folding makes the direction of the
+    sort irrelevant.
     """
     both_ends_zero = [(NAT_ID, "BytesOutToDestination", [0.0, 4096.0, 0.0])]
     document, _ = _observe(FakeCloudWatch(_series(*both_ends_zero)))
     observed = _by_id(document)[NAT_ID]
-    assert observed["status"] == "live", "창 안에 통과량이 있는데 회색이 됐다"
+    assert observed["status"] == "live", (
+        "there is throughput inside the window and yet it came out grey"
+    )
     assert observed["evidence"]["datapoints"] == 1
-    # 같은 계열을 뒤집어도 같은 판정이다 — 정렬에 기대지 않는다는 뜻이다.
+    # The same series reversed gives the same verdict, which is what it means
+    # not to rely on the ordering.
     reversed_series = [(NAT_ID, "BytesOutToDestination", [0.0, 4096.0, 0.0][::-1])]
     flipped, _ = _observe(FakeCloudWatch(_series(*reversed_series)))
     assert _by_id(flipped)[NAT_ID] == observed
 
 
 def test_live_evidence_names_the_first_and_last_flowing_minute():
-    """`live` 의 근거에 **0 이 아닌 첫·마지막 분**이 실린다(ADR 0008 D6 보강 — 이력의 재료).
+    """The evidence behind `live` carries the first and last non-zero minute,
+    which is the material the history is built from.
 
-    FLOW_VALUES 는 00:05 기준 최신 우선 [4096, 0, 2048] = 00:04 · 00:03 · 00:02 다. 첫 = 00:02,
-    마지막 = 00:04. 🔴 가운데 0 을 건너뛰어야 한다 — 「배열 끝」을 읽으면 둘 중 하나가 틀린다.
+    FLOW_VALUES is [4096, 0, 2048] newest first from 00:05, so 00:04, 00:03 and
+    00:02. The first is 00:02 and the last is 00:04. The zero in the middle has
+    to be skipped; reading the ends of the array gets one of the two wrong.
     """
     document, _ = _observe(FakeCloudWatch(_series()))
     observations = _by_id(document)
@@ -894,21 +1020,26 @@ def test_live_evidence_names_the_first_and_last_flowing_minute():
 
 
 def test_rows_that_are_not_live_carry_no_flow_minutes():
-    """흐름이 없는 행에는 두 키가 **없다** — 모름·없음의 바이트 표현을 부재 하나로 둔다."""
+    """A row with no traffic has neither key. Not knowing and not having are
+    both represented by one absence.
+    """
     zeros = [(NAT_ID, "BytesOutToDestination", [0.0, 0.0, 0.0])]
     document, _ = _observe(FakeCloudWatch(_series(*zeros)))
     observed = _by_id(document)[NAT_ID]
     assert observed["status"] == "up" and observed["evidence"]["datapoints"] == 0
     assert "first_flow_at" not in observed["evidence"]
     assert "last_flow_at" not in observed["evidence"]
-    # 전제의 판별력 — 같은 문서에 흐르는 행은 키를 가진다.
+    # What makes the premise meaningful: a row with traffic in the same document
+    # does have the keys.
     assert any(
         "last_flow_at" in (o["evidence"] or {}) for o in document["observations"]
     )
 
 
 def test_flow_minutes_do_not_depend_on_the_scan_order():
-    """🔴 최소·최대를 잰다 — `ScanBy` 가 뒤집혀도 같은 분이다(판정과 같은 규율)."""
+    """Measure the minimum and the maximum, so a reversed `ScanBy` still gives
+    the same minutes. Same discipline as the verdict.
+    """
     ref = MetricRef("BytesOutToDestination", "Sum", AGG_SUM, ROLE_FLOW, REPORT_ALWAYS)
     stamps = [f"2026-09-23T00:0{m}:00Z" for m in (4, 3, 2, 1)]
     values = [0.0, 7.0, 0.0, 5.0]
@@ -924,17 +1055,20 @@ def test_flow_minutes_do_not_depend_on_the_scan_order():
 @pytest.mark.parametrize(
     "stamps",
     [
-        None,  # 응답에 `Timestamps` 가 없다
-        ["2026-09-23T00:04:00Z"],  # 짝이 안 맞는다 — 어느 값이 어느 분인지 모른다
+        None,  # the response carries no `Timestamps`
+        ["2026-09-23T00:04:00Z"],  # they do not pair up, so which value belongs
+        # to which minute is unknown
         [
             "2026-09-23T00:04:00",
             "2026-09-23T00:03:00",
-        ],  # 시간대 없음 — UTC 로 가정하지 않는다
-        ["not-a-time", "2026-09-23T00:03:00Z"],  # 읽을 수 없는 원소
+        ],  # no time zone, and UTC is not assumed
+        ["not-a-time", "2026-09-23T00:03:00Z"],  # an element that cannot be read
     ],
 )
 def test_unusable_timestamps_leave_the_minutes_out_but_keep_the_verdict(stamps):
-    """🔴 시각을 못 읽어도 **판정은 그대로**다 — 이 시각은 판정 재료가 아니다(불변식 ④)."""
+    """The verdict stands even when the timestamps cannot be read, because they
+    are not material the verdict is built from.
+    """
     ref = MetricRef("BytesOutToDestination", "Sum", AGG_SUM, ROLE_FLOW, REPORT_ALWAYS)
     reading = read_series([4096.0, 2048.0], ref, stamps)
     assert (reading.first_nonzero_at, reading.last_nonzero_at) == (None, None)
@@ -942,7 +1076,9 @@ def test_unusable_timestamps_leave_the_minutes_out_but_keep_the_verdict(stamps):
 
 
 def test_a_response_without_timestamps_is_still_live_and_valid():
-    """실제 응답에서 시각이 빠져도 행은 `live` 이고 스키마를 통과한다(키만 없다)."""
+    """With the timestamps missing from a real response the row is still `live`
+    and still passes the schema; only the keys are absent.
+    """
     document, _ = _observe(FakeCloudWatch(_series(), with_timestamps=False))
     observed = _by_id(document)[NAT_ID]
     assert observed["status"] == "live"
@@ -951,7 +1087,9 @@ def test_a_response_without_timestamps_is_still_live_and_valid():
 
 
 def test_a_series_of_zeros_stays_up_and_says_it_measured():
-    """쟀고 흐름이 없었다 → `up` + `datapoints: 0`. 🔴 `null`(안 쟀음)과 다른 사실이다."""
+    """Measured, with no traffic: `up` with `datapoints: 0`. That states a
+    different fact from `null`, which means it was not measured.
+    """
     document, _ = _observe(
         FakeCloudWatch(_series((NAT_ID, "BytesOutToDestination", [0.0, 0.0, 0.0])))
     )
@@ -963,22 +1101,30 @@ def test_a_series_of_zeros_stays_up_and_says_it_measured():
 
 
 def test_an_empty_series_does_not_overwrite_layer_one():
-    """🔴 승인된 계약: 빈 배열은 「확인 불가」이고 1층 `up` 을 **덮지 않는다**.
+    """The approved contract: an empty array means unconfirmed and does not
+    override an `up` from the structure tier.
 
-    §O7-1 함정 3 의 그 경우다(구조에 있는데 지표가 없는 대상) — 「`up` 이고 `datapoints` 가
-    `null` 인 것」이 정답이다. `partial` 도 아니다: 근거가 불완전한 것이 아니라 그 대상에 지표가
-    없는 것이고, `partial` 로 적으면 화면이 「권한을 고치면 보인다」고 거짓말한다.
+    This is the case of a target that exists in the structure but has no
+    metrics, where the right answer is `up` with `datapoints` of `null`. It is
+    not `partial` either: the evidence is not incomplete, that target simply has
+    no metric, and writing `partial` would have the screen claim that fixing a
+    permission would reveal it.
 
-    🔴 **피험자가 엔드포인트에서 NAT 으로 바뀌었다(2026-10-21)**: 수락된 엔드포인트의 `BytesProcessed` 빈 응답은
-    이제 「쟀고 0」이다(ADR 0006 §O7-2a 개정 · `test_a_silent_accepted_endpoint_is_up_with_no_flow`). 값 0 도 발행하는
-    NAT(`always`)의 빈 응답이 이 계약의 피험자로 남는다 — 차원이 틀렸을 때 오는 바로 그 모양이다.
+    The subject of this test moved from an endpoint to a NAT gateway. An empty
+    `BytesProcessed` response on an accepted endpoint now means measured and
+    zero. What remains the subject of this contract is an empty response from a
+    NAT gateway, which publishes zero values too, and that is exactly the shape
+    that arrives when a dimension is wrong.
     """
     document, _ = _observe(FakeCloudWatch(_series(flowing=(TGW_ID,))))
     observed = _by_id(document)[NAT_ID]
     assert observed["status"] == "up"
-    # 하나도 못 쟀으면 이름은 물어본 통과량의 첫 이름이다(`Verdict.report_metric` 의 마지막 갈래)
+    # With nothing measured at all the name is the first throughput metric that
+    # was asked for, which is the last branch of `Verdict.report_metric`.
     assert observed["evidence"]["metric"] == "BytesInFromSource"
-    assert observed["evidence"]["datapoints"] is None, "빈 배열을 0 으로 적었다"
+    assert observed["evidence"]["datapoints"] is None, (
+        "an empty array was recorded as zero"
+    )
     assert "값 0 도 발행하는 지표" in (observed["why"] or ""), observed
     assert observed["partial"] is False
     assert "partial_reasons" not in observed
@@ -986,10 +1132,12 @@ def test_an_empty_series_does_not_overwrite_layer_one():
 
 
 def test_drops_do_not_deny_a_flow():
-    """🔴 **드롭 > 0 은 흐름을 부정하지 않는다**(ADR 0008 D3).
+    """A drop above zero does not negate traffic.
 
-    사람이 보는 결과: 정상적으로 흐르면서 일부 패킷을 버리는 구간(MTU·TTL·정책)이 전부 빨간
-    점선이 된다. 그러면 진짜 차단과 구별되지 않고, 화면의 빨강이 신뢰를 잃는다.
+    What somebody sees otherwise: every span that carries traffic normally while
+    discarding some packets, through MTU, TTL or policy, turns into a red dashed
+    line. Then it cannot be told apart from a real block, and the red on the
+    screen loses its credibility.
     """
     document, _ = _observe(
         FakeCloudWatch(_series((NAT_ID, "PacketsDropCount", [12.0, 3.0])))
@@ -1001,17 +1149,20 @@ def test_drops_do_not_deny_a_flow():
 
 
 def test_zero_flow_with_drops_is_down_and_names_the_drop():
-    """통과 0 + 드롭 > 0 → `down`. 🔴 이름과 숫자는 **드롭의** 것이어야 한다.
+    """No throughput with drops above zero gives `down`, and the name and the
+    number have to be the drop's.
 
-    드롭으로 차단을 말했는데 `evidence` 에 통과량 이름과 0 이 적히면, 사람이 콘솔에서 그 지표를
-    열어 보고 「0 이네, 아무 일도 없었는데?」로 읽는다 — 재현할 수 없는 빨강이다.
+    If a block is stated from a drop while `evidence` records a throughput name
+    and a zero, somebody opens that metric in the console, reads zero, and
+    concludes that nothing happened. That is a red nobody can reproduce.
     """
     document, _ = _observe(
         FakeCloudWatch(
             _series(
-                # 🔴 **나감(`BytesOut`) 0 을 잰 계열**이 있어야 이 검사가 무엇을 잰다 — 들어옴만 두면
-                #    통과량 이름 자체가 없어서(정정 1-2) 「통과량 이름을 적는」 회귀가 통과한다
-                #    (브레이크 `차단에통과량이름` 이 죽었다 · 2026-09-28 전량 스윕).
+                # This check measures something only if there is a series that
+                #    measured `BytesOut` as zero. With arrivals alone there is
+                #    no throughput name at all, and a regression that records a
+                #    throughput name would pass.
                 (TGW_ID, "BytesOut", [0.0, 0.0]),
                 (TGW_ID, "BytesIn", [0.0, 0.0]),
                 (TGW_ID, "PacketDropCountBlackhole", [7.0, 5.0]),
@@ -1025,20 +1176,27 @@ def test_zero_flow_with_drops_is_down_and_names_the_drop():
     assert observed["evidence"]["datapoints"] == 2
     assert observed["error_count"] == 1
     assert "PacketDropCountBlackhole" in observed["why"]
-    assert "900" in observed["why"], "창 길이를 사유에 적지 않으면 재현할 수 없다"
+    assert "900" in observed["why"], (
+        "without the window length in the reason it cannot be reproduced"
+    )
     _valid(document)
 
 
 def test_a_new_nat_that_dropped_packets_is_not_called_blocked():
-    """🔴 **NAT 의 버림 수만으로 「막혔다」를 적지 않는다**(ADR 0008 D3 정정 5 · 랩 A1 실측).
+    """Do not state a block from a NAT gateway's discard count alone.
 
-    사람이 보는 결과: NAT 게이트웨이를 방금 만들면 **생성 직후 3분에** `PacketsDropCount` 가
-    49패킷을 낸다(`docs/verification-lab.md:143,153`) — 아직 아무도 그 NAT 을 쓰지 않아 통과량은 0 이다.
-    옛 규칙(통과 0 + 드롭 > 0 → 막힘)은 이 정상 NAT 을 **빨간 「막혔다」**로 그리고, 고객은 방금
-    만든 것이 고장 났다고 읽는다. NAT 에서 막힘을 말할 수 있는 신호는 **포트 고갈 하나**다.
+    What somebody sees otherwise: a freshly created NAT gateway reports 49
+    packets on `PacketsDropCount` in the three minutes after creation, while its
+    throughput is zero because nobody is using it yet. The old rule, no
+    throughput with drops above zero meaning blocked, draws that healthy NAT
+    gateway as a red block, and the customer reads what they have just created
+    as broken. The one signal that can state a block on a NAT gateway is port
+    exhaustion.
 
-    대조군이 이 검사의 판별력이다 — 같은 모양인데 `ErrorPortAllocation` 이 양수면 `down` 이고
-    사유에 적히는 이름도 그것이다. 둘이 같은 결과가 되면 이 검사는 아무것도 재지 않는다.
+    The control case is what gives this check its power: the same shape with a
+    positive `ErrorPortAllocation` is `down`, and that is the name recorded in
+    the reason. If the two gave the same result this check would measure
+    nothing.
     """
     badge = _observe(
         FakeCloudWatch(
@@ -1051,11 +1209,17 @@ def test_a_new_nat_that_dropped_packets_is_not_called_blocked():
         )
     )[0]
     observed = _by_id(badge)[NAT_ID]
-    assert observed["status"] == "up", "갓 만든 정상 NAT 이 막힌 것으로 그려진다"
-    # 동률(둘 다 0)이면 이름이 앞선 것 — `_fold` 의 결정론 규칙이다(불변식 ②).
+    assert observed["status"] == "up", (
+        "a healthy, freshly created NAT gateway is drawn as blocked"
+    )
+    # On a tie, both zero, the earlier name wins. That is the determinism rule
+    # of `_fold`.
     assert observed["evidence"]["metric"] == "BytesInFromSource", observed
-    # `datapoints` 는 **0 이 아닌 점의 수**다 → 「쟀고 전부 0」은 `0`, 「못 쟀다」는 `None`.
-    assert observed["evidence"]["datapoints"] == 0, "못 잰 것으로 적혔다"
+    # `datapoints` counts the non-zero points, so measured and all zero gives
+    # `0` while not measured gives `None`.
+    assert observed["evidence"]["datapoints"] == 0, (
+        "it was recorded as not having been measured"
+    )
     assert observed["why"] is None, observed
 
     blocked = _observe(
@@ -1072,45 +1236,56 @@ def test_a_new_nat_that_dropped_packets_is_not_called_blocked():
     exhausted = _by_id(blocked)[NAT_ID]
     assert exhausted["status"] == "down", exhausted
     assert exhausted["evidence"]["metric"] == "ErrorPortAllocation", (
-        "차단을 말했는데 배지용 드롭 이름을 적으면 콘솔에서 재현할 수 없다"
+        "stating a block while recording a badge-only drop name cannot be "
+        "reproduced in the console"
     )
     assert "ErrorPortAllocation" in exhausted["why"]
     assert "PacketsDropCount" not in (exhausted["why"] or "")
 
 
 def test_the_adr_says_nat_packet_drops_are_not_a_blocking_signal():
-    """🔴 코드의 `blocking` ↔ ADR 0008 D3 표. **둘이 같이 틀릴 수 있는 구멍을 막는다.**
+    """The `blocking` declaration in the code against the D3 table, which closes
+    the hole where both could be wrong together.
 
-    위 검사만 있으면 코드를 고쳐서 통과시킬 수 있다. 정본은 ADR 이므로, D3 의 NAT 행이 「버림 수를
-    차단 신호에서 뺀다」고 적고 있다는 사실과 코드의 선언을 **한 검사 안에서** 맞춘다 — 한쪽만
-    뒤집으면 FAIL 한다.
+    With only the check above, the code could be changed to make it pass. The
+    design document is the source of truth, so this matches the code's
+    declaration against the fact that the NAT row of D3 says the discard count
+    is excluded from the blocking signals, within one check. Flipping either
+    side alone fails.
     """
     rows = [line for line in _adr8().splitlines() if line.startswith("| NAT GW |")]
-    assert len(rows) == 1, f"D3 표의 NAT 행을 특정할 수 없다: {rows}"
+    assert len(rows) == 1, f"the NAT row of the D3 table is not unique: {rows}"
     assert "`ErrorPortAllocation` (Sum)만" in rows[0], rows[0]
     assert "`PacketsDropCount` 는 D 신호에서 뺀다" in rows[0], rows[0]
     by_name = {ref.name: ref for ref in NODE_PROBES["nat_gateway"].metrics}
     assert by_name["ErrorPortAllocation"].blocking is True
     assert by_name["PacketsDropCount"].blocking is False, (
-        "ADR 은 배지 전용이라고 적었는데 코드는 차단 신호로 쓴다"
+        "the design document says badge-only while the code uses it as a "
+        "blocking signal"
     )
 
 
 def test_the_drop_count_lands_in_the_row_not_only_in_the_why_line():
-    """S2-2 ⓑ(2026-09-26) — 「드롭 N」이 읽는 칸(`drops`)을 엔진이 채운다.
+    """The engine fills the `drops` field that the drop badge reads.
 
-    사람이 보는 결과: 흐름이 관측된 선에 **초록 + 「드롭 15」**가 같이 적힌다. 이 칸이 없으면
-    화면이 드롭을 말할 수단이 `why` 문장뿐이고, **문장에서 숫자를 뽑는 화면은 계약이 아니다**
-    (`schema/observation.schema.json` `drops` 의 `$comment`). 렌더러는 `row.drops` 를 읽는다
+    What somebody sees: a line with observed traffic carries both green and a
+    drop count. Without this field the only way the screen could state a drop is
+    the `why` sentence, and a screen that extracts a number out of a sentence is
+    not a contract. The renderer reads `row.drops`.
     (`renderer/flow.js` `wireBadge`·`showWirePanel`).
 
-    🔴 **등급 경로를 다 잰다** — `drops` 는 등급과 **독립적인 사실**이므로 한 경로만 실으면 나머지
-    등급의 행에서 배지가 조용히 사라진다. 그리고 **세 값이 서로 다른 사실**이다(ADR 0007):
-    `15`(쟀고 15) · `0`(쟀고 0) · **키 없음**(못 쟀거나 드롭 지표가 없다). 대조군 두 개가 이
-    검사의 판별력이다 — 키 없음만 재면 「아무 행에도 안 싣는다」도 통과하고, 0 을 재지 않으면
-    「0 이면 키를 지운다」도 통과한다.
+    Every grade path is measured, because `drops` states a fact independent of
+    the grade. Filling it on one path only makes the badge quietly disappear from
+    the rows of every other grade. And the three values state three different
+    facts: `15` means measured as 15, `0` means measured as zero, and a missing
+    key means either not measured or no drop metric at all. The two control
+    cases are what give this check its power: measuring only the missing key
+    would let "never fill it on any row" pass, and not measuring zero would let
+    "delete the key when it is zero" pass.
     """
-    # ① `live` + 드롭 > 0 (흐르면서 일부를 버린다) · ② `live` + 「쟀고 0」 · ③ 드롭 지표가 조용하다
+    # First, `live` with drops above zero, carrying traffic while discarding
+    # some. Second, `live` with measured and zero. Third, a drop metric that is
+    # quiet.
     document, _ = _observe(
         FakeCloudWatch(
             _series(
@@ -1121,14 +1296,18 @@ def test_the_drop_count_lands_in_the_row_not_only_in_the_why_line():
     )
     rows = _by_id(document)
     assert rows[NAT_ID]["status"] == "live"
-    assert rows[NAT_ID]["drops"] == 15, "창 합계여야 한다(12 + 3)"
-    assert rows[TGW_ID]["drops"] == 0, "「쟀고 0」이 키 없음으로 뭉개졌다"
+    assert rows[NAT_ID]["drops"] == 15, "it has to be the window total, 12 + 3"
+    assert rows[TGW_ID]["drops"] == 0, (
+        "measured and zero was flattened into a missing key"
+    )
     assert "drops" not in rows[ENDPOINT_ID], (
-        "드롭 지표가 조용한데 0 을 적었다 — 「드롭 없음」과 「못 쟀음」이 같아진다"
+        "a zero was recorded while the drop metric was quiet, which makes no "
+        "drops and not measured the same thing"
     )
     _valid(document)
 
-    # ④ `down` 경로 — 차단을 말한 행에도 그 숫자가 남아야 한다(사유 문장과 같은 수).
+    # Fourth, the `down` path: a row that states a block keeps that number too,
+    # the same number as in the reason.
     blocked, _ = _observe(
         FakeCloudWatch(
             _series(
@@ -1143,8 +1322,10 @@ def test_the_drop_count_lands_in_the_row_not_only_in_the_why_line():
     assert down["drops"] == 12
     _valid(blocked)
 
-    # ⑤ 「흐름 없음」(`up` + 통과 0) 경로 — 갓 만든 NAT 의 배지 전용 드롭. 등급은 안 바뀌지만
-    #    화면은 **왜 회색인데 버림이 있는지**를 말할 수 있어야 한다(랩 A1 정정 5).
+    # Fifth, the no-traffic path, `up` with zero throughput: the badge-only drop
+    #    of a freshly created NAT gateway. The grade does not change, but the
+    #    screen still has to be able to say why something is grey and yet
+    #    discarding packets.
     quiet, _ = _observe(
         FakeCloudWatch(
             _series(
@@ -1156,19 +1337,22 @@ def test_the_drop_count_lands_in_the_row_not_only_in_the_why_line():
         )
     )
     new_nat = _by_id(quiet)[NAT_ID]
-    assert new_nat["status"] == "up", "전제가 바뀌었다 — 이 경로는 `up` 이어야 한다"
+    assert new_nat["status"] == "up", "the premise changed; this path has to be `up`"
     assert new_nat["drops"] == 49
     _valid(quiet)
 
 
 def test_two_drop_metrics_on_one_target_report_the_larger_not_the_sum():
-    """🔴 `drops` 는 드롭 지표 **하나**의 창 합계다 — 지표끼리 더하지 않는다(#32 리뷰 5).
+    """`drops` is the window total of one drop metric; the metrics are not added
+    together.
 
-    TGW 는 블랙홀과 「경로 없음」을 따로 센다. 둘을 더하면 화면의 「드롭 100」이 콘솔의 어느 지표와도
-    맞지 않아 사람이 따라갈 수 없다. 차단 사유 문장이 이름을 대는 지표와 숫자가 같아야 한다.
-    스키마 `drops` 설명이 이 규칙을 적는다(`observation.schema.json` `drops`).
+    A TGW counts blackholed packets and packets with no route separately. Adding
+    the two gives a drop count on screen that matches no metric in the console,
+    so nobody can follow it. The number has to match the metric the blocking
+    reason names. The schema records this rule in the description of `drops`.
     """
-    # ① 흐르면서 두 종류로 버린다 — 70 과 30 중 큰 쪽
+    # First, carrying traffic while discarding in two ways: the larger of 70
+    # and 30.
     flowing, _ = _observe(
         FakeCloudWatch(
             _series(
@@ -1180,11 +1364,12 @@ def test_two_drop_metrics_on_one_target_report_the_larger_not_the_sum():
     live = _by_id(flowing)[TGW_ID]
     assert live["status"] == "live"
     assert live["drops"] == 70, (
-        "두 드롭 지표를 더했다(70 + 30) — 콘솔의 어느 지표와도 안 맞는다"
+        "the two drop metrics were added, 70 + 30, which matches no metric in "
+        "the console"
     )
     _valid(flowing)
 
-    # ② 막혔다 — 사유 문장의 지표와 숫자가 `drops` 와 같다
+    # Second, blocked: the metric and the number in the reason match `drops`.
     blocked, _ = _observe(
         FakeCloudWatch(
             _series(
@@ -1204,10 +1389,13 @@ def test_two_drop_metrics_on_one_target_report_the_larger_not_the_sum():
 
 
 def test_a_gauge_is_folded_by_max_not_by_sum():
-    """🔴 게이지는 창 **최대**로 접는다 — 합계로 접으면 「1분에 흐름 3,600개」가 나온다.
+    """A gauge folds to the maximum over the window. Folding it to a sum gives
+    numbers like 3,600 flows in one minute.
 
-    `_fold` 는 값이 가장 큰 흐름 지표를 고르므로, 게이지를 합계로 접으면 그 부풀린 수가 판정의
-    근거로 올라가고 `evidence.metric` 도 그 이름이 된다(사람이 콘솔에서 확인하면 다른 수다).
+    `_fold` picks the flow metric with the largest value, so folding a gauge to
+    a sum promotes that inflated number into the evidence behind the verdict and
+    puts its name in `evidence.metric`. Somebody checking it in the console sees
+    a different number.
     """
     nlb = _active_nlb()
     cw = FakeCloudWatch(
@@ -1216,16 +1404,19 @@ def test_a_gauge_is_folded_by_max_not_by_sum():
     document, layer = _observe(cw, load_balancers=nlb)
     reading = layer.readings_for(NLB_ID)["ActiveFlowCount"]
     assert reading.aggregate == AGG_MAX
-    assert reading.value == 5.0, "합계(12)로 접혔다"
+    assert reading.value == 5.0, "it folded to the sum, 12"
     assert _by_id(document)[NLB_ID]["status"] == "live"
 
 
 def test_fold_folds_counters_by_sum_and_state_by_max():
-    """`_fold` 단위 검사 — 역할별 접기 규칙(ADR 0008 D2 통계 규칙 · D6).
+    """A unit check on `_fold`: the folding rule for each role.
 
-    🔴 상태·건강 역할은 아직 어느 프로브도 쓰지 않으므로(위 래칫) **여기가 유일한 측정**이다.
-    상태는 창 최대 = 「창 내내 0 이어야 차단」이고, 건강은 창 최소 = 「한 칸이라도 0 이면 전멸
-    구간이 있었다」다. 둘을 뒤집으면 유지보수·재수렴이 전부 빨간 선이 된다.
+    No probe uses the state or health roles yet, as the ratchet above records,
+    so this is the only place they are measured. State folds to the maximum over
+    the window, so a block requires zero throughout; health folds to the
+    minimum, so a single zero slot means there was a span with nothing healthy.
+    Reversing the two turns every maintenance window and reconvergence into a
+    red line.
     """
     flowing = _fold(
         {"BytesIn": Reading("BytesIn", ROLE_FLOW, AGG_SUM, 3, 2, 6144.0, REPORT_ALWAYS)}
@@ -1248,7 +1439,9 @@ def test_fold_folds_counters_by_sum_and_state_by_max():
             )
         }
     )
-    assert not state_up.blocked, "창 안에 한 번이라도 1 이면 차단이 아니다"
+    assert not state_up.blocked, (
+        "a single 1 anywhere in the window means it is not blocked"
+    )
 
     health_gone = _fold(
         {
@@ -1259,7 +1452,8 @@ def test_fold_folds_counters_by_sum_and_state_by_max():
     )
     assert health_gone.blocked
 
-    # 🔴 못 쟀으면(빈 배열) 차단이 아니다 — 「모름」을 「고장」으로 올리지 않는다(이음매 3).
+    # An empty array means it was not measured, which is not a block. Do not
+    # promote not knowing into broken.
     unmeasured = _fold(
         {
             "TunnelState": Reading(
@@ -1271,15 +1465,18 @@ def test_fold_folds_counters_by_sum_and_state_by_max():
 
 
 def test_report_metric_never_borrows_a_health_name_for_a_silent_flow():
-    """🔴 통과량을 **하나도 못 쟀을 때**도 근거 이름은 통과량의 것이다(ADR 0009 D3).
+    """Even when no throughput was measured at all, the name in the evidence is
+    a throughput metric.
 
-    사람이 보는 결과: 화면의 「흐름」 칸이 「확인 불가」인데 근거로 `HealthyHostCount` 가 적혀
-    있으면, 사람은 콘솔에서 그 지표를 열고 「타깃은 건강한데 왜 확인 불가인가」로 헤맨다. 이름은
-    **우리가 무엇을 물었는지**를 말해야 한다 — 물은 것은 통과량이다.
+    What somebody sees otherwise: the traffic field on screen reads unconfirmed
+    while the evidence names `HealthyHostCount`, so they open that metric in the
+    console and wonder why it is unconfirmed when the targets are healthy. The
+    name has to say what we asked about, and what we asked about was throughput.
     """
     verdict = _fold(
         {
-            # 이름순으로는 이 건강 지표가 앞선다 → `metric_names[0]` 폴백이면 이것이 뽑힌다.
+            # Alphabetically this health metric comes first, so a
+            # `metric_names[0]` fallback would pick it.
             "HealthyHostCount": Reading(
                 "HealthyHostCount",
                 ROLE_HEALTH,
@@ -1294,30 +1491,42 @@ def test_report_metric_never_borrows_a_health_name_for_a_silent_flow():
             ),
         }
     )
-    assert verdict.measured, "건강 지표를 쟀으므로 대상 전체로는 «쟀다» 다"
+    assert verdict.measured, (
+        "a health metric was measured, so the target as a whole was measured"
+    )
     assert not verdict.flowing and not verdict.blocked
     assert verdict.report_metric == "ProcessedBytes", verdict
 
 
 def test_a_silent_flow_metric_is_null_even_when_another_series_answered():
-    """🔴 **같은 대상의 다른 계열이 답했다고 통과량을 쟀다고 적지 않는다**(ADR 0009 ④).
+    """Do not record throughput as measured just because another series on the
+    same target answered.
 
-    사람이 보는 결과: 엔드포인트에 드롭 계열만 답이 오고 통과량은 한 점도 안 온 상황에서, 옛 판은
-    그 칸에 「데이터포인트 0개」를 적었다 — 화면은 그것을 **「이 구간에 흐름이 없었다」는 확정**
-    으로 읽는다. 실제로 일어난 일은 「그 지표를 못 봤다」이므로 숫자는 비어야 하고, 사유가
-    다음에 무엇을 할지(= 기다릴 일인지 우리가 고칠 일인지)를 말해야 한다.
+    What somebody sees otherwise: with only the drop series answering for an
+    endpoint and not one point of throughput, an older version wrote zero data
+    points in that field, and the screen reads that as settled proof that there
+    was no traffic in the span. What actually happened is that we never saw the
+    metric, so the number has to be empty and the reason has to say what to do
+    next: whether to wait or whether this is ours to fix.
 
-    대조군이 이 검사의 판별력이다 — **같은 `up`** 인데 통과량을 실제로 쟀으면 `0` 이 적히고
-    사유가 없다. 둘이 같은 바이트가 되면 이 검사는 아무것도 재지 않는다.
+    The control case is what gives this check its power. With the same `up` but
+    the throughput really measured, a `0` is written and there is no reason. If
+    the two produced the same bytes this check would measure nothing.
 
-    🔴 **피험자가 NAT 에서 엔드포인트로 바뀌었다(2026-09-26)**: 랩 A1 실측으로 NAT 통과량 2종이
-    `always` 가 되어 「점이 안 왔다」의 뜻이 정반대가 됐다 — NAT 에서 점이 없으면 이제 **우리가
-    고칠 결함**(차원 조합·발행 시작)이고, 여기서 재려는 「발행되지 않는 지표라 기다릴 일」은
-    `nonzero_only` 자원에서만 성립한다. 엔드포인트 통과량 2종이 그 자리다.
+    The subject of this test moved from a NAT gateway to an endpoint. A lab
+    measurement made two NAT throughput metrics `always`, which reversed the
+    meaning of no points arriving: on a NAT gateway, no points is now a defect
+    of ours to fix, in the dimension combination or in publishing. What this
+    test wants to measure, a metric that is not published so there is nothing to
+    do but wait, holds only for a `nonzero_only` resource, and the two endpoint
+    throughput metrics are that case.
 
-    🔴 **2026-10-21 개정**(ADR 0006 §O7-2a): 수락된 엔드포인트의 `BytesProcessed` **성공한** 빈 응답은 이제 「쟀고 0」
-    이다. 그래서 「통과량을 못 봤다」를 만드는 길은 그 계열의 쿼리가 `Complete` 가 아닌 경우(`Forbidden`)뿐이다 —
-    드롭 계열이 답했다고 그 계열을 0 으로 채우면 거부가 「흐름 없음」으로 숨는다(불변식 ④).
+    A later revision made a successful empty `BytesProcessed` response on an
+    accepted endpoint mean measured and zero. So the only way left to produce
+    "the throughput was never seen" is for that series' query to come back as
+    something other than `Complete`, such as `Forbidden`. Filling that series
+    with zero because the drop series answered would hide a denial as an absence
+    of traffic.
     """
     drop = _drop_metric(ENDPOINT_ID)
     silent = _observe(
@@ -1329,8 +1538,12 @@ def test_a_silent_flow_metric_is_null_even_when_another_series_answered():
     observed = _by_id(silent)[ENDPOINT_ID]
     assert observed["status"] == "up", observed
     assert observed["evidence"]["metric"] == "BytesProcessed"
-    assert observed["evidence"]["datapoints"] is None, "못 잰 것을 «쟀고 0» 으로 적었다"
-    # 사유 = `_quiet_why` 의 「값 0 이면 발행되지 않는 지표」 갈래(쿼리 `StatusCode` 는 따로 사유로 올리지 않는다 — 지금 그대로)
+    assert observed["evidence"]["datapoints"] is None, (
+        "something not measured was recorded as measured and zero"
+    )
+    # The reason comes from the branch of `_quiet_why` about a metric that is
+    # not published when its value is zero. The query `StatusCode` is not raised
+    # as a separate reason, which is how it stands today.
     assert "발행되지 않는 지표" in (observed["why"] or ""), observed
 
     measured = _observe(
@@ -1344,15 +1557,21 @@ def test_a_silent_flow_metric_is_null_even_when_another_series_answered():
     )[0]
     zeroed = _by_id(measured)[ENDPOINT_ID]
     assert zeroed["status"] == "up"
-    assert zeroed["evidence"]["datapoints"] == 0, "쟀고 0 은 숫자가 있어야 한다"
-    assert zeroed["why"] is None, "쟀는데 «못 쟀다» 사유가 붙었다"
+    assert zeroed["evidence"]["datapoints"] == 0, (
+        "measured and zero has to carry a number"
+    )
+    assert zeroed["why"] is None, (
+        "it was measured, yet a not-measured reason was attached"
+    )
 
 
 def test_traffic_does_not_erase_a_down_verdict():
-    """🔴 2층은 **`up` 에서만** 올라간다 — 실패한 NAT·`failed` LB 에 흐름이 보여도 `down` 이다.
+    """The metric layer only ever lifts an `up`. A failed NAT gateway or a
+    `failed` load balancer stays `down` even when traffic is visible.
 
-    사람이 보는 결과: 고장 난 자원이 초록으로 바뀌어 화면에서 사라진다. 「흐르는데 고장」을
-    그리려면 다섯 번째 어휘가 필요하고 ADR 0008 D1 이 그것을 금지했다.
+    What somebody sees otherwise: a broken resource turns green and disappears
+    from the screen. Drawing "carrying traffic but broken" would need a fifth
+    word in the vocabulary, and the design forbids one.
     """
     cw = FakeCloudWatch(_series(flowing=FLOWING + (DEAD_NAT_ID, NLB_ID)))
     document, _ = _observe(cw)
@@ -1364,20 +1583,25 @@ def test_traffic_does_not_erase_a_down_verdict():
         assert observed["partial"] is False
 
 
-# ---------------------------------------------------------------- 2층 전용 엣지(D8)
+# ------------------------------------------- metric-layer-only edges
 
 
 def test_metric_only_edges_appear_only_when_the_metric_answered():
-    """🔴 못 쟀으면 **행이 없다**(ADR 0008 D1 의 E · D8-1).
+    """When it could not be measured there is no row.
 
-    사람이 보는 결과의 차이: 행이 없으면 그 선은 「경로만 확인」으로 남고, 여기서 `up` 을
-    만들면 **근거 0 인 초록**이 된다 — 그것이 이 ADR 이 폐기한 종단 추론의 형태다.
-    대조군을 둘 둔다: 지표를 하나도 등록하지 않은 실행과 등록한 실행.
+    The difference somebody sees: with no row, that line stays marked as having
+    only its path confirmed. Producing an `up` here would make it green with
+    nothing behind it, which is the shape of the endpoint inference this design
+    discarded.
+    There are two control cases: a run with no metrics registered at all, and a
+    run with them registered.
     """
     quiet, _ = _observe(FakeCloudWatch(_series(flowing=(NAT_ID,))))
-    # 🔴 예외 둘 — ALB 배치 선 · 수락된 엔드포인트의 서브넷 구간은 **성공한 빈 응답 = 쟀고 0**(`empty_is_zero` ·
-    #    사용자 결정 2026-10-21 · ADR 0006 §O7-2a)이라 행이 있다. 그 행은 `up` + `datapoints: 0`(흐름 없음)이다 —
-    #    근거 0 인 초록이 아니다.
+    # Two exceptions: for the ALB placement line and the subnet span of an
+    #    accepted endpoint, a successful empty response means measured and zero
+    #    (`empty_is_zero`), so they do have a row. That row is `up` with
+    #    `datapoints: 0`, meaning no traffic, rather than a green with nothing
+    #    behind it.
     zeroed = [
         o
         for o in quiet["observations"]
@@ -1398,7 +1622,7 @@ def test_metric_only_edges_appear_only_when_the_metric_answered():
         o
         for o in quiet["observations"]
         if o["target_id"].split("|")[0] in METRIC_ONLY_EDGES and o not in zeroed
-    ], "2층이 그 구간에 답하지 않았는데 행을 만들었다"
+    ], "a row was built although the metric layer never answered for that span"
 
     document, _ = _observe(
         FakeCloudWatch(
@@ -1411,24 +1635,31 @@ def test_metric_only_edges_appear_only_when_the_metric_answered():
     assert rows[ALB_PUBLIC_EDGE]["evidence"]["metric"] == "ProcessedBytes"
     assert rows[ATTACH_TGW_EDGE]["status"] == "live"
     assert rows[ENDPOINT_PUBLIC_EDGE]["status"] == "live"
-    # 🔴 대조군 — **같은 종류의 다른 구간**은 계열을 등록하지 않았으니 흐름이 없다. 엔드포인트 노드
-    # 지표가 서브넷 구간으로 번지면 여기가 `live` 로 잡히고, 그것이 옛 종단 추론이다. (수락된 엔드포인트라
-    # 빈 응답 = 쟀고 0 → 행은 있고 `up` · 0 · 2026-10-21)
+    # Control case: another span of the same type has no series registered, so
+    # it has no traffic. If the metric of an endpoint node bled into the subnet
+    # span this would come out `live`, and that is the old endpoint inference.
+    # Being an accepted endpoint, an empty response means measured and zero, so
+    # the row exists with `up` and 0.
     assert rows[ENDPOINT_PRIVATE_EDGE]["status"] == "up", (
-        "등록하지 않은 계열에 흐름이 번졌다"
+        "traffic bled into a series that was never registered"
     )
     assert rows[ENDPOINT_PRIVATE_EDGE]["evidence"]["datapoints"] == 0
-    # ALB 배치 선은 빈 응답 = 쟀고 0(`empty_is_zero`) → 행은 있지만 옆 구간의 흐름이 번지지 않는다(`up` · 0)
+    # For the ALB placement line an empty response means measured and zero
+    # (`empty_is_zero`), so the row exists without traffic bleeding in from the
+    # neighbouring span: `up` with 0.
     assert rows[ALB_PRIVATE_EDGE]["status"] == "up"
     assert rows[ALB_PRIVATE_EDGE]["evidence"]["datapoints"] == 0
     _valid(document)
 
 
 def test_a_measured_span_that_carried_nothing_is_up_with_zero():
-    """쟀고 0 인 구간 → 행이 **있고** `up` + `datapoints: 0`.
+    """A span that was measured and came out zero has a row, with `up` and
+    `datapoints: 0`.
 
-    「행 없음」(못 쟀다)과 「`up` + 0」(쟀고 조용했다)은 화면에서 달라야 한다 — 전자는 「경로만
-    확인」, 후자는 「지금 트래픽 없음」이다. 고객이 물을 질문이 다르다.
+    Having no row, meaning it could not be measured, and `up` with 0, meaning it
+    was measured and quiet, have to look different on screen. The first says
+    only the path is confirmed and the second says there is no traffic right
+    now. A customer would ask a different question about each.
     """
     document, _ = _observe(
         FakeCloudWatch(
@@ -1446,30 +1677,34 @@ def test_a_measured_span_that_carried_nothing_is_up_with_zero():
 
 
 def test_the_vpc_side_of_a_measured_attachment_says_deduced_in_the_document():
-    """🔴 `evidence.observed_on` 이 **문서에** 적힌다(ADR 0008 D8-2 · 불변식 ③).
+    """`evidence.observed_on` is written into the document.
 
-    같은 계열이 두 선을 초록으로 만드는데, 한쪽은 지표가 그 구간을 직접 이름 댄 것이고 다른
-    한쪽은 연역이다. 그 차이를 데이터에 적지 않으면 화면이 배지로 말할 수 없고, 두 선은
-    구별되지 않는다 — 그 구별이 사라진 상태가 폐기된 종단 추론이다.
+    One series turns two lines green: on one of them the metric named that span
+    directly, and on the other it is a deduction. Without that difference in the
+    data the screen cannot state it with a badge and the two lines are
+    indistinguishable, and losing that distinction is the discarded endpoint
+    inference.
     """
     document, _ = _observe(FakeCloudWatch(_series(flowing=(NAT_ID, ATTACH_ID))))
     rows = _by_id(document)
     direct, deduced = rows[ATTACH_TGW_EDGE], rows[ATTACH_VPC_EDGE]
     assert direct["status"] == deduced["status"] == "live"
     assert direct["evidence"].get("observed_on") is None, (
-        "직접 측정에 연역 표시가 붙었다"
+        "a direct measurement was marked as a deduction"
     )
     assert deduced["evidence"]["observed_on"] == ATTACH_ID
-    # 어태치먼트 노드 자신도 같은 계열로 초록이다 — 박스만 회색인 화면이 되지 않는다.
+    # The attachment node itself goes green from the same series, so the screen
+    # does not end up with the box alone in grey.
     assert rows[ATTACH_ID]["status"] == "live"
     _valid(document)
 
 
 def test_a_metric_only_edge_can_be_down():
-    """구간 지표가 차단을 말하면 그 **선**이 `down` 이다(ADR 0008 D3 + D8).
+    """When a span metric states a block, that line is `down`.
 
-    사람이 보는 결과: blackhole 라우트가 생긴 어태치먼트 구간이 점선 + `!` 로 바뀐다. 이 경로가
-    없으면 차단은 노드에만 보이고 **어느 구간이 막혔는지**는 화면에 없다.
+    What somebody sees: the attachment span that gained a blackhole route turns
+    into a dashed line with a warning mark. Without this path a block is visible
+    only on the node, and which span is blocked never reaches the screen.
     """
     document, _ = _observe(
         FakeCloudWatch(
@@ -1490,9 +1725,10 @@ def test_a_metric_only_edge_can_be_down():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ADR 0008 정정 1-2 — 「들어옴」과 「통과」를 가른다. 서부 랩 블랙홀 구간이 초록이던 결함(2026-09-28).
+# Separating what arrived from what got through. This is the defect where a
+# blackholed span in the lab came out green.
 # ─────────────────────────────────────────────────────────────────────────────
-ARRIVED = [210.0, 210.0]  # 창 합계 420 = 랩 B3 의 `BytesIn`(정정 1)
+ARRIVED = [210.0, 210.0]  # window total 420, the `BytesIn` measured in the lab
 ZERO = [0.0, 0.0]
 
 
@@ -1503,7 +1739,9 @@ def _tgw_family(
     blackhole: list[float] | None,
     noroute: list[float] | None,
 ) -> tuple[tuple[str, str, list[float]], ...]:
-    """TGW 계열 한 벌. 드롭을 `None` 으로 주면 **빈 배열**(= 못 쟀다)이 온다."""
+    """One set of TGW series. Passing `None` for the drops gives an empty array,
+    meaning they could not be measured.
+    """
     rows = [(target_id, "BytesIn", ARRIVED), (target_id, "BytesOut", out)]
     if blackhole is not None:
         rows.append((target_id, "PacketDropCountBlackhole", blackhole))
@@ -1513,11 +1751,14 @@ def _tgw_family(
 
 
 def test_traffic_that_only_arrived_and_was_blackholed_is_down_on_card_and_line():
-    """🔴 **전량 블랙홀 = 막힘**(ADR 0008 정정 1 · 1-2). 카드·어태치먼트 카드·어태치먼트 선 셋 다.
+    """Everything blackholed means blocked, on the card, the attachment card and
+    the attachment line alike.
 
-    사람이 보는 결과: 서부 랩처럼 TGW 로 들어온 트래픽이 1분마다 블랙홀에 전부 버려지는데, 옛 판은
-    `BytesIn` 420 을 「흐른다」로 읽어 **선을 초록으로** 그렸다. 사유에 들어온 양을 같이 적어야 사람이
-    「보낸 것은 있었는데 건너가지 못했다」를 읽는다.
+    What somebody sees otherwise: as in the lab, traffic arriving at the TGW is
+    discarded into a blackhole every minute, and an older version read the
+    `BytesIn` of 420 as traffic and drew the line green. The reason has to carry
+    the amount that arrived, so that somebody reads it as something having been
+    sent but not having got through.
     """
     document, _ = _observe(
         FakeCloudWatch(
@@ -1538,11 +1779,14 @@ def test_traffic_that_only_arrived_and_was_blackholed_is_down_on_card_and_line()
 
 
 def test_a_one_way_sender_with_measured_zero_drops_is_a_flow():
-    """🔴 **한 방향 송신은 흐름이다** — 정정 1 의 「흐름 = `BytesOut` > 0」만으로는 틀린다(정정 1-2).
+    """One-way sending is traffic. Defining traffic as `BytesOut` above zero
+    alone gets this wrong.
 
-    사람이 보는 결과: VPC 에서 온프렘 syslog 로 보내기만 하는 어태치먼트는 `BytesIn` > 0 · `BytesOut`
-    = 0 이다. 차단 드롭을 **재서 0** 이면 버려진 것이 없으므로 건너갔다. 이것을 「흐름 없음」으로
-    적으면 잘 도는 로그 경로가 회색이 된다. 근거 이름은 실제로 값이 있는 `BytesIn` 이다.
+    What somebody sees otherwise: an attachment that only sends from a VPC to an
+    on-premises syslog has `BytesIn` above zero and `BytesOut` at zero. With the
+    blocking drops measured at zero, nothing was discarded, so it got through.
+    Recording that as no traffic turns a perfectly healthy logging path grey.
+    The name in the evidence is `BytesIn`, the metric that actually has a value.
     """
     document, _ = _observe(
         FakeCloudWatch(
@@ -1563,13 +1807,18 @@ def test_a_one_way_sender_with_measured_zero_drops_is_a_flow():
 
 
 def test_arrival_without_measured_drops_is_undecided_not_a_flow_or_quiet():
-    """🔴 **들어왔는데 버림을 못 쟀다 = 판정 못 함**(정정 1-2). 흐름도 「흐름 없음」도 아니다.
+    """Something arrived but the discards could not be measured, which is
+    unjudgeable: neither traffic nor an absence of traffic.
 
-    사람이 보는 결과: 흐름으로 적으면 블랙홀일 수 있는 선이 초록이고, 「흐름 없음」으로 적으면
-    들어온 420 바이트를 없었다고 단정한다. 그래서 숫자를 적지 않고(`datapoints: null`) 이유를 말한다.
+    What somebody sees otherwise: recorded as traffic, a line that might be
+    blackholed comes out green; recorded as no traffic, the 420 bytes that did
+    arrive are asserted never to have existed. So no number is written
+    (`datapoints: null`) and the reason is stated instead.
 
-    대조군이 판별력이다 — 같은 모양에서 드롭을 재서 0 이면 `live`(위 검사), 한 계열만 빠져도
-    판정 못 함이다(「둘 다 재서 0」이 조건이다).
+    The control case gives this its power: in the same shape with the drops
+    measured at zero it is `live`, as the check above shows, and a single
+    missing series
+    leaves it unjudgeable, because the condition is both measured at zero.
     """
     for blackhole, noroute in ((None, None), (ZERO, None), (None, ZERO)):
         document, _ = _observe(
@@ -1592,9 +1841,11 @@ def test_arrival_without_measured_drops_is_undecided_not_a_flow_or_quiet():
 
 
 def test_a_tgw_card_that_drops_for_no_route_is_down():
-    """🔴 TGW 카드도 「경로 없음」 버림을 잰다(정정 1-2). 옛 카드는 블랙홀만 읽었다.
+    """The TGW card measures packets discarded for having no route as well. The
+    older card read only the blackholed ones.
 
-    사람이 보는 결과: 라우트가 **없어서** 전량 버리는 TGW 가 카드에서 초록이었다(블랙홀 0 이므로).
+    What somebody saw: a TGW discarding everything because it had no route came
+    out green on its card, since the blackhole count was zero.
     """
     document, _ = _observe(
         FakeCloudWatch(
@@ -1612,10 +1863,13 @@ def test_a_tgw_card_that_drops_for_no_route_is_down():
 
 
 def test_a_missing_drop_series_is_not_a_measured_zero():
-    """`_fold` 단위 — 차단 드롭 계열이 **응답에서 빠졌으면**(`incomplete`) 「재서 0」이 아니다.
+    """A unit check on `_fold`: a blocking drop series missing from the response
+    (`incomplete`) is not the same as measured at zero.
 
-    빈 배열(`points == 0`)과 달리 응답에서 빠진 계열은 `readings` 에 아예 없다 → 남은 드롭이 전부
-    0 이라는 사실만으로 흐름을 적으면, 빠진 그 계열이 전량 버림을 말하고 있었을 수 있다.
+    Unlike an empty array (`points == 0`), a series missing from the response is
+    absent from `readings` entirely. Recording traffic on the strength of the
+    remaining drops all being zero ignores that the missing series might have
+    been reporting everything discarded.
     """
     readings = {
         "BytesIn": Reading(
@@ -1633,7 +1887,9 @@ def test_a_missing_drop_series_is_not_a_measured_zero():
             True,
         ),
     }
-    assert _fold(readings).flowing, "대조군: 전부 돌아왔으면 한 방향 송신 = 흐름"
+    assert _fold(readings).flowing, (
+        "control case: with every series returned, one-way sending is traffic"
+    )
     partial = _fold(readings, complete=False)
     assert not partial.flowing and not partial.blocked
     assert partial.arrival_unproven
@@ -1641,15 +1897,18 @@ def test_a_missing_drop_series_is_not_a_measured_zero():
 
 
 def test_the_adr_flow_rule_for_tgw_matches_the_declarations():
-    """🔴 코드의 `arrival_only` ↔ ADR 0008 D2 의 TGW 두 행. **둘이 같이 틀릴 수 있는 구멍을 막는다.**
+    """The `arrival_only` declaration in the code against the two TGW rows of
+    the D2 table, which closes the hole where both could be wrong together.
 
-    정정 1 은 표만 고치고 코드가 따르지 않았다 — 그래서 블랙홀 구간이 2일 동안 초록이었다. 이
-    검사는 규칙 문장이 표에 있다는 것과 코드가 그 문장대로 선언했다는 것을 한 곳에서 맞춘다.
+    One correction changed only the table and the code never followed, which is
+    why a blackholed span stayed green for two days. This check matches, in one
+    place, that the rule is written in the table and that the code declares it
+    the same way.
     """
     rule = "**`BytesOut` > 0, 또는 `BytesIn` > 0 이면서 차단 드롭을 재서 0**"
     for label in ("| **TGW** |", "| **TGW 어태치먼트 = 구간** |"):
         rows = [line for line in _adr8().splitlines() if line.startswith(label)]
-        assert len(rows) == 1, f"D2 표의 {label} 행을 특정할 수 없다: {rows}"
+        assert len(rows) == 1, f"the {label} row of the D2 table is not unique: {rows}"
         condition = rows[0].split(" | ")[3]
         assert rule in condition, (label, condition)
         assert not condition.startswith("어느 한쪽"), (label, condition)
@@ -1663,11 +1922,14 @@ def test_the_adr_flow_rule_for_tgw_matches_the_declarations():
 
 
 def test_an_alb_placement_can_never_say_down():
-    """🔴 판별력 — ALB 배치 구간은 **차단 지표가 없어서** `down` 을 만들 수 없다.
+    """What tells them apart: an ALB placement span cannot produce `down`,
+    because it has no blocking metric.
 
-    통과 0 이 곧 차단이 아니라는 것(D1·D3)을 여기서 한 번 더 고정한다. 반대편 대조군은 NLB
-    배치다 — 거기엔 `RejectedFlowCount` 가 있으므로 같은 조건에서 `down` 이 나와야 한다.
-    같은 화면을 보는 사람 입장에서: 「ALB 는 트래픽이 없을 뿐이고, NLB 는 거절하고 있다」.
+    This pins down once more that zero throughput is not itself a block. The
+    control case on the other side is an NLB placement, which does have
+    `RejectedFlowCount` and so has to come out `down` under the same conditions.
+    To somebody looking at the screen: the ALB simply has no traffic, while the
+    NLB is rejecting.
     """
     quiet_alb, _ = _observe(
         FakeCloudWatch(
@@ -1692,10 +1954,14 @@ def test_an_alb_placement_can_never_say_down():
     _valid(document)
 
 
-# ---- ALB 의 빈 응답 = 흐름 없음(사용자 결정 2026-10-21 · `MetricRef.empty_is_zero`) -------------------------
-# AWS 는 ALB 의 `ProcessedBytes` 가 0 이면 점을 보내지 않는다(「There is a nonzero value」 · 실측). 고치기 전에는
-# 그 빈 응답이 「확인 불가」였고, 배치 선은 행이 통째로 사라져 이력에 「흐름 멈춤」이 남지 않았다.
-# 🔴 못 읽음(호출 거부 · 쿼리 Forbidden)은 그대로 확인 불가다 — 0 으로 적으면 거부가 「흐름 없음」으로 숨는다(불변식 ④).
+# ---- An empty response from an ALB means no traffic ------------------------
+# AWS sends no point for the `ProcessedBytes` of an ALB when it is zero, which
+# the documentation states and a real account confirmed. Before this was fixed
+# such an empty response meant unconfirmed, and the placement line lost its row
+# entirely, so no traffic stop was left in the history.
+# A failure to read, a denied call or a query that comes back Forbidden, still
+# means unconfirmed. Recording it as zero would hide a denial as an absence of
+# traffic.
 
 ALB_FLOW_KEYS = tuple(
     _key(t, "ProcessedBytes") for t in (ALB_ID, ALB_PUBLIC_EDGE, ALB_PRIVATE_EDGE)
@@ -1703,7 +1969,9 @@ ALB_FLOW_KEYS = tuple(
 
 
 def test_a_silent_alb_is_up_with_no_flow():
-    """성공한 빈 응답 → ALB 노드·배치 선 둘 다 `up` + `datapoints: 0`(흐름 없음) · 사유 없음."""
+    """A successful empty response leaves both the ALB node and the placement
+    line at `up` with `datapoints: 0`, meaning no traffic, and no reason.
+    """
     document, layer = _observe(FakeCloudWatch(_series(flowing=(NAT_ID,))))
     rows = _by_id(document)
     for target in (ALB_ID, ALB_PUBLIC_EDGE, ALB_PRIVATE_EDGE):
@@ -1711,19 +1979,26 @@ def test_a_silent_alb_is_up_with_no_flow():
         assert row["status"] == "up", row
         assert row["partial"] is False
         assert row["evidence"]["metric"] == "ProcessedBytes"
-        assert row["evidence"]["datapoints"] == 0, "쟀고 0 — null(못 쟀다)이 아니다"
+        assert row["evidence"]["datapoints"] == 0, (
+            "measured and zero, not null, which would mean not measured"
+        )
         assert row.get("why") is None, row
-    # 점은 지어내지 않는다 — 받은 점은 0개 그대로다.
+    # No points are invented; the number received stays zero.
     reading = layer.readings[(ALB_ID, "ProcessedBytes")]
     assert reading.points == 0 and reading.zero_filled and reading.value == 0.0
-    # 🔴 대조군 — 같은 문서의 `always`(NAT 2개 중 값을 안 등록한 것 · TGW)는 빈 응답이 여전히 확인 불가다.
-    #    (엔드포인트는 2026-10-21 부터 수락됐으면 같은 규칙 — 아래 「수락된 엔드포인트」 절)
+    # Control case: for the `always` metrics in the same document, the NAT
+    #    gateway with no values registered and the TGW, an empty response still
+    #    means unconfirmed. An accepted endpoint now follows the same rule as
+    #    the ALB; see the accepted-endpoint section below.
     assert rows[TGW_ID]["evidence"]["datapoints"] is None
     _valid(document)
 
 
 def test_a_forbidden_alb_query_is_not_read_as_zero():
-    """호출은 성공했는데 그 계열이 `Forbidden` — 빈 배열이지만 「쟀고 0」이 아니다(확인 불가 · 배치 선 행 없음)."""
+    """The call succeeded but that series came back `Forbidden`. The array is
+    empty, yet this is not measured and zero: it is unconfirmed, and the
+    placement line gets no row.
+    """
     document, layer = _observe(
         FakeCloudWatch(
             _series(flowing=(NAT_ID,)),
@@ -1739,7 +2014,10 @@ def test_a_forbidden_alb_query_is_not_read_as_zero():
 
 
 def test_a_denied_alb_is_partial_not_zero():
-    """2층이 막혔다(AccessDenied) — ALB 도 `partial` + 사유 · 숫자 없음 · 배치 선 행 없음(coverage 가 막힘을 말한다)."""
+    """The metric layer is blocked with AccessDenied. The ALB too comes out
+    `partial` with a reason and no number, and the placement line gets no row,
+    because coverage is what states the block.
+    """
     document, _ = _observe(
         FakeCloudWatch(_series(), error=client_error("AccessDenied", "GetMetricData"))
     )
@@ -1753,9 +2031,13 @@ def test_a_denied_alb_is_partial_not_zero():
 
 
 def test_an_alb_that_went_silent_lists_one_flow_stop_each():
-    """ALB `live` → 빈 응답 → 「흐름 멈춤」(`live → up`)이 노드·배치 선마다 **정확히 한 줄** · 다음 빈 실행은 0줄.
+    """An ALB going from `live` to an empty response records traffic stopping,
+    `live → up`, as exactly one row for the node and one for the placement line,
+    and the next empty run adds none.
 
-    고치기 전에는 배치 선의 행이 사라져(2층 전용 연결의 「없음」 = 미측정) 그 선의 멈춤이 이력에 남지 않았다.
+    Before this was fixed the placement line lost its row, since an absence on a
+    metric-layer-only connection meant no measurement, so that line's stop never
+    reached the history.
     """
     lit = FakeCloudWatch(_series(flowing=(NAT_ID, ALB_ID, ALB_PUBLIC_EDGE)))
     before, _ = _observe(lit)
@@ -1771,7 +2053,7 @@ def test_an_alb_that_went_silent_lists_one_flow_stop_each():
     assert sorted(stops) == sorted([ALB_ID, ALB_PUBLIC_EDGE]), after["changes"]
     assert report.unmeasured == 0, report
     _valid(after)
-    # 계속 조용하면 새 줄이 없다(같은 `up` → `up`).
+    # While it stays quiet there are no new rows, since `up` follows `up`.
     third, _ = _observe(
         FakeCloudWatch(_series(flowing=(NAT_ID,))), at="2026-09-23T00:20:00Z"
     )
@@ -1779,11 +2061,15 @@ def test_an_alb_that_went_silent_lists_one_flow_stop_each():
     assert again.new_rows == 0, third["changes"]
 
 
-# ---- 수락된 PrivateLink 엔드포인트의 빈 응답 = 흐름 없음(사용자 결정 2026-10-21 · ADR 0006 §O7-2a 개정) ------------------
-# AWS 는 엔드포인트가 그 1분에 트래픽을 받았을 때만 `AWS/PrivateLinkEndpoints` 를 발행한다(ALB 와 같은 모양). 고치기 전에는
-# 그 빈 응답이 「확인 불가」였고 서브넷 구간은 행이 통째로 사라져 이력에 「흐름 멈춤」이 남지 않았다.
-# 🔴 수락 전(`pendingAcceptance` 등)인 엔드포인트도 똑같이 0점이다(ADR 0008 정정 4) — 그것까지 「흐름 없음」이라 하면
-# 트래픽을 받을 수 없는 엔드포인트가 조용히 정상으로 보인다. 그래서 고르는 기준은 지표가 아니라 1층 상태다.
+# ---- An empty response from an accepted PrivateLink endpoint means no traffic
+# AWS publishes `AWS/PrivateLinkEndpoints` only for a minute in which the
+# endpoint received traffic, the same shape as the ALB. Before this was fixed
+# such an empty response meant unconfirmed, and the subnet span lost its row
+# entirely, so no traffic stop was left in the history.
+# An endpoint that has not been accepted yet, in `pendingAcceptance` or
+# similar, reports zero points just the same. Calling that no traffic too would
+# leave an endpoint that cannot receive traffic quietly looking healthy. So what
+# decides this is the structure-tier state rather than the metric.
 
 ENDPOINT_FLOW_KEYS = tuple(
     _key(t, "BytesProcessed")
@@ -1793,7 +2079,9 @@ ENDPOINT_TARGETS = (ENDPOINT_ID, ENDPOINT_PUBLIC_EDGE, ENDPOINT_PRIVATE_EDGE)
 
 
 def _endpoints_in(state: str) -> list[dict[str, Any]]:
-    """인터페이스 엔드포인트 하나의 `State` 만 바꾼 응답(게이트웨이 엔드포인트는 그대로)."""
+    """A response with only the `State` of one interface endpoint changed; the
+    gateway endpoint is left alone.
+    """
     endpoints = copy.deepcopy(VPC_ENDPOINTS)
     for endpoint in endpoints:
         if endpoint["VpcEndpointType"] == "Interface":
@@ -1802,7 +2090,10 @@ def _endpoints_in(state: str) -> list[dict[str, Any]]:
 
 
 def test_accepted_endpoint_probes_differ_only_in_reading_the_empty_answer():
-    """🔴 수락된 판은 **해석 하나만** 다르다 — 차원·지표·발행 규칙이 두 벌이 되면 한쪽만 고쳐진다(§O7-1 함정 1)."""
+    """The accepted case differs in its interpretation alone. Two sets of
+    dimensions, metrics or publishing rules would leave one of them getting
+    fixed on its own.
+    """
     for key, accepted in ACCEPTED_ENDPOINT_PROBES.items():
         base = {**NODE_PROBES, **EDGE_PROBES}[key]
         assert (accepted.key, accepted.namespace, accepted.dimensions) == (
@@ -1813,7 +2104,8 @@ def test_accepted_endpoint_probes_differ_only_in_reading_the_empty_answer():
         assert [r.name for r in accepted.metrics] == [r.name for r in base.metrics]
         zeroed = [r.name for r in accepted.metrics if r.empty_is_zero]
         assert zeroed == ["BytesProcessed"], (key, zeroed)
-        # 드롭은 0 으로 채우지 않는다 — 채우면 「드롭을 재서 0」이 근거 없는 주장이 된다.
+        # The drops are not filled with zero. Filling them would make
+        # "the drops were measured at zero" a claim with nothing behind it.
         assert not any(r.empty_is_zero for r in base.metrics), key
         assert all(
             a.reporting == b.reporting and a.role == b.role and a.blocking == b.blocking
@@ -1822,7 +2114,10 @@ def test_accepted_endpoint_probes_differ_only_in_reading_the_empty_answer():
 
 
 def test_a_silent_accepted_endpoint_is_up_with_no_flow():
-    """수락됨 + 성공한 빈 응답 → 엔드포인트 노드·서브넷 구간 둘 다 `up` + `datapoints: 0`(흐름 없음) · 사유 없음."""
+    """Accepted, with a successful empty response: both the endpoint node and
+    the subnet span come out `up` with `datapoints: 0`, meaning no traffic, and
+    no reason.
+    """
     document, layer = _observe(FakeCloudWatch(_series(flowing=(NAT_ID,))))
     rows = _by_id(document)
     for target in ENDPOINT_TARGETS:
@@ -1830,20 +2125,27 @@ def test_a_silent_accepted_endpoint_is_up_with_no_flow():
         assert row["status"] == "up", row
         assert row["partial"] is False
         assert row["evidence"]["metric"] == "BytesProcessed"
-        assert row["evidence"]["datapoints"] == 0, "쟀고 0 — null(못 쟀다)이 아니다"
+        assert row["evidence"]["datapoints"] == 0, (
+            "measured and zero, not null, which would mean not measured"
+        )
         assert row.get("why") is None, row
     reading = layer.readings[(ENDPOINT_ID, "BytesProcessed")]
     assert reading.points == 0 and reading.zero_filled and reading.value == 0.0
-    # 판정은 `BytesProcessed` 가 선다 — 다른 계열을 0 으로 지어내지 않는다.
+    # The verdict rests on `BytesProcessed`; the other series are not invented
+    # as zeros.
     assert not layer.readings[(ENDPOINT_ID, "NewConnections")].zero_filled
     assert not layer.readings[(ENDPOINT_ID, "PacketsDropped")].zero_filled
     _valid(document)
 
 
 def test_an_accepted_endpoint_that_went_silent_lists_one_flow_stop_each():
-    """수락된 엔드포인트 `live` → 빈 응답 → 「흐름 멈춤」(`live → up`)이 노드·구간마다 **정확히 한 줄** · 다음 빈 실행은 0줄.
+    """An accepted endpoint going from `live` to an empty response records
+    traffic stopping, `live → up`, as exactly one row for the node and one for
+    the span, and the next empty run adds none.
 
-    고치기 전에는 구간의 행이 사라져(2층 전용 연결의 「없음」 = 미측정) 그 선의 멈춤이 이력에 남지 않았다.
+    Before this was fixed the span lost its row, since an absence on a
+    metric-layer-only connection meant no measurement, so that line's stop never
+    reached the history.
     """
     before, _ = _observe(
         FakeCloudWatch(_series(flowing=(NAT_ID, ENDPOINT_ID, ENDPOINT_PUBLIC_EDGE)))
@@ -1859,7 +2161,8 @@ def test_an_accepted_endpoint_that_went_silent_lists_one_flow_stop_each():
         if (c["kind"], c.get("from"), c.get("to")) == ("status_changed", "live", "up")
     ]
     assert sorted(stops) == sorted([ENDPOINT_ID, ENDPOINT_PUBLIC_EDGE]), rows
-    assert len(rows) == len(stops), rows  # 그 밖의 줄(생김·없어짐)이 없다
+    assert len(rows) == len(stops), rows  # no other rows, no appearances or
+    # disappearances
     assert report.unmeasured == 0, report
     _valid(after)
     third, _ = _observe(
@@ -1869,13 +2172,19 @@ def test_an_accepted_endpoint_that_went_silent_lists_one_flow_stop_each():
     assert again.new_rows == 0, third["changes"]
 
 
-# `rejected`·`expired`·`deleted` 는 구조가 노드째 뺀다(`services/base.py` `GONE_STATES`) — 판정할 행 자체가 없다.
+# `rejected`, `expired` and `deleted` have their whole node dropped by the
+# structure tier through `GONE_STATES` in `services/base.py`, so there is no row
+# to judge in the first place.
 @pytest.mark.parametrize("state", ["pendingAcceptance", "pending", "failed", "partial"])
 def test_a_pending_endpoint_with_no_points_is_unknown(state):
-    """수락 전·실패 엔드포인트 + 빈 응답 → 「흐름 없음」이 **아니다**: 구간 행 없음(경로만 확인) · 노드는 1층 상태가 말한다.
+    """An endpoint that is not yet accepted, or has failed, with an empty
+    response does not mean no traffic: the span gets no row, leaving only its
+    path confirmed, and the node is described by its structure-tier state.
 
-    사람이 보는 결과: 수락을 기다리는 엔드포인트가 「지금 트래픽 없음」으로 보이면 고객은 「연결은 됐고 조용할 뿐」으로 읽는다.
-    실제로는 그 엔드포인트가 아직 트래픽을 받을 수 없다(ADR 0008 정정 4 — 수락 대기도 0점이다).
+    What somebody sees otherwise: an endpoint waiting for acceptance appears to
+    have no traffic right now, and the customer reads that as being connected
+    and merely quiet. In fact that endpoint cannot receive traffic yet, and an
+    endpoint awaiting acceptance reports zero points just the same.
     """
     endpoints = _endpoints_in(state)
     document, layer = _observe(
@@ -1884,17 +2193,22 @@ def test_a_pending_endpoint_with_no_points_is_unknown(state):
     rows = _by_id(document)
     for edge in (ENDPOINT_PUBLIC_EDGE, ENDPOINT_PRIVATE_EDGE):
         assert edge not in rows, (
-            "수락 전 엔드포인트 구간에 「흐름 없음」 행을 만들었다",
+            (
+                "a no-traffic row was built for the span of an endpoint that "
+                "has not been accepted"
+            ),
             rows[edge],
         )
     node = rows[ENDPOINT_ID]
     assert node["status"] != "up", (
         node
-    )  # 1층(`NODE_RULES`)이 판정한다 — 「흐름 없음」(up · 0)이 아니다
+    )  # the structure tier (`NODE_RULES`) decides this; it is not no traffic
+    # (`up` with 0)
     assert node["evidence"].get("datapoints") is None, node
     assert state in (node.get("why") or ""), node
     assert not layer.readings[(ENDPOINT_ID, "BytesProcessed")].zero_filled
-    # 다음 실행도 같은 상태 · 같은 빈 응답 → 이력에 그 엔드포인트의 줄이 하나도 없다
+    # The next run has the same state and the same empty response, so the
+    # history holds no row at all for that endpoint.
     later, _ = _observe(
         FakeCloudWatch(_series(flowing=(NAT_ID,))),
         at=LATER_AT,
@@ -1909,7 +2223,10 @@ def test_a_pending_endpoint_with_no_points_is_unknown(state):
 
 
 def test_the_endpoint_probe_is_chosen_by_the_layer_one_state():
-    """고르는 곳 자체 — `Available`(문서 대소문자) · `available`(실측) 둘 다 수락 판 · 상태 없음은 기본 판."""
+    """The selection itself: `Available`, as the documentation spells it, and
+    `available`, as a real account returned it, both take the accepted branch,
+    while a missing state takes the default one.
+    """
     state = _snapshot(OBSERVED_RESOURCE_TYPES, OBSERVED_AT)
     nodes = {n.id: n for n in state.nodes}
     endpoint = nodes[ENDPOINT_ID]
@@ -1937,7 +2254,10 @@ def test_the_endpoint_probe_is_chosen_by_the_layer_one_state():
 
 
 def test_a_forbidden_endpoint_query_is_not_read_as_zero():
-    """수락됐어도 그 계열이 `Forbidden` 이면 빈 배열은 「쟀고 0」이 아니다 — 숫자 없음 · 구간 행 없음."""
+    """Even when accepted, a series that comes back `Forbidden` makes an empty
+    array something other than measured and zero: no number, and no row for the
+    span.
+    """
     document, layer = _observe(
         FakeCloudWatch(
             _series(flowing=(NAT_ID,)),
@@ -1953,7 +2273,9 @@ def test_a_forbidden_endpoint_query_is_not_read_as_zero():
 
 
 def test_a_denied_endpoint_is_partial_not_zero():
-    """2층이 막혔다(AccessDenied) — 수락된 엔드포인트도 `partial` + 사유 · 숫자 없음 · 구간 행 없음(불변식 ④)."""
+    """The metric layer is blocked with AccessDenied. An accepted endpoint too
+    comes out `partial` with a reason, no number, and no row for the span.
+    """
     document, _ = _observe(
         FakeCloudWatch(_series(), error=client_error("AccessDenied", "GetMetricData"))
     )
@@ -1967,10 +2289,13 @@ def test_a_denied_endpoint_is_partial_not_zero():
 
 
 def test_a_metric_only_edge_with_an_unbuildable_dimension_says_none():
-    """🔴 개발 결함은 **조용할 수 없다** — 행이 없으면 아무 데도 드러나지 않는다.
+    """A defect of ours must not be able to stay quiet, and with no row it would
+    surface nowhere.
 
-    2층 전용 엣지의 「행 없음」은 정상(못 쟀다)이므로, 차원을 못 만든 경우까지 행을 안 만들면
-    우리 쪽 결함이 「경로만 확인」으로 위장된다. 그래서 그때는 `none` + 사유로 행을 만든다.
+    For a metric-layer-only edge, having no row is the normal case, meaning it
+    could not be measured. So leaving out the row when a dimension could not be
+    built would disguise a defect of ours as having only the path confirmed. In
+    that case a row is built with `none` and a reason.
     """
     attachments = copy.deepcopy(TRANSIT_GATEWAY_ATTACHMENTS)
     del attachments[0]["TransitGatewayId"]
@@ -1983,16 +2308,17 @@ def test_a_metric_only_edge_with_an_unbuildable_dimension_says_none():
     assert observed["status"] == "none"
     assert "구조 수집기" in observed["why"]
     assert [r["code"] for r in observed["partial_reasons"]] == ["api_error"]
-    # 대조군 — 같은 문서의 다른 구간은 정상이다(전부 `none` 이면 판별력이 없다).
+    # Control case: another span in the same document is fine. With everything
+    # at `none` this check could tell nothing apart.
     assert rows[ENDPOINT_PUBLIC_EDGE]["status"] == "live"
     _valid(document)
 
 
 def test_other_edges_never_get_a_metric():
-    """2층 전용 3종 **밖의** 선은 지표를 받지 않는다(§O7 규칙 1).
+    """A line outside the three metric-layer-only types receives no metrics.
 
-    라우트·연관 선에 `live` 를 붙이면 그 값은 어디서 온 것도 아니다 — 노드의 값을 선에 복사한
-    것이고, 그것이 종단 추론이다.
+    Putting `live` on a route or association line gives it a value from nowhere:
+    it is a node's value copied onto a line, which is endpoint inference.
     """
     document, _ = _observe(FakeCloudWatch(_series()))
     others = [
@@ -2001,15 +2327,17 @@ def test_other_edges_never_get_a_metric():
         if o["target_kind"] == "edge"
         and o["target_id"].split("|")[0] not in METRIC_ONLY_EDGES
     ]
-    assert others, "엣지 관측이 0건이면 아래 검사는 아무것도 재지 않는다"
+    assert others, "with no edge observations at all the check below measures nothing"
     for observed in others:
         assert observed["status"] != "live", observed["target_id"]
         assert (observed["evidence"] or {}).get("metric") is None
 
 
-# 🔴 이력에서 2층 전용 연결은 「생겼다/없어졌다」가 아니다(배포본 실측 2026-09-27). 그 행은
-# 쟀을 때만 있으므로, 행의 유무를 구성 변경으로 읽으면 실시간을 켜고 끌 때마다 연결 17개가
-# 목록에 「생겼다」·「없어졌다」로 쏟아지고 흐름이 멈출 때마다 1~2줄이 더 붙는다.
+# In the history, a metric-layer-only connection appearing or disappearing is
+# not a configuration change. Those rows exist only when something was
+# measured, so reading their presence as a change floods the list with
+# seventeen connections appearing and disappearing every time live monitoring is
+# turned on and off, plus another row or two whenever traffic stops.
 LATER_AT = "2026-09-23T00:10:00Z"
 EDGES_TOO = FLOWING + (ALB_PUBLIC_EDGE, ENDPOINT_PUBLIC_EDGE)
 
@@ -2029,14 +2357,17 @@ def test_turning_live_on_or_off_lists_no_connection_as_created_or_removed(turned
     before, _ = _observe(first)
     after, _ = _observe(second, at=LATER_AT)
     edges = _metric_only(after if turned == "on" else before)
-    assert len(edges) >= 3, "전제: 한쪽 실행에만 2층 전용 연결 행이 있어야 한다"
+    assert len(edges) >= 3, (
+        "premise: only one of the runs may have metric-layer-only connection rows"
+    )
 
     report = apply_history(after, before)
 
     assert after["changes"] == [], [
         (c["kind"], c["target_id"]) for c in after["changes"]
     ]
-    # 흐름 노드의 `live ↔ up` 도 같은 칸 규칙으로 빠진다 → 연결 행 전부 + 그 노드들.
+    # The `live` and `up` of a node with traffic drops out under the same cell
+    # rule, so that covers every connection row plus those nodes.
     assert report.layer_changed >= len(edges), report
     assert report.unmeasured == 0, report
     _valid(after)
@@ -2046,9 +2377,13 @@ def test_a_connection_that_went_quiet_is_not_listed_as_removed():
     before, _ = _observe(FakeCloudWatch(_series(flowing=EDGES_TOO)))
     after, _ = _observe(FakeCloudWatch(_series(flowing=(NAT_ID,))), at=LATER_AT)
     quiet = sorted(set(_metric_only(before)) - set(_metric_only(after)))
-    # 어태치먼트 선 2개(`always` 의 빈 응답 = 확인 불가 → 행 없음). ALB 배치 선 · 수락된 엔드포인트 구간은 빈 응답 =
-    # 쟀고 0 이라 행이 남는다(ADR 0006 §O7-2a) — 그 둘은 아래 대조군의 「흐름 멈춤」 쪽이다.
-    assert len(quiet) >= 2, "전제: 이번 실행에서 값이 없어 사라진 연결 행이 있어야 한다"
+    # Two attachment lines, where an empty response on an `always` metric means
+    # unconfirmed and so no row. For the ALB placement line and the accepted
+    # endpoint span an empty response means measured and zero, so their rows
+    # remain, and those two are the traffic-stop side of the control case below.
+    assert len(quiet) >= 2, (
+        "premise: this run needs connection rows that disappeared for want of a value"
+    )
 
     report = apply_history(after, before)
 
@@ -2056,8 +2391,9 @@ def test_a_connection_that_went_quiet_is_not_listed_as_removed():
     assert not {k for k in kinds if k[0] != "status_changed"}, kinds
     assert report.unmeasured == len(quiet), report
     assert report.unknown_cell == 0, report
-    # 🔴 대조군 — 멈춤은 **소유 자원 행**이 여전히 말한다. 이것이 없으면 위 가드가 흐름 멈춤
-    # 기록 자체를 지워도 통과한다.
+    # Control case: the row of the owning resource still states the stop.
+    # Without this, the guard above would pass even if it deleted the record of
+    # traffic stopping altogether.
     stopped = {
         c["target_id"]
         for c in after["changes"]
@@ -2069,10 +2405,12 @@ def test_a_connection_that_went_quiet_is_not_listed_as_removed():
 
 
 def test_a_transit_gateway_link_that_stopped_is_recorded():
-    """🔴 TGW 어태치먼트 선도 이력의 칸을 찾아야 한다(`history.target_cells` ↔ `observe` 같은 규칙).
+    """A TGW attachment line has to find its cell in the history too, under the
+    same rule that `history.target_cells` and `observe` share.
 
-    사람이 보는 결과: 칸을 못 찾으면 그 선의 멈춤/시작은 「칸 미상」으로 세어질 뿐 목록에 한 줄도
-    남지 않는다 — 어태치먼트 노드 줄만 보고 「어느 쪽 선이 멈췄나」를 알 수 없다.
+    What somebody sees otherwise: without a cell, that line's stop or start is
+    only counted as having an unknown cell and never reaches the list. From the
+    attachment node's row alone there is no telling which side stopped.
     """
     before, _ = _observe(FakeCloudWatch(_series(flowing=(NAT_ID, ATTACH_ID))))
     after, _ = _observe(
@@ -2084,7 +2422,9 @@ def test_a_transit_gateway_link_that_stopped_is_recorded():
         at=LATER_AT,
     )
     assert _by_id(before)[ATTACH_TGW_EDGE]["status"] == "live"
-    assert _by_id(after)[ATTACH_TGW_EDGE]["status"] == "up", "전제: 쟀고 0 이어야 한다"
+    assert _by_id(after)[ATTACH_TGW_EDGE]["status"] == "up", (
+        "premise: it has to be measured and zero"
+    )
 
     report = apply_history(after, before)
 
@@ -2098,14 +2438,16 @@ def test_a_transit_gateway_link_that_stopped_is_recorded():
     _valid(after)
 
 
-# ---------------------------------------------------------------- 실패 경로
+# ------------------------------------------------------------- failure paths
 
 
 def test_a_denied_metric_layer_keeps_up_and_records_why():
-    """2층만 막힌 경우 — 스키마 `$comment` 가 정한 모양: `up` + `partial` + 사유.
+    """Only the metric layer is blocked, which the schema describes as `up` with
+    `partial` and a reason.
 
-    🔴 `none` 으로 떨어뜨리면 「구조적으로 관측 불가」와 섞이고, `up` 만 적으면 2층 실패가
-    사라진다. 1층 판정은 그대로 살아 있어야 한다(대상이 사라진 것이 아니다).
+    Dropping it to `none` would mix it up with being structurally unobservable,
+    and writing `up` alone would make the metric-layer failure disappear. The
+    structure-tier verdict has to stay alive, since the target did not go away.
     """
     cw = FakeCloudWatch(_series(), error=client_error("AccessDenied", "GetMetricData"))
     document, layer = _observe(cw)
@@ -2115,15 +2457,18 @@ def test_a_denied_metric_layer_keeps_up_and_records_why():
     assert [r["code"] for r in observed["partial_reasons"]] == ["access_denied"]
     assert observed["partial_reasons"][0]["api"] == METRIC_API
     assert observed["evidence"]["metric"] is None
-    # coverage 는 종류마다 같은 실패를 적는다(2층은 층 단위로 죽는다).
+    # Coverage records the same failure for every type, because the metric layer
+    # dies as a whole layer.
     rows = _metric_rows(document)
     assert rows["nat_gateway"]["status"] == "denied"
     assert rows["nat_gateway"]["reason"]["code"] == "access_denied"
     assert rows["nat_gateway"]["item_count"] is None
-    # 지표가 없는 종류는 부르지 않았으므로 **막히지 않았다** — 같이 빨갛게 만들지 마라.
+    # A type with no metrics was never called, so it was not blocked. Do not
+    # turn it red along with the rest.
     assert rows["vpc"]["status"] == "ok"
     assert layer.enabled is True
-    # 🔴 2층 전용 엣지는 **행이 없다** — 막힌 것은 coverage 가 말한다(위 `denied`).
+    # A metric-layer-only edge has no row; coverage is what states the block,
+    # as the `denied` above shows.
     assert not [
         o
         for o in document["observations"]
@@ -2133,7 +2478,9 @@ def test_a_denied_metric_layer_keeps_up_and_records_why():
 
 
 def test_credentials_failure_is_a_layer_failure_not_a_crash():
-    """자격증명이 없어 클라이언트를 못 만든 경우도 「2층이 죽었다」다(전체를 죽이지 않는다)."""
+    """Failing to build a client for want of credentials is also the metric layer
+    dying, and it does not kill the whole run.
+    """
     document, _ = _observe(
         FakeCloudWatch(_series()),
         fail={"cloudwatch": client_error("ExpiredToken", "AssumeRole")},
@@ -2145,13 +2492,17 @@ def test_credentials_failure_is_a_layer_failure_not_a_crash():
 
 
 def test_metric_client_factory_failure_names_the_api_that_actually_failed():
-    """🔴 2층 진입 실패는 `GetMetricData` 가 **아니다** — 실계정이 잡은 결함(2026-09-24).
+    """Failing to enter the metric layer is not `GetMetricData`. A real account
+    caught this one.
 
-    화면에서 일어난 일: 멤버 계정 역할에 `cloudwatch:GetMetricData` 를 넣어 배포한 **뒤에도**
-    그 계정 칸이 「확인 불가 · cloudwatch:GetMetricData」라고 말했다. 진짜 원인은 허브 쪽 2층
-    자격증명에 `sts:AssumeRole` 이 없는 것이라서, 대상 계정 정책을 몇 번 고쳐도 화면이 바뀌지
-    않는다. 위 `test_a_denied_metric_layer_keeps_up_and_records_why` 가 **대조군**이다 —
-    거기는 `get_metric_data` **호출**이 막힌 경우이므로 `METRIC_API` 를 계속 말해야 한다.
+    What happened on the screen: even after deploying `cloudwatch:GetMetricData`
+    into the member account role, that account's cell still said it was
+    unconfirmed because of `cloudwatch:GetMetricData`. The real cause was that
+    the hub-side metric-layer credentials lacked `sts:AssumeRole`, so no amount
+    of editing the target account policy changed the screen.
+    `test_a_denied_metric_layer_keeps_up_and_records_why` above is the control
+    case: there the `get_metric_data` call itself is blocked, so it has to keep
+    naming `METRIC_API`.
     """
     document, _ = _observe(
         FakeCloudWatch(_series()),
@@ -2168,14 +2519,16 @@ def test_metric_client_factory_failure_names_the_api_that_actually_failed():
 
 
 def test_metric_factory_failure_without_an_operation_name_says_so():
-    """API 이름을 알 수 없는 실패(`ClientError` 가 아닌 것)는 **추측하지 않는다**.
+    """For a failure whose API name is unknown, anything that is not a
+    `ClientError`, do not guess.
 
-    `sts:None` 이나 `cloudwatch:GetMetricData` 로 적으면 둘 다 거짓이다 — 사람을 있지도 않은
-    액션·정책으로 보낸다. 이 자리의 정직한 이름은 「우리 팩토리가 죽었다」다.
+    Writing `sts:None` or `cloudwatch:GetMetricData` would both be false and
+    would send somebody after an action or a policy that does not exist. The
+    honest name here is that our own factory died.
     """
     document, _ = _observe(
         FakeCloudWatch(_series()),
-        fail={"cloudwatch": RuntimeError("프로필을 찾을 수 없다")},
+        fail={"cloudwatch": RuntimeError("profile not found")},
     )
     row = _metric_rows(document)["nat_gateway"]
     assert row["status"] != "ok"
@@ -2183,12 +2536,14 @@ def test_metric_factory_failure_without_an_operation_name_says_so():
 
 
 def test_all_targets_empty_is_a_defect_not_a_quiet_network():
-    """🔴 §O7-1 함정 1+3 — 「대상이 1개 이상인데 dp>0 이 하나도 없으면 결함」.
+    """With at least one target and not a single data point above zero,
+    something is wrong.
 
-    차원 이름을 틀렸을 때와 「정말 아무 흐름도 없다」가 **바이트 단위로 같다**(둘 다 `Complete`,
-    `Messages` 없음). 전자로 읽어 통과시키면 이 층은 실패할 수 없는 검사가 된다.
+    A wrong dimension name and genuinely having no traffic at all are identical
+    byte for byte: both give `Complete` with no `Messages`. Reading the first as
+    the second and passing turns this layer into a check that cannot fail.
     """
-    document, layer = _observe(FakeCloudWatch({}))  # 아무 계열도 등록하지 않았다
+    document, layer = _observe(FakeCloudWatch({}))  # no series registered at all
     rows = _metric_rows(document)
     assert rows["nat_gateway"]["status"] == "error"
     assert rows["nat_gateway"]["reason"]["code"] == "api_error"
@@ -2200,20 +2555,26 @@ def test_all_targets_empty_is_a_defect_not_a_quiet_network():
 
 
 def test_one_answered_target_is_not_a_defect():
-    """대조군 — 하나라도 답이 오면 「전부 0」 규칙이 발동하지 않는다(판별력 확인)."""
+    """Control case: with even one answer, the all-zero rule does not fire. This
+    is what confirms the check can tell them apart.
+    """
     _document, layer = _observe(FakeCloudWatch(_series(flowing=(NAT_ID,))))
     assert layer.failures == {}
     assert layer.warnings == ()
 
 
 def test_a_missing_result_id_is_reported():
-    """쿼리는 보냈는데 응답에 그 계열이 없는 경우 — 조용히 「지표 없음」이 되면 안 된다.
+    """A query was sent but the response does not carry that series, which must
+    not quietly become "no metric".
 
-    🔴 **이 검사가 실측으로 잡은 구멍(2026-09-25)**: 대상 하나가 지표 4개를 갖게 된 뒤로는 계열
-    하나가 빠져도 나머지로 판정이 서기 때문에 「응답에 없다」 경로가 **한 번도 발동하지 않았다**.
-    사람이 겪는 일: 선은 초록으로 그려지는데 그 초록의 근거가 우리가 물어본 것의 일부뿐이고,
-    화면에는 아무 표시도 없다. 최악의 형태는 드롭 계열만 빠지는 것이다 — 차단을 못 보고 초록으로
-    남는다. 그래서 판정은 그대로 쓰고(불변식 ④) **사유를 함께** 남긴다.
+    The hole this check caught: once one target had four metrics, a single
+    missing series still left the verdict standing on the rest, so the
+    missing-from-the-response path never fired once.
+    What somebody experiences: the line is drawn green while the evidence behind
+    that green covers only part of what we asked about, and the screen shows
+    nothing. The worst shape is the drop series alone going missing, which
+    leaves a block unseen and the line green. So the verdict is used as it is
+    and a reason is recorded alongside it.
     """
     cw = FakeCloudWatch(_series(), missing_ids=("m0",))
     document, layer = _observe(cw)
@@ -2223,22 +2584,27 @@ def test_a_missing_result_id_is_reported():
         if o["partial"]
         and "대응이 깨졌습니다" in json.dumps(o["partial_reasons"], ensure_ascii=False)
     ]
-    assert missing, "응답에서 빠진 쿼리가 아무 행에도 드러나지 않았다"
-    assert layer.incomplete, "층이 빠진 계열을 기억하지 않는다"
+    assert missing, "a query missing from the response surfaced on no row at all"
+    assert layer.incomplete, "the layer does not remember the missing series"
     assert any("응답에 없다" in w for w in layer.warnings)
-    # 🔴 판정은 살아 있다 — 남은 계열로 선 판정을 지우면 「결함을 신고하려고 화면을 비우는」 셈이다.
+    # The verdict stays alive. Erasing a line's verdict that the remaining
+    # series supports would amount to blanking the screen in order to report a
+    # defect.
     assert {o["status"] for o in missing} <= {"live", "up", "down"}
-    assert layer.readings, "한 id 가 빠졌다고 층 전체가 비었다"
-    # 대조군 — 빠진 계열을 쓰지 않는 대상은 `partial` 이 아니다(전부 빨개지면 판별력이 없다).
+    assert layer.readings, "the whole layer came back empty because one id was missing"
+    # Control case: a target that does not use the missing series is not
+    # `partial`. With everything red this check could tell nothing apart.
     assert any(o["partial"] is False for o in document["observations"])
     _valid(document)
 
 
-# ---------------------------------------------------------------- 층 off · coverage
+# ------------------------------------------- the layer off, and coverage
 
 
 def test_layer_off_is_not_a_failure():
-    """기본값은 2층 off(ADR 0006 D4) — 「안 켰다」는 `skipped` 이고 `?` 의 첫 번째 이유다."""
+    """The metric layer is off by default. Not having turned it on is `skipped`,
+    and it is the first of the reasons behind a question mark.
+    """
     document, _ = _observe()
     assert document["layers"] == {"describe": True, "metric": False}
     for row in _metric_rows(document).values():
@@ -2246,7 +2612,8 @@ def test_layer_off_is_not_a_failure():
         assert row["reason"] is None
         assert row["item_count"] is None
     assert all(o["partial"] is False for o in document["observations"])
-    # 🔴 2층이 꺼지면 2층 전용 엣지는 통째로 조용하다 — 그것이 정상이다(ADR 0008 D8-1).
+    # With the metric layer off, the metric-layer-only edges are silent
+    # altogether, and that is the normal case.
     assert not [
         o
         for o in document["observations"]
@@ -2255,10 +2622,12 @@ def test_layer_off_is_not_a_failure():
 
 
 def test_metric_coverage_counts_only_answered_targets():
-    """2층 `item_count` = 「지표가 답을 준 대상 수」. 빈 배열은 세지 않는다.
+    """The `item_count` of the metric layer is the number of targets the metrics
+    answered for. An empty array is not counted.
 
-    🔴 2층 전용 엣지는 **2층 칸에서만** 세어진다(1층 칸은 describe 가 읽은 것만 센다 —
-    `schema/tests` 의 두 원장). 그래서 모니터링을 켰다 끌 때 1층의 숫자가 움직이지 않는다.
+    A metric-layer-only edge is counted in the metric-layer cell alone; the
+    structure-tier cell counts only what a describe call read. That is why
+    turning monitoring on and off does not move the structure-tier numbers.
     """
     document, _ = _observe(
         FakeCloudWatch(
@@ -2266,17 +2635,24 @@ def test_metric_coverage_counts_only_answered_targets():
         )
     )
     rows = _metric_rows(document)
-    assert rows["nat_gateway"]["item_count"] == 1  # NAT 2개 중 답이 온 것 1개
-    # 어태치먼트 1개의 계열이 노드 1 + 선 2 를 답한다(같은 계열 · 세 대상).
+    assert rows["nat_gateway"]["item_count"] == 1  # one of the two NAT gateways
+    # answered
+    # The series of one attachment answers for one node and two lines: one
+    # series, three targets.
     assert rows["transit_gateway_attachment"]["item_count"] == 3
-    # ALB 노드 + 배치 선 2개 — 값이 온 선 1개 + 빈 응답 = 쟀고 0 인 선 1개(`empty_is_zero` · 사용자 결정 2026-10-21)
+    # The ALB node plus two placement lines: one line that received a value and
+    # one whose empty response means measured and zero (`empty_is_zero`).
     assert rows["load_balancer"]["item_count"] == 3
-    # Interface 엔드포인트 노드(값이 왔다) + 서브넷 구간 2개(수락됨 · 빈 응답 = 쟀고 0 · ADR 0006 §O7-2a 2026-10-21)
+    # The interface endpoint node, which received a value, plus two subnet
+    # spans that are accepted and whose empty response means measured and zero.
     assert rows["vpc_endpoint"]["item_count"] == 3
-    assert rows["route_table"]["item_count"] == 0  # 지표가 없는 종류
-    # 🔴 원장: 2층 `item_count` 의 합 == **지표가 답을 준 행 수**(`datapoints` 가 숫자인 행).
-    # 이름만 적히고 `datapoints` 가 `null` 인 행(= 물었는데 조용했다)은 세지 않는다 — 그 둘을
-    # 합치면 「읽었다」와 「빈 배열이 왔다」가 같은 숫자가 되고, 화면의 「확인 불가 N」이 거짓이 된다.
+    assert rows["route_table"]["item_count"] == 0  # a type with no metrics
+    # The ledger: the sum of the metric-layer `item_count` equals the number of
+    # rows the metrics answered for, meaning rows whose `datapoints` is a
+    # number. A row that carries only a name with `datapoints` of `null`, having
+    # been asked and stayed quiet, is not counted. Merging the two would give
+    # the same number for having read and for having received an empty array,
+    # and the unconfirmed count on the screen would become false.
     answered = [
         o
         for o in document["observations"]
@@ -2284,22 +2660,28 @@ def test_metric_coverage_counts_only_answered_targets():
     ]
     written = sum(r["item_count"] or 0 for r in rows.values() if r["status"] == "ok")
     assert written == len(answered), (
-        "2층 원장이 어긋났다(요약의 숫자와 화면의 근거가 다르다)"
+        "the metric-layer ledger does not add up: the number in the summary "
+        "differs from the evidence on screen"
     )
-    # 판별력 — 「이름은 적혔지만 못 쟀다」 행이 실제로 있어야 위 등식이 무언가를 가른다.
+    # What tells them apart: the equation above distinguishes something only if
+    # there really is a row that carries a name but was never measured.
     named_but_quiet = [
         o
         for o in document["observations"]
         if (o.get("evidence") or {}).get("metric")
         and (o.get("evidence") or {}).get("datapoints") is None
     ]
-    assert named_but_quiet, "빈 배열로 온 대상이 0개면 이 원장은 아무것도 가르지 않는다"
+    assert named_but_quiet, (
+        "with no target coming back as an empty array this ledger distinguishes nothing"
+    )
 
 
 def test_a_denied_describe_does_not_claim_the_metric_layer_was_read():
-    """🔴 1층이 막히면 대상 id 를 모르므로 2층을 **부르지 않았다** — `ok` 를 적으면 거짓이다.
+    """When the structure tier is blocked the target ids are unknown, so the
+    metric layer was never called, and writing `ok` would be false.
 
-    describe 와 같은 사유를 복사해도 거짓이다(부르지도 않은 API 의 거부를 주장한다).
+    Copying the reason from the describe call would be false too, since it would
+    claim a denial of an API that was never called.
     """
     denied = client_error("UnauthorizedOperation", "DescribeNatGateways")
     document, _ = _observe(
@@ -2309,13 +2691,15 @@ def test_a_denied_describe_does_not_claim_the_metric_layer_was_read():
     assert rows["nat_gateway"]["status"] == "skipped"
     assert rows["nat_gateway"]["reason"] is None
     assert rows["vpc"]["status"] == "ok"
-    # 1층이 막힌 종류에는 관측 항목 자체가 없다(스키마 규칙 2).
+    # A type whose structure tier was blocked has no observation entry at all.
     assert NAT_ID not in _by_id(document)
     _valid(document)
 
 
 def test_metric_layer_is_byte_identical_across_runs():
-    """불변식 ② — 2층을 붙여도 같은 입력이면 같은 바이트."""
+    """With the metric layer attached, the same input still gives the same
+    bytes.
+    """
     first, _ = _observe(FakeCloudWatch(_series()))
     second, _ = _observe(FakeCloudWatch(_series()))
     assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
