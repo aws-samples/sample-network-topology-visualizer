@@ -1,32 +1,35 @@
-"""LB 대상 선(스키마 2.7.0 · ADR 0002 §8)의 가짜 세계 — 대상 모양 전부를 한 VPC 에 둔다.
+"""A fake world for load balancer target edges (schema 2.7.0), holding every
+target shape in one VPC.
 
-`test_lb_targets.py` 가 이 세계로 엔진을 재고, 같은 세계를 엔진에 돌린 산출물이 **그대로**
-`fixtures/lb-targets.json`(렌더러 하네스 입력 · 검사 148)이다 — 손으로 쓴 fixture 가 엔진 모양에서
-조용히 멀어지지 않게 `test_the_fixture_is_this_world_collected` 가 바이트를 대조한다
-(`NETTOPO_REGEN_FIXTURE=1` 이면 다시 쓴다).
+`test_lb_targets.py` measures the engine against this world, and running the
+engine over the same world produces `fixtures/lb-targets.json` byte for byte.
+`test_the_fixture_is_this_world_collected` compares those bytes so that a
+hand-written fixture cannot drift away from the engine's shape unnoticed; it
+rewrites the fixture when `NETTOPO_REGEN_FIXTURE=1` is set.
 
-계정 = 마스킹된 예시 계열(`111122223333` · 불변식 ⑤). 모양:
+The account numbers come from the reserved example range (`111122223333`).
+The shape is:
 
-| LB | 대상 그룹(TargetType) | 대상 | 잇는 노드 |
+| Load balancer | Target group (TargetType) | Targets | Nodes it links |
 |---|---|---|---|
-| `web-alb`(ALB · 인터넷용 · 퍼블릭 a·b) | `web-tg`(instance :80) | EC2 6대(같은 서브넷 → 화면 묶음 `EC2 ×6`) + 수집하지 않은 인스턴스 1 | `ec2_instance` ×6 · 1 = `not_collected` |
-| | `api-tg`(ip :8080) | ECS 태스크 IP 2(그 그룹을 든 ECS 서비스 하나) | `ecs_service`(선 하나 · 등록 2) |
-| | `fn-tg`(lambda) | 함수 ARN(별칭 하나) | `lambda_function`(엔진이 짓는다) |
-| `edge-nlb`(NLB · 내부 · 앱 a·b) | `web-alb-tg`(alb :80) | `web-alb` ARN | `load_balancer`(NLB → ALB) |
-| | `onprem-tg`(ip :443 · AZ `all`) | 192.168.10.5 · .6(→ VGW) · 172.16.5.9(→ TGW) | `external_ip` ×3(출구 = 주 라우트 테이블) |
-| | `svc-tg`(ip) | 인터페이스 엔드포인트 ENI · RDS ENI · 내부 ALB ENI · EC2 부착 ENI · ElastiCache ENI · EFS ENI · 주인 없는 IP | `vpc_endpoint` · `rds_db_instance` · `load_balancer` · `ec2_instance` · `elasticache_cluster`(2.9.0 · #114) · `efs`(수집 안 함) · `no_eni` |
-| | `svc-tg`(ip · 2.9.0) | Aurora 멤버 둘이 같은 AZ(데이터 b) — 그 VPC·AZ 의 RDS ENI | `rds_db_cluster`(멤버가 둘이라 인스턴스는 못 고르지만 둘 다 한 클러스터) |
-| | `svc-tg`(ip · 2.9.0) | OpenSearch 데이터 노드 ENI(`ES <도메인>`) | `opensearch_domain` |
-| | `kafka-tg`(ip :9094 · 2.9.0) | MSK 브로커 ENI 둘(데이터 a·b — `ListNodes` 의 ENI id) | `msk_cluster`(선 하나 · 등록 2) |
-| `int-alb`(ALB · 내부 · 앱 a·b) | `int-tg`(instance :8080) | worker EC2 | `ec2_instance` |
-| | `bridge-tg`(instance :80 · 2.8.0) | ECS 컨테이너 인스턴스(EC2 2대 · bridge 동적 포트 3) — 그 그룹을 든 ECS 서비스 `bridge-svc`(EC2 시작 유형 · 서브넷 없음 = 리전 줄) | `ecs_service`(선 하나 · 등록 3 · EC2 로 가지 않는다) |
-| | `idle-tg`(ip :8080 · 2.8.0) | 등록 0 — 그 그룹을 든 ECS 서비스 `idle-svc`(원하는 수 0) | `ecs_service`(선 하나 · 등록 0 · 칩 `×0`) |
-| | `standby-tg`(instance :8080 · 2.8.0) | 등록 0 — 그 그룹을 든 ASG `standby-asg`(원하는 수 0 · 앱 a·b) | `auto_scaling_group`(선 하나 · 등록 0) |
-| `edge-nlb` | `svc-tg` 에 IP 하나 더(2.8.0 · P2-6) | VPC Lambda `orders-fn`(데이터 b 서브넷)의 공유 ENI(`InterfaceType` = `lambda`) | `lambda_function`(수집한 노드 · 서브넷 칸에 선다) |
-| Route 53(2.8.0 · P2-4) | 공개 영역 `example.com`(별칭 `www` → `web-alb` dualstack · `old` → 수집하지 않은 LB) · 사설 영역 `corp.internal`(lbt-vpc · 별칭 `api` → `int-alb`) | `dns_alias` 둘 · `zone_association` 하나 · 못 이은 별칭 1(`unresolved_refs`) |
-| `web-alb` | `k8s-web-tg`(ip :8080 · 2.8.0 · P2-5) | 파드 IP 2(ENI 없음) — 그룹 태그 `elbv2.k8s.aws/cluster` = `lbt-eks` | `eks_cluster`(선 하나 · 등록 2 · ENI 를 묻지 않는다) |
-| CloudFront(2.8.0 · P2-3) | 배포 `E0LBTPUB1111`: S3 REST `lbt-static`(리전 꼴) · S3 웹사이트 `lbt-site` · 사용자 도메인 `www.example.com`(→ 별칭 → `web-alb`) · 배포 `E0LBTINT2222`: VPC 원본 → `int-alb`(도메인 = 그 DNS) · → worker EC2 · 같은 S3 `lbt-static` | `s3_bucket` 둘(같은 버킷 = 하나) · `origin` 여섯(`via` = `s3` 셋 · `dns_alias` · `vpc_origin` 둘) |
-| `web-alb` | `asg-tg`(instance :8081 · 2.8.0) | ASG `web-asg` 의 인스턴스 2(퍼블릭 a·b) + 손으로 등록한 worker · `web-asg-1` 은 `web-tg` 에도 손으로 | 엔진 선 = `ec2_instance`(그대로) · 화면이 `web-asg-2` 선을 ASG 로 접는다(§17.27) · `web-asg-1` 은 그룹이 섞여 안 접힌다 |
+| `web-alb` (ALB, internet-facing, public a and b) | `web-tg` (instance :80) | Six EC2 instances in the same subnet, which the screen groups as `EC2 ×6`, plus one instance that was not collected | `ec2_instance` ×6, and one `not_collected` |
+| | `api-tg` (ip :8080) | Two ECS task IPs, from the one ECS service that holds the group | `ecs_service`, a single edge with two registrations |
+| | `fn-tg` (lambda) | A function ARN with one alias | `lambda_function`, which the engine synthesizes |
+| `edge-nlb` (NLB, internal, app a and b) | `web-alb-tg` (alb :80) | The `web-alb` ARN | `load_balancer`, NLB to ALB |
+| | `onprem-tg` (ip :443, AZ `all`) | 192.168.10.5 and .6, which exit through the VGW, and 172.16.5.9, which exits through the TGW | `external_ip` ×3, with the exit taken from the main route table |
+| | `svc-tg` (ip) | An interface endpoint ENI, an RDS ENI, an internal ALB ENI, an ENI attached to EC2, an ElastiCache ENI, an EFS ENI, and an IP with no owner | `vpc_endpoint`, `rds_db_instance`, `load_balancer`, `ec2_instance`, `elasticache_cluster` (2.9.0), `efs` (not collected), and `no_eni` |
+| | `svc-tg` (ip, 2.9.0) | Two Aurora members in the same AZ (data b), reached through the RDS ENI in that VPC and AZ | `rds_db_cluster`: with two members the instance cannot be chosen, but both belong to one cluster |
+| | `svc-tg` (ip, 2.9.0) | An OpenSearch data node ENI (`ES <domain>`) | `opensearch_domain` |
+| | `kafka-tg` (ip :9094, 2.9.0) | Two MSK broker ENIs in data a and b, by the ENI ids from `ListNodes` | `msk_cluster`, a single edge with two registrations |
+| `int-alb` (ALB, internal, app a and b) | `int-tg` (instance :8080) | The worker EC2 instance | `ec2_instance` |
+| | `bridge-tg` (instance :80, 2.8.0) | Two ECS container instances with three dynamic bridge ports, held by the ECS service `bridge-svc`, which uses the EC2 launch type and has no subnet, so it sits on the Region row | `ecs_service`, a single edge with three registrations, and no edge to the EC2 instances |
+| | `idle-tg` (ip :8080, 2.8.0) | No registrations, held by the ECS service `idle-svc` with a desired count of 0 | `ecs_service`, a single edge with zero registrations and the chip `×0` |
+| | `standby-tg` (instance :8080, 2.8.0) | No registrations, held by the ASG `standby-asg` with a desired count of 0, in app a and b | `auto_scaling_group`, a single edge with zero registrations |
+| `edge-nlb` | One more IP in `svc-tg` (2.8.0) | The shared ENI of the VPC Lambda `orders-fn` in a data b subnet, whose `InterfaceType` is `lambda` | `lambda_function`, a collected node that stands in the subnet cell |
+| Route 53 (2.8.0) | The public zone `example.com`, where the alias `www` points at `web-alb` dualstack and `old` points at a load balancer that was not collected, and the private zone `corp.internal` on lbt-vpc, where the alias `api` points at `int-alb` | Two `dns_alias` edges, one `zone_association`, and one alias that could not be resolved (`unresolved_refs`) |
+| `web-alb` | `k8s-web-tg` (ip :8080, 2.8.0) | Two pod IPs with no ENI, where the group tag `elbv2.k8s.aws/cluster` is `lbt-eks` | `eks_cluster`, a single edge with two registrations, without asking about the ENIs |
+| CloudFront (2.8.0) | Distribution `E0LBTPUB1111` with the S3 REST origin `lbt-static` in regional form, the S3 website origin `lbt-site`, and the custom domain `www.example.com`, which resolves through the alias to `web-alb`; distribution `E0LBTINT2222` with a VPC origin to `int-alb` by its DNS name, another to the worker EC2 instance, and the same S3 bucket `lbt-static` | Two `s3_bucket` nodes, which collapse to one because it is the same bucket, and six `origin` edges: three with `via` set to `s3`, one `dns_alias`, and two `vpc_origin` |
+| `web-alb` | `asg-tg` (instance :8081, 2.8.0) | The two instances of the ASG `web-asg` in public a and b, plus the worker registered by hand; `web-asg-1` is also registered by hand in `web-tg` | The engine keeps `ec2_instance` edges as they are. The screen folds the `web-asg-2` edge into the ASG, while `web-asg-1` is not folded because its group mixes registration sources |
 """
 
 from __future__ import annotations
@@ -55,9 +58,11 @@ RT_MAIN = "rtb-0abc1234def56072"
 VPCE = "vpce-0abc1234def56301"
 WEB = [f"i-0abc1234def5610{i}" for i in range(1, 7)]
 WORKER = "i-0abc1234def56201"
-# ECS 컨테이너 인스턴스(bridge 네트워크 · 2.8.0) — 대상 그룹을 든 서비스가 이긴다(EC2 로 가지 않는다)
+# ECS container instances on the bridge network (2.8.0). The service that
+# holds the target group wins, so no edge goes to the EC2 instances.
 ECS_HOSTS = ("i-0abc1234def56301", "i-0abc1234def56302")
-# Auto Scaling 그룹의 인스턴스(2.8.0 · P1-2) — 그룹이 든 대상 그룹의 등록이 ASG 선 하나로 접힌다
+# Instances of an Auto Scaling group (2.8.0). Registrations in a target group
+# the ASG holds fold into a single ASG edge.
 ASG_INSTANCES = ("i-0abc1234def56401", "i-0abc1234def56402")
 ASG = "web-asg"
 EKS = "lbt-eks"
@@ -67,7 +72,7 @@ ZONE_PUB = "Z0LBT1111AAAA1111"
 CF_PUB = "E0LBTPUB1111"
 CF_INT = "E0LBTINT2222"
 ZONE_PRIV = "Z0LBT2222BBBB2222"
-LAMBDA_ENI_IP = "10.20.22.40"  # 수집 범위 밖 파트너 계정(마스킹된 예시 계열)
+LAMBDA_ENI_IP = "10.20.22.40"  # a partner account outside the collection scope, from the example range
 POD_IPS = ("10.20.11.90", "10.20.12.90")
 ASG_IDLE = "standby-asg"
 GONE_INSTANCE = "i-0abc1234def56999"
@@ -99,22 +104,28 @@ TG = {
 }
 EXTERNAL = ("172.16.5.9", "192.168.10.5", "192.168.10.6")
 UNRESOLVED_IP = "10.20.12.99"
-# #114(2.9.0) — ElastiCache 캐시 클러스터(복제 그룹의 노드 하나 · 데이터 a 서브넷). ENI 설명이 그 id 를 낱말로 든다.
+# An ElastiCache cache cluster (2.9.0): one node of a replication group, in a
+# data a subnet. The ENI description names that id as a word.
 CACHE = "lbt-cache-0001-001"
-# 그 캐시 노드의 ENI IP — 데이터 b(2.9.0 · 배치 A 의 CloudFront VPC 원본 선이 데이터 a 줄을 지나 그 자리를 비운다 )
+# The ENI IP of that cache node, in data b (2.9.0). A CloudFront VPC origin
+# edge crosses the data a row and leaves that slot empty.
 CACHE_NODE_IP = "10.20.22.30"
-# 수집하지 않는 서비스(EFS 마운트 대상) — 「<서비스> — 수집하지 않는 서비스」 글자를 재는 짝(그 전엔 ElastiCache 가 이 자리였다)
+# A service we do not collect, here an EFS mount target. This is the case that
+# measures the text for a service that is not collected.
 EFS_IP = "10.20.22.45"
-# #114(2.9.0) — Aurora 클러스터(멤버 둘이 같은 AZ = 데이터 b). 그 AZ 의 RDS ENI 는 어느 멤버 것인지 모르지만 클러스터는 안다
+# An Aurora cluster (2.9.0) whose two members share an AZ, data b. The RDS ENI
+# in that AZ does not say which member it belongs to, but it does say which
+# cluster.
 AURORA = "lbt-aurora"
 AURORA_MEMBERS = ("lbt-aurora-1", "lbt-aurora-2")
 AURORA_IP = "10.20.22.50"
-# #114(2.9.0) — OpenSearch VPC 도메인(데이터 b 한 서브넷 · 노드 하나)
+# An OpenSearch VPC domain (2.9.0): one node in a single data b subnet.
 SEARCH = "lbt-search"
 SEARCH_IP = (
-    "10.20.22.41"  # 데이터 b(배치 A 의 CloudFront VPC 원본 선이 데이터 a 줄을 지난다)
+    "10.20.22.41"  # data b, because a CloudFront VPC origin edge crosses the data a row
 )
-# #114(2.9.0) — MSK 프로비저닝 클러스터(브로커 둘 · 데이터 a·b). LB 는 브로커 IP 둘을 한 대상 그룹으로 든다
+# A provisioned MSK cluster (2.9.0) with two brokers, in data a and b. The load
+# balancer holds both broker IPs in one target group.
 KAFKA = "lbt-kafka"
 KAFKA_ARN = f"arn:aws:kafka:{REGION}:{ACCOUNT}:cluster/{KAFKA}/0f1e2d3c-4b5a-6901-2345-6789abcdef01-1"
 KAFKA_BROKERS = (
@@ -146,7 +157,7 @@ def _lb(
 
 
 def _cf(dist: str, tag: str, origins: list[dict[str, Any]]) -> dict[str, Any]:
-    """CloudFront 배포(2.8.0 · P2-3) — 원본 꼴만 다르다."""
+    """A CloudFront distribution (2.8.0); only the origin shape differs."""
     return {
         "Id": dist,
         "ARN": f"arn:aws:cloudfront::{ACCOUNT}:distribution/{dist}",
@@ -173,7 +184,8 @@ def _tg(key: str, name: str, kind: str, port: int | None) -> dict[str, Any]:
     return out
 
 
-# 헬스 체크를 끈 대상 그룹(Lambda 의 기본값)에 AWS 가 주는 대상 헬스 — State `unavailable` + 이 Reason(#137 · 관측 1.15.0)
+# The target health AWS reports for a target group with health checks turned
+# off, which is the default for Lambda: State `unavailable` with this Reason.
 HEALTH_CHECK_OFF = {
     "State": "unavailable",
     "Reason": "Target.HealthCheckDisabled",
@@ -217,10 +229,14 @@ def world(
     followup_errors: dict[tuple[str, str], Exception] | None = None,
     errors: dict[str, Exception] | None = None,
 ) -> FakeAws:
-    """`health` = {대상 그룹 키: 헬스} 로 그 그룹의 모든 대상 헬스를 바꾼다(기본 healthy · `fn` 만 기본 헬스 체크 꺼짐).
+    """Set the health of every target in a group through `health`, a mapping of
+    target group key to health. The default is healthy, except for `fn`, where
+    health checks are off by default.
 
-    `health_check_off` = State `unavailable` + Reason `Target.HealthCheckDisabled`(`HEALTH_CHECK_OFF`). Lambda 대상 그룹은
-    헬스 체크가 기본으로 꺼져 있고, 그 대상은 AWS 문서상 이 모양으로 답한다(ELB `TargetHealth` · #137).
+    `health_check_off` means State `unavailable` with Reason
+    `Target.HealthCheckDisabled` (`HEALTH_CHECK_OFF`). Health checks are off by
+    default for Lambda target groups, and the AWS documentation says such a
+    target answers in exactly this shape (ELB `TargetHealth`).
     """
     hs = {"fn": "health_check_off", **(health or {})}
 
@@ -268,7 +284,9 @@ def world(
             "Tags": _tags("lbt-public-rt"),
         },
         {
-            # 주 라우트 테이블 — 앱·데이터 서브넷이 연관 선 없이 쓴다(→ NLB 의 외부 IP 출구)
+            # The main route table, used by the app and data subnets with no
+            # association of their own. It is the exit for the NLB's
+            # external IPs.
             "RouteTableId": RT_MAIN,
             "VpcId": VPC,
             "Associations": [
@@ -350,7 +368,9 @@ def world(
     target_health = {
         TG["web"]: [_target(w, 80, state=h("web")) for w in reversed(WEB)]
         + [_target(GONE_INSTANCE, 80, state=h("web"))]
-        # ASG 인스턴스 하나를 ASG 가 안 든 그룹에도 손으로 등록(2.8.0) — 그 선은 ASG 로 접히지 않는다(그룹이 전부 ASG 것이 아니다)
+        # One ASG instance is also registered by hand in a group the ASG does
+        # not hold (2.8.0). That edge is not folded into the ASG, because the
+        # group does not belong to the ASG alone.
         + [_target(ASG_INSTANCES[0], 80, state=h("web"))],
         TG["api"]: [
             _target("10.20.12.51", 8080, "us-east-1b", h("api")),
@@ -372,21 +392,26 @@ def world(
             _target(LAMBDA_ENI_IP, 8443, "us-east-1b", h("svc")),
         ],
         TG["int"]: [_target(WORKER, 8080, state=h("int"))],
-        # bridge 동적 포트 — 같은 호스트에 태스크 둘(포트가 다르다) · 다른 호스트에 하나
+        # Dynamic bridge ports: two tasks on the same host, on different
+        # ports, and one on another host.
         TG["bridge"]: [
             _target(ECS_HOSTS[0], 32768, state=h("bridge")),
             _target(ECS_HOSTS[0], 32769, state=h("bridge")),
             _target(ECS_HOSTS[1], 32768, state=h("bridge")),
         ],
         TG["idle"]: [],
-        # ASG 가 등록한 인스턴스 둘 + 손으로 등록한 worker(그 ASG 의 인스턴스가 아니다 → 제 EC2 선)
+        # The two instances the ASG registered, plus the worker registered by
+        # hand. The worker is not an instance of that ASG, so it keeps its own
+        # EC2 edge.
         TG["asg"]: [
             _target(ASG_INSTANCES[1], 8081, state=h("asg")),
             _target(WORKER, 8081, state=h("asg")),
             _target(ASG_INSTANCES[0], 8081, state=h("asg")),
         ],
         TG["standby"]: [],
-        # AWS LB Controller 가 등록한 파드 IP — ENI 가 이 세계에 없다(그룹 태그가 클러스터를 말하므로 ENI 를 묻지 않아도 된다)
+        # Pod IPs registered by the AWS Load Balancer Controller. Their ENIs
+        # are absent from this world, and we do not need to ask about them
+        # because the group tag already names the cluster.
         TG["k8s"]: [
             _target(
                 ip,
@@ -401,7 +426,8 @@ def world(
         ],
     }
     enis = [
-        # ECS 태스크 ENI — 대상 그룹을 든 서비스가 먼저 이긴다(ENI 는 보지 않는다)
+        # ECS task ENIs. The service that holds the target group wins first,
+        # so the ENIs are never looked at.
         _eni(
             "eni-0abc1234def57001",
             "10.20.11.50",
@@ -445,7 +471,8 @@ def world(
             Description="EFS mount target for fs-0abc1234def56701 (fsmt-0abc1234def56702)",
             RequesterId="",
         ),
-        # MSK 브로커 ENI — 설명 글자에 클러스터 이름이 없어도 ENI id 로 잇는다(`ListNodes`)
+        # MSK broker ENIs. Even when the description text does not carry the
+        # cluster name, the ENI ids from `ListNodes` link them.
         *[
             _eni(
                 eid,
@@ -483,7 +510,8 @@ def world(
             "app-b",
             Attachment={"InstanceId": WORKER, "InstanceOwnerId": ACCOUNT},
         ),
-        # VPC Lambda 의 공유 ENI(2.8.0 · P2-6) — 서브넷·보안 그룹이 맞는 수집한 함수가 하나라 그 함수다
+        # The shared ENI of a VPC Lambda (2.8.0). Exactly one collected
+        # function matches the subnet and security groups, so it is that one.
         _eni(
             "eni-0abc1234def57008",
             LAMBDA_ENI_IP,
@@ -518,7 +546,8 @@ def world(
                 }
             },
         },
-        # EC2 시작 유형 · bridge 네트워크(awsvpc 설정 없음) — 대상 = 컨테이너 인스턴스(`instance` 대상 그룹)
+        # EC2 launch type on the bridge network, with no awsvpc configuration,
+        # so the targets are container instances in an `instance` target group.
         ECS_BRIDGE_ARN: {
             "serviceArn": ECS_BRIDGE_ARN,
             "serviceName": "bridge-svc",
@@ -535,7 +564,9 @@ def world(
                 }
             ],
         },
-        # 원하는 수 0 — 등록이 없어도 「이 LB 뒤의 서비스」는 구성이다(선 · 등록 0)
+        # A desired count of 0. Even with no registrations, which service sits
+        # behind this load balancer is part of the configuration, so the edge
+        # stays with zero registrations.
         ECS_IDLE_ARN: {
             "serviceArn": ECS_IDLE_ARN,
             "serviceName": "idle-svc",
@@ -804,7 +835,9 @@ def world(
                 "status": "ACTIVE",
             }
         },
-        # 파트너 서비스의 주인 계정(2.8.0 · P2-1) — 수집 범위 밖 계정이라 제공자 NLB 까지는 못 잇고 「어느 계정의 서비스인가」만 안다
+        # The owner account of a partner service (2.8.0). The account is
+        # outside the collection scope, so we cannot reach the providing NLB
+        # and only know which account the service belongs to.
         consumer_services={
             "com.amazonaws.vpce.us-east-1.vpce-svc-0abc1234def56aaa": PARTNER
         },

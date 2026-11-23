@@ -1,19 +1,27 @@
-"""AWS 없이 수집 경로를 재는 가짜 클라이언트.
+"""Fake clients that let the collection path be measured without AWS.
 
-실제 계정을 쓰면 결정론·부분실패를 **재현 가능하게** 잴 수 없다(권한·리소스가 사람마다
-다르고, 실패를 마음대로 일으킬 수 없다). 그래서 불변식 ②④는 여기서 잰다. 실계정 1회
-실행은 그것과 별개의 게이트다(완료 기준 = 실계정 실행).
+A real account cannot measure determinism or partial failure reproducibly,
+because permissions and resources differ from person to person and failures
+cannot be triggered at will. Those properties are measured here instead. A
+single run against a real account is a separate gate.
 
-계정ID 는 AWS 예시 계열(`111122223333`)만 쓴다 — 불변식 ⑤, pre-commit 훅이 강제한다.
+Account ids come only from the AWS example range (`111122223333`), which a
+pre-commit hook enforces.
 
-픽스처는 **일부러 궂은 경우를 담는다**. 정상 경로만 담으면 어서션이 통과해도 미측정이다:
-같은 대상으로 가는 라우트 2개(집계), blackhole + 노드 없는 대상(unresolved), 떼어낸 IGW,
-실패·삭제 중인 NAT·어태치먼트·피어링·VIF(죽은 상태 — 노드는 남고 선은 없다), 자기참조 SG,
-범위 밖 계정 소유 VPC, 게이트웨이 vs 인터페이스 엔드포인트, 실패한 LB.
+The fixtures deliberately carry awkward cases. A fixture with nothing but the
+happy path leaves assertions passing while measuring nothing, so this one holds
+two routes to the same target (which must aggregate), a blackhole route and a
+target with no node (which must stay unresolved), a detached IGW, a NAT
+gateway, attachment, peering and virtual interface that are failed or being
+deleted (dead states, where the node stays and the edge does not), a
+self-referencing security group, a VPC owned by an account outside the scope,
+a gateway endpoint next to an interface endpoint, and a failed load balancer.
 
-🔴 `deleted`·`terminated` 같은 **없어진 상태**는 기본 픽스처에 두지 않는다 — 수집이 노드째
-버리므로(ADR 0002 §3 개정 2026-10-14 · `services/base.py` `GONE_STATES`) 여기 두면 노드 수
-(`RESOURCE_NODE_COUNT`)와 어긋난다. 그 경로는 `test_gone_states.py` 가 종류마다 따로 잰다.
+Gone states such as `deleted` and `terminated` are kept out of the default
+fixtures. Collection drops the whole node for those (see `GONE_STATES` in
+`services/base.py`), so putting them here would contradict the node count in
+`RESOURCE_NODE_COUNT`. `test_gone_states.py` measures that path separately for
+each resource type.
 """
 
 from __future__ import annotations
@@ -24,9 +32,12 @@ from typing import Any
 from botocore.exceptions import ClientError
 
 ACCOUNT = "111122223333"
-# 계정 이름(`account:GetAccountInformation` · 2026-10-28) — 지어낸 값이다. 실계정 이름(이메일 모양도 있다)을 fixture 에 옮기지 마라
+# The account name from `account:GetAccountInformation`. This value is made up:
+# never copy a real account name, which can look like an email address, into a
+# fixture.
 ACCOUNT_NAME = "network-hub"
-# scope 안의 다른 계정(공유 자원의 소유자) / scope 밖 계정(귀속되지 않아야 한다)
+# Another account inside the scope, the owner of a shared resource, and an
+# account outside the scope, which must not be attributed.
 PARTNER = "222233334444"
 OUTSIDER = "999900001111"
 REGION = "us-east-1"
@@ -42,7 +53,8 @@ EGRESS_NAT = "nat-0eee5555ffff6666"
 APP_SG = "sg-0aaa1111bbbb2222"
 DB_SG = "sg-0bbb2222cccc3333"
 
-# 일부러 id 오름차순이 아닌 순서로 둔다 — 정렬이 코드에 있는지 재기 위해서다.
+# Deliberately not in ascending id order, so that the sorting has to come from
+# the code.
 VPCS: list[dict[str, Any]] = [
     {
         "VpcId": EGRESS_VPC,
@@ -126,7 +138,7 @@ ROUTE_TABLES: list[dict[str, Any]] = [
                 "GatewayId": APP_IGW,
                 "State": "active",
             },
-            # 같은 TGW 로 가는 목적지 2개 → 엣지는 1개여야 한다(ADR 0002 §4)
+            # Two destinations to the same TGW, which must produce one edge.
             {
                 "DestinationCidrBlock": "10.20.0.0/16",
                 "TransitGatewayId": CORE_TGW,
@@ -137,7 +149,8 @@ ROUTE_TABLES: list[dict[str, Any]] = [
                 "TransitGatewayId": CORE_TGW,
                 "State": "active",
             },
-            # 노드가 없는 대상(ENI) + blackhole → unresolved_refs 로 남아야 한다
+            # A target with no node (an ENI) and a blackhole route, both of
+            # which must stay in unresolved_refs.
             {
                 "DestinationCidrBlock": "172.16.0.0/16",
                 "NetworkInterfaceId": "eni-0dead0000beef1111",
@@ -148,9 +161,10 @@ ROUTE_TABLES: list[dict[str, Any]] = [
                 "GatewayId": "vpce-0aaa1111bbbb7777",
                 "State": "active",
             },
-            # 🔴 실데이터에서 온 모양(2026-09-15 실측): AWS 는 `xxx-` 형태가 아닌
-            # **의사 게이트웨이 이름**을 GatewayId 로 준다. 링크로컬 목적지 2개가 같은
-            # 이름으로 묶여 하나의 미해결 참조가 된다. ID 모양으로 걸러내면 안 된다.
+            # A shape taken from real data: AWS puts a pseudo gateway name,
+            # which does not follow the `xxx-` form, in GatewayId. Two
+            # link-local destinations group under that one name and become a
+            # single unresolved reference. Do not filter these out by id shape.
             {
                 "DestinationCidrBlock": "169.254.171.0/24",
                 "GatewayId": "VpcLattice",
@@ -191,7 +205,7 @@ INTERNET_GATEWAYS: list[dict[str, Any]] = [
         "Attachments": [{"VpcId": APP_VPC, "State": "available"}],
         "Tags": [{"Key": "Name", "Value": "app-igw"}],
     },
-    # 떼어낸 IGW — 노드는 남지만 선은 없다
+    # A detached IGW: the node stays, the edge does not.
     {"InternetGatewayId": "igw-0bbb2222cccc5555", "Attachments": [], "Tags": []},
 ]
 
@@ -205,9 +219,11 @@ NAT_GATEWAYS: list[dict[str, Any]] = [
         "NatGatewayAddresses": [{"PublicIp": "203.0.113.10", "PrivateIp": "10.20.1.5"}],
         "Tags": [{"Key": "Name", "Value": "egress-nat"}],
     },
-    # 실패한 NAT(서브넷을 못 찾아 생성 실패 — `InvalidSubnetID.NotFound`): 서브넷 정보가 없다 →
-    # 부모 후보가 VPC 로 내려간다. `failed` 는 자원이 아직 응답에 **있는** 상태라 노드로 남는다
-    # (`deleted` 는 수집이 버린다 — ADR 0002 §3).
+    # A failed NAT gateway, which could not be created because its subnet was
+    # not found (`InvalidSubnetID.NotFound`). With no subnet information the
+    # parent candidate falls back to the VPC. `failed` is a state in which the
+    # resource is still present in the response, so it stays as a node, unlike
+    # `deleted`, which collection drops.
     {
         "NatGatewayId": "nat-0fff6666aaaa7777",
         "VpcId": EGRESS_VPC,
@@ -219,7 +235,8 @@ NAT_GATEWAYS: list[dict[str, Any]] = [
     },
 ]
 
-# 🔴 소유자가 다른 계정이다 — scope 안이면 그 계정으로 귀속돼 노드가 하나로 합쳐진다(ADR 0002 §2).
+# The owner is a different account. When that account is inside the scope, the
+# resource is attributed to it and the nodes merge into one.
 TRANSIT_GATEWAYS: list[dict[str, Any]] = [
     {
         "TransitGatewayId": CORE_TGW,
@@ -243,7 +260,8 @@ TRANSIT_GATEWAY_ATTACHMENTS: list[dict[str, Any]] = [
         "State": "available",
         "Tags": [],
     },
-    # VPN 어태치먼트 — 대상 = VPN 연결 노드(2.6.0 전에는 노드가 없어 엣지가 TGW 쪽만이었다)
+    # A VPN attachment, whose target is the VPN connection node. Before 2.6.0
+    # there was no such node and the edge only had a TGW side.
     {
         "TransitGatewayAttachmentId": "tgw-attach-0bbb2222cccc9999",
         "TransitGatewayId": CORE_TGW,
@@ -254,7 +272,7 @@ TRANSIT_GATEWAY_ATTACHMENTS: list[dict[str, Any]] = [
         "State": "available",
         "Tags": [],
     },
-    # 삭제 중 — 노드는 남고 선은 0
+    # Being deleted: the node stays and there are no edges.
     {
         "TransitGatewayAttachmentId": "tgw-attach-0ccc3333dddd0000",
         "TransitGatewayId": CORE_TGW,
@@ -265,7 +283,8 @@ TRANSIT_GATEWAY_ATTACHMENTS: list[dict[str, Any]] = [
         "State": "deleting",
         "Tags": [],
     },
-    # DXGW 어태치먼트 — 2.1.0 부터 대상 노드가 있다. DXGW ↔ TGW 는 **이 선 하나**로만 그린다(ADR 0010)
+    # A Direct Connect gateway attachment, which has had a target node since
+    # 2.1.0. The DXGW and the TGW are drawn with this single edge and no other.
     {
         "TransitGatewayAttachmentId": "tgw-attach-0ddd4444eeee1111",
         "TransitGatewayId": CORE_TGW,
@@ -296,7 +315,8 @@ PEERINGS: list[dict[str, Any]] = [
         "Status": {"Code": "active", "Message": "Active"},
         "Tags": [{"Key": "Name", "Value": "app-egress"}],
     },
-    # 실패한 피어링 — 선을 그리면 없는 경로를 있다고 그린다(`deleted` 는 노드째 버린다 — §3)
+    # A failed peering. Drawing an edge for it would show a path that does not
+    # exist, while `deleted` has its whole node dropped.
     {
         "VpcPeeringConnectionId": "pcx-0bbb2222cccc2222",
         "RequesterVpcInfo": {"VpcId": APP_VPC, "OwnerId": ACCOUNT, "Region": REGION},
@@ -308,7 +328,8 @@ PEERINGS: list[dict[str, Any]] = [
         "Status": {"Code": "failed", "Message": "Failed due to incorrect VPC-ID"},
         "Tags": [],
     },
-    # 살아 있지만 상대 VPC 가 scope 밖 → 한쪽만 선이 생기고 상대는 unresolved_refs
+    # Alive, but the peer VPC is outside the scope, so only one side gets an
+    # edge and the other lands in unresolved_refs.
     {
         "VpcPeeringConnectionId": "pcx-0ccc3333dddd3333",
         "RequesterVpcInfo": {"VpcId": APP_VPC, "OwnerId": ACCOUNT, "Region": REGION},
@@ -360,7 +381,7 @@ SECURITY_GROUPS: list[dict[str, Any]] = [
                 "ToPort": 443,
                 "UserIdGroupPairs": [{"GroupId": DB_SG, "UserId": ACCOUNT}],
             },
-            # 자기참조 — 엣지가 아니라 속성이다(ADR 0002 §6)
+            # A self reference, which is an attribute rather than an edge.
             {
                 "IpProtocol": "tcp",
                 "FromPort": 22,
@@ -388,7 +409,8 @@ SECURITY_GROUPS: list[dict[str, Any]] = [
                 "ToPort": 5432,
                 "UserIdGroupPairs": [
                     {"GroupId": APP_SG, "UserId": ACCOUNT},
-                    # 노드가 없는 SG(다른 계정 소유) → unresolved_refs
+                    # A security group with no node, owned by another
+                    # account, so it lands in unresolved_refs.
                     {"GroupId": "sg-0ddd4444eeee4444", "UserId": OUTSIDER},
                 ],
             }
@@ -432,14 +454,19 @@ OLD_NLB_ARN = (
     "loadbalancer/net/old-nlb/60dc6c495c0c9199"
 )
 
-# ALB 의 web ACL — `wafv2:GetWebACLForResource` 로 **LB 당 1회** 더 읽는다(교차 서비스 후속 호출).
-# 🔴 세 경우를 다 만든다: ⓐ 붙은 ALB ⓑ **안 붙은** ALB(응답에 `WebACL` 키가 없다) ⓒ NLB(부르면 안 된다).
-# 🔵 ARN 은 `wafv2` REGIONAL 스코프 꼴이다 — CloudFront 용은 `global/` 이고 us-east-1 고정이다.
+# The web ACL of an ALB, read with one extra `wafv2:GetWebACLForResource` call
+# per load balancer, which is a cross-service follow-up call.
+# All three cases are built here: an ALB that has one attached, an ALB that does
+# not, where the response carries no `WebACL` key at all, and an NLB, which must
+# never be asked.
+# The ARNs follow the `wafv2` REGIONAL scope form. The CloudFront ones use
+# `global/` and are fixed to us-east-1.
 APP_WEB_ACL_ARN = (
     f"arn:aws:wafv2:{REGION}:{ACCOUNT}:regional/webacl/prod-edge-acl/abc12345"
 )
 
-# ResourceArn → web ACL 객체. **없는 키 = 붙지 않았다**(AWS 가 `WebACL` 키를 아예 안 준다).
+# ResourceArn to web ACL object. A missing key means nothing is attached, which
+# is how AWS answers: it omits the `WebACL` key entirely.
 WEB_ACLS: dict[str, dict[str, Any]] = {
     APP_ALB_ARN: {"Name": "prod-edge-acl", "ARN": APP_WEB_ACL_ARN, "Id": "abc12345"},
 }
@@ -459,7 +486,7 @@ LOAD_BALANCERS: list[dict[str, Any]] = [
         ],
         "SecurityGroups": [APP_SG],
     },
-    # 실패한 LB — 노드는 남고 배치 선은 없다
+    # A failed load balancer: the node stays and it gets no placement edge.
     {
         "LoadBalancerName": "old-nlb",
         "LoadBalancerArn": OLD_NLB_ARN,
@@ -473,20 +500,25 @@ LOAD_BALANCERS: list[dict[str, Any]] = [
     },
 ]
 
-# ---------------------------------------------------------------- CloudFront (글로벌 2번째)
-# 🔴 응답 모양이 다른 종류와 다르다: 항목이 **`DistributionList.Items` 에 중첩**돼 있고,
-#    `{Quantity, Items}` 래퍼가 Aliases·Origins 안에도 한 번 더 있다. 평평한 키를 가정하는
-#    구현은 여기서 조용히 0건이 된다(= 「배포가 없다」로 그려진다).
-# 🔴 `Status`·`LastModifiedTime`·`ETag` 를 **일부러 넣어** 수집기가 상태·wall-clock 을 안 담는지
-#    잰다. 이 값들이 산출물에 나오면 FAIL 이다.
-# 🔵 오리진 하나를 픽스처 ALB 의 실제 DNS 이름으로 둔다 — DNS 색인으로 `origin` 엣지가 맞물린다
-#    (#43 · `services/cloudfront.py` 머리말). S3 오리진은 LB 모양이 아니라 선도 해소 실패도 없다.
+# ------------------------------------------------- CloudFront (second global)
+# The response shape differs from every other resource type: the items are
+#    nested in `DistributionList.Items`, and the `{Quantity, Items}` wrapper
+#    appears once more inside Aliases and Origins. An implementation that
+#    assumes flat keys silently finds nothing here, and the screen then shows
+#    that there are no distributions.
+# `Status`, `LastModifiedTime` and `ETag` are included on purpose, to measure
+#    that the collector carries neither state nor wall-clock time. If any of
+#    these values reach the output, that is a failure.
+# One origin uses the real DNS name of the fixture ALB, so that the DNS index
+#    makes the `origin` edge meet it. The S3 origin has no load balancer shape,
+#    so it produces neither an edge nor an unresolved reference.
 CLOUDFRONT_DISTRIBUTION = "E1AAAAAAAAAAAA"
 CLOUDFRONT_DISABLED = "E2BBBBBBBBBBBB"
 CLOUDFRONT_STATE_LEAKS = ("Deployed", "InProgress", "2026-09-30T00:00:00Z", "ETAG12345")
 
 CLOUDFRONT_DISTRIBUTIONS: list[dict[str, Any]] = [
-    # 일부러 id 역순 — 정렬이 코드에 있는지 재기 위해서다.
+    # Deliberately in reverse id order, so that the sorting has to come from
+    # the code.
     {
         "Id": CLOUDFRONT_DISABLED,
         "ARN": f"arn:aws:cloudfront::{ACCOUNT}:distribution/{CLOUDFRONT_DISABLED}",
@@ -498,7 +530,8 @@ CLOUDFRONT_DISTRIBUTIONS: list[dict[str, Any]] = [
         "IsIPV6Enabled": False,
         "HttpVersion": "http2",
         "PriceClass": "PriceClass_100",
-        # 붙지 않은 배포는 **빈 문자열**을 준다 — None 으로 접히는지 잰다.
+        # A distribution with nothing attached answers with an empty string,
+        # so this measures whether that folds to None.
         "WebACLId": "",
         "Aliases": {"Quantity": 0},
         "Origins": {
@@ -518,7 +551,8 @@ CLOUDFRONT_DISTRIBUTIONS: list[dict[str, Any]] = [
         "HttpVersion": "http2and3",
         "PriceClass": "PriceClass_All",
         "WebACLId": "arn:aws:wafv2:us-east-1:111122223333:global/webacl/prod-edge-acl/abc",
-        # 대체 도메인·오리진을 오름차순이 아닌 순서로 줘 정렬을 잰다.
+        # The alternate domain names and origins arrive out of ascending
+        # order, so the sorting is measured.
         "Aliases": {"Quantity": 2, "Items": ["www.example.com", "example.com"]},
         "Origins": {
             "Quantity": 2,
@@ -533,34 +567,39 @@ CLOUDFRONT_DISTRIBUTIONS: list[dict[str, Any]] = [
     },
 ]
 
-# ---------------------------------------------------------------- Direct Connect (2차, ADR 0010)
-# 응답 키는 소문자 camelCase 다. 🔴 비밀 필드(`authKey`·`macSecKeys`·피어 IP·`customerRouterConfig`)를
-# **일부러 넣는다** — 수집기가 그것을 버리는지 재기 위해서다. 이 값들이 산출물에 나오면 FAIL 이다.
+# ------------------------------------------------------------- Direct Connect
+# The response keys are lower camelCase. The secret fields (`authKey`,
+# `macSecKeys`, the peer IPs and `customerRouterConfig`) are included on
+# purpose, to measure that the collector discards them. If any of these values
+# reach the output, that is a failure.
 DX_CONNECTION = "dxcon-fg0aaa1111"
 DX_CONNECTION_DOWN = "dxcon-fg0bbb2222"
-# hosted VIF 의 부모 연결 — 다른 계정(파트너) 소유라 `DescribeConnections` 에 **없다**(§5.5-2)
+# The parent connection of a hosted VIF. It is owned by another account, the
+# partner, so it is absent from `DescribeConnections`.
 DX_HOSTED_PARENT = "dxcon-fg0ccc3333"
 DX_PRIVATE_VIF = "dxvif-fg0aaa1111"
 DX_HOSTED_VIF = "dxvif-fg0bbb2222"
 DX_PUBLIC_VIF = "dxvif-fg0ccc3333"
 DX_DELETING_VIF = "dxvif-fg0ddd4444"
-DXGW = "0a0b0c0d-0aaa-1111-bbbb-0000aaaa1111"  # VGW 용 (private VIF 가 붙는다)
-DXGW_TGW = "0f0e0d0c-0aaa-1111-bbbb-0000bbbb2222"  # TGW 용 (TGW 어태치먼트가 가리킨다)
+DXGW = "0a0b0c0d-0aaa-1111-bbbb-0000aaaa1111"  # for the VGW; the private VIF attaches to it
+DXGW_TGW = "0f0e0d0c-0aaa-1111-bbbb-0000bbbb2222"  # for the TGW; the TGW attachment points at it
 DX_SECRETS = (
     "s3cret-bgp-auth-key",
     "s3cret-macsec-ckn",
     "arn:aws:secretsmanager:secret",
     "router-config-xml",
 )
-# BGP 피어 주소(Amazon 쪽 · 고객 쪽) — 비밀이 아니다: 콘솔이 VIF 세부 정보에 보여 주는 값이라 우리도 싣는다
-# (사용자 결정 2026-10-24 「콘솔이 보여 주는 값이면 우리도 보여 줘도 된다」). 인증 키·라우터 설정은 여전히 비밀이다.
+# The BGP peer addresses, on the Amazon side and the customer side. These are
+# not secret: the console shows them in the VIF details, so we carry them too.
+# The authentication key and the router configuration remain secret.
 DX_PEER_ADDRESSES = (
     "169.254.255.1/30",
     "169.254.255.2/30",
 )
 
 DIRECT_CONNECT_CONNECTIONS: list[dict[str, Any]] = [
-    # 일부러 id 역순 — 정렬이 코드에 있는지 재기 위해서다.
+    # Deliberately in reverse id order, so that the sorting has to come from
+    # the code.
     {
         "connectionId": DX_CONNECTION_DOWN,
         "connectionName": "seoul-backup",
@@ -605,7 +644,8 @@ DIRECT_CONNECT_CONNECTIONS: list[dict[str, Any]] = [
 ]
 
 DIRECT_CONNECT_VIRTUAL_INTERFACES: list[dict[str, Any]] = [
-    # private VIF → DXGW. 4바이트 ASN 이라 `asn` 은 0 이고 `asnLong` 이 진짜다(§5.5-10)
+    # A private VIF to the DXGW. The ASN is four bytes, so `asn` is 0 and
+    # `asnLong` holds the real value.
     {
         "virtualInterfaceId": DX_PRIVATE_VIF,
         "virtualInterfaceName": "to-dxgw",
@@ -643,7 +683,9 @@ DIRECT_CONNECT_VIRTUAL_INTERFACES: list[dict[str, Any]] = [
         "region": REGION,
         "tags": [],
     },
-    # hosted VIF — 부모 연결이 목록에 없다(파트너 소유). 미수락 상태. 부모는 리전으로 내려간다
+    # A hosted VIF whose parent connection is not in the list, because the
+    # partner owns it. It is not yet confirmed, and its parent falls back to
+    # the Region.
     {
         "virtualInterfaceId": DX_HOSTED_VIF,
         "virtualInterfaceName": "hosted-pending",
@@ -661,7 +703,8 @@ DIRECT_CONNECT_VIRTUAL_INTERFACES: list[dict[str, Any]] = [
         "region": REGION,
         "tags": [],
     },
-    # public VIF — 게이트웨이 필드가 둘 다 비어 있는 것이 **정상**이다(§5.5-8). 광고 prefix 를 든다
+    # A public VIF. Both gateway fields being empty is the normal case here.
+    # It carries the advertised prefixes.
     {
         "virtualInterfaceId": DX_PUBLIC_VIF,
         "virtualInterfaceName": "public-services",
@@ -687,8 +730,9 @@ DIRECT_CONNECT_VIRTUAL_INTERFACES: list[dict[str, Any]] = [
         "region": REGION,
         "tags": [],
     },
-    # 삭제 중인 VIF — 노드는 남고 DXGW 로 가는 선은 없다(ADR 0002 §3). 삭제가 끝난 `deleted`
-    # (15분 잔존)는 수집이 노드째 버린다.
+    # A VIF being deleted: the node stays and it gets no edge to the DXGW.
+    # Once deletion finishes, `deleted` lingers for about fifteen minutes, and
+    # collection drops that whole node.
     {
         "virtualInterfaceId": DX_DELETING_VIF,
         "virtualInterfaceName": "old-transit",
@@ -725,7 +769,9 @@ DIRECT_CONNECT_GATEWAYS: list[dict[str, Any]] = [
     },
 ]
 
-# DXGW 별 연결(association) — 후속 호출. VGW 연결 + 해제된 연결(관계가 아니다) / TGW 연결(다른 계정·리전).
+# The associations of each DXGW, read with a follow-up call: a VGW association
+# and a disassociated one, which is not a relation, plus a TGW association in
+# another account and Region.
 DXGW_ASSOCIATIONS: dict[str, list[dict[str, Any]]] = {
     DXGW: [
         {
@@ -769,17 +815,21 @@ DXGW_ASSOCIATIONS: dict[str, list[dict[str, Any]]] = {
     ],
 }
 
-# 🔴 boto3 페이지네이터가 없는 메서드 — 가짜도 `can_paginate` 를 False 로 답하고 `nextToken` 을
-#    두 장에 걸쳐 준다. 첫 장만 읽는 구현은 여기서 개수가 준다.
-# 2.12.0 — WAFv2 `ListWebACLs` 도 페이지네이터가 없다(`NextMarker` · botocore 실측 2026-10-23)
+# A method with no boto3 paginator. The fake answers `can_paginate` with False
+#    as well, and hands back `nextToken` across two pages. An implementation
+#    that reads only the first page comes up short here.
+# WAFv2 `ListWebACLs` has no paginator either, and uses `NextMarker` (2.12.0).
 UNPAGINATED = frozenset(
     {"describe_connections", "describe_virtual_interfaces", "list_web_acls"}
 )
-# `describe_instances` 는 인스턴스를 **예약(Reservation)으로 감싸** 돌려준다 → result_key 는
-# `Reservations`. `ec2_instance.enrich` 가 예약을 인스턴스로 편다. 🔴 예약당 인스턴스 **1개**로
-# 둔다: RESOURCE_NODE_COUNT 가 예약 수(= 목록 항목 수)를 세므로 예약당 여럿을 넣으면 노드 수
-# 어서션(test_cli)이 조용히 어긋난다. 예약당 여럿을 펴는 경로는 test_services 가 enrich 를
-# 직접 불러 잰다. id·SG 를 일부러 오름차순이 아닌 순서로 둬 정렬이 코드에 있는지 잰다.
+# `describe_instances` wraps the instances in Reservations, so the result_key is
+# `Reservations` and `ec2_instance.enrich` flattens a reservation into
+# instances. Each reservation holds exactly one instance here, because
+# RESOURCE_NODE_COUNT counts reservations, that is list entries, and several
+# instances per reservation would quietly break the node-count assertion in
+# test_cli. The path that flattens several per reservation is measured in
+# test_services, which calls enrich directly. The ids and security groups are
+# deliberately out of ascending order, so the sorting has to come from the code.
 INSTANCE_RESERVATIONS: list[dict[str, Any]] = [
     {
         "OwnerId": ACCOUNT,
@@ -815,12 +865,16 @@ INSTANCE_RESERVATIONS: list[dict[str, Any]] = [
     },
 ]
 
-# ASG 는 서브넷 하나에 안 산다: VPCZoneIdentifier 로 여러 서브넷에 걸치고 응답에 VpcId 가 없다.
-# 🔴 `Instances`·`HealthStatus`·`LifecycleState` 를 일부러 넣어 **수집기가 헬스를 안 담는지** 잰다.
-# 서브넷·AZ 를 오름차순이 아닌 순서로 줘 정렬이 코드에 있는지 잰다(PRIVATE=0bbb, PUBLIC=0aaa).
+# An ASG does not live in a single subnet: it spans several through
+# VPCZoneIdentifier, and the response carries no VpcId.
+# `Instances`, `HealthStatus` and `LifecycleState` are included on purpose, to
+# measure that the collector does not carry health.
+# The subnets and AZs arrive out of ascending order, so the sorting has to come
+# from the code (PRIVATE=0bbb, PUBLIC=0aaa).
 #
-# 🔴 두 번째 그룹의 이름은 **인코딩이 필요한 이름**이다 — `_id_segment()` 의 `quote` 줄을 픽스처가
-#    실제로 타게 하려고 둔다(`app-asg` 하나만 있던 동안 그 줄은 한 번도 실행되지 않았다).
+# The name of the second group needs encoding. It is here so that the fixture
+#    actually reaches the `quote` line in `_id_segment()`; while `app-asg` was
+#    the only group, that line never ran.
 ASG_NAME_NEEDING_ENCODING = "team//prod app|asg"
 
 AUTO_SCALING_GROUPS: list[dict[str, Any]] = [
@@ -847,10 +901,13 @@ AUTO_SCALING_GROUPS: list[dict[str, Any]] = [
             }
         ],
     },
-    # 🔴 **인코딩 경로를 타는 이름**(리뷰 요청 2026-09-28). `app-asg` 하나만 있던 동안은
-    #    `_id_segment()` 가 `quote` 를 부르는 줄이 픽스처로 한 번도 실행되지 않았다 = 미측정.
-    #    한 이름에 세 축을 다 넣는다: `//`(빈 세그먼트 — `safe="/"` 로 되돌리면 스키마 위반) ·
-    #    공백 · `|`(남기면 `edge_id` 파싱 유일성이 깨진다). AWS 는 이 이름을 실제로 허용한다.
+    # A name that reaches the encoding path. While `app-asg` was the only
+    #    group, the line where `_id_segment()` calls `quote` never ran from a
+    #    fixture, which left it unmeasured.
+    #    One name covers all three cases: `//`, an empty segment, which
+    #    violates the schema if `safe="/"` is restored; a space; and `|`,
+    #    which breaks the uniqueness of `edge_id` parsing if it survives.
+    #    AWS does allow this name.
     {
         "AutoScalingGroupName": ASG_NAME_NEEDING_ENCODING,
         "AutoScalingGroupARN": (
@@ -865,9 +922,12 @@ AUTO_SCALING_GROUPS: list[dict[str, Any]] = [
     },
 ]
 
-# EKS 는 list_clusters 가 dict 가 아니라 **이름 문자열** 목록을 준다 → describe_cluster 로 상세를
-# 채운다(단일 객체 `{"cluster": {...}}`, 리스트가 아니라 pages() 로 못 읽는다). 🔴 status·health 를
-# 일부러 넣어 **수집기가 상태를 안 담는지** 잰다. subnet·SG 를 오름차순이 아닌 순서로 줘 정렬을 잰다.
+# For EKS, list_clusters returns a list of name strings rather than dicts, so
+# describe_cluster fills in the details. That returns a single object,
+# `{"cluster": {...}}`, not a list, so pages() cannot read it. status and health
+# are included on purpose, to measure that the collector does not carry state.
+# The subnets and security groups arrive out of ascending order, so the sorting
+# is measured.
 EKS_CLUSTER_NAME = "app-eks"
 EKS_CLUSTER_NAMES: list[str] = [EKS_CLUSTER_NAME]
 EKS_CLUSTERS: dict[str, dict[str, Any]] = {
@@ -885,17 +945,22 @@ EKS_CLUSTERS: dict[str, dict[str, Any]] = {
             "endpointPrivateAccess": True,
             "publicAccessCidrs": ["0.0.0.0/0"],
         },
-        # 🔴 수집기가 담으면 안 되는 상태값 — status·health.issues 는 시시각각 바뀐다(불변식 ②).
+        # State values the collector must not carry: status and health.issues
+        # change from moment to moment.
         "status": "ACTIVE",
         "health": {"issues": []},
     }
 }
 
-# Network Firewall 도 목록→상세다: list_firewalls 는 이름/ARN dict 만, describe_firewall 로 상세를
-# 채운다(단일 객체 {"Firewall": ..., "FirewallStatus": ...} → pages() 로 못 읽는다). 🔴 FirewallStatus
-# 안 SyncStates 는 배열이 아니라 **AZ 키 map**(§6)이고 그 안의 Status·상위 Status 는 시시각각 바뀌는
-# 상태다 → 수집기는 구조인 EndpointId(RT 조인 키 vpce-*)만 담고 Status 는 안 담아야 한다(불변식 ②).
-# SubnetMapping·SyncStates 를 오름차순이 아닌 순서로 줘 정렬이 코드에 있는지 잰다.
+# Network Firewall is list-then-describe as well: list_firewalls returns only
+# name and ARN dicts, and describe_firewall fills in the details. That returns a
+# single object, {"Firewall": ..., "FirewallStatus": ...}, so pages() cannot read
+# it. Inside FirewallStatus, SyncStates is a map keyed by AZ rather than an
+# array, and both the Status inside it and the Status above it change from
+# moment to moment. The collector must carry only EndpointId, which is
+# structure and the vpce-* join key for route tables, and not Status.
+# SubnetMapping and SyncStates arrive out of ascending order, so the sorting has
+# to come from the code.
 FW_NAME = "app-fw"
 FW_ARN = f"arn:aws:network-firewall:{REGION}:{ACCOUNT}:firewall/{FW_NAME}"
 FW_POLICY_ARN = (
@@ -920,7 +985,8 @@ NETWORK_FIREWALL_DETAILS: dict[str, dict[str, Any]] = {
             "DeleteProtection": True,
         },
         "FirewallStatus": {
-            # 🔴 수집기가 담으면 안 되는 상태값 — Status·per-AZ Status 는 시시각각 바뀐다(불변식 ②).
+            # State values the collector must not carry: Status and the
+            # per-AZ Status change from moment to moment.
             "Status": "READY",
             "SyncStates": {
                 "us-east-1b": {
@@ -942,11 +1008,14 @@ NETWORK_FIREWALL_DETAILS: dict[str, dict[str, Any]] = {
     }
 }
 
-# 후속 호출 — **부모 ARN 별**로 다른 응답을 준다(ELB 의 리스너·타깃 그룹, 「이음매 2」 참조 구현).
-# 🔴 `_DATASETS` 에 섞지 마라: RESOURCE_NODE_COUNT 가 리스너까지 세서 노드 수 어서션이 조용히
-# 거짓이 된다. 리스너는 노드가 아니라 LB 의 속성이다.
+# Follow-up calls, which answer differently per parent ARN. The listeners and
+# target groups of ELB are the reference case.
+# Do not mix these into `_DATASETS`: RESOURCE_NODE_COUNT would count the
+# listeners too and the node-count assertion would quietly become false.
+# A listener is an attribute of a load balancer, not a node.
 LISTENERS: dict[str, list[dict[str, Any]]] = {
-    # 일부러 포트 역순 + 8080 을 섞는다 — 문자열 정렬이면 "HTTP:8080" 이 "HTTP:80" 앞에 온다.
+    # The ports are deliberately in reverse order with 8080 mixed in: under a
+    # string sort, "HTTP:8080" comes before "HTTP:80".
     APP_ALB_ARN: [
         {
             "ListenerArn": f"{APP_ALB_ARN}/listener/https",
@@ -960,7 +1029,8 @@ LISTENERS: dict[str, list[dict[str, Any]]] = {
         },
         {"ListenerArn": f"{APP_ALB_ARN}/listener/http", "Protocol": "HTTP", "Port": 80},
     ],
-    # 리스너가 **없는** LB. 「없음(빈 배열)」과 「못 읽음(키 부재)」의 대조군이다.
+    # A load balancer with no listeners. This is the control case that
+    # separates none, an empty array, from could not read, a missing key.
     OLD_NLB_ARN: [],
 }
 
@@ -982,10 +1052,16 @@ TARGET_GROUPS: dict[str, list[dict[str, Any]]] = {
     OLD_NLB_ARN: [],
 }
 
-# W3② 대상 상태 — 타깃 그룹 ARN 으로 갈라진다. 기본 = green 정상 2 · blue 정상 1 + 등록 중 1(`initial` 은
-# 비정상이 아니다). 구조 수집이 **개수만**(등록 대상 수 · 사용자 결정 2026-10-16) · 상태 단이 같은 응답의 헬스를 센다.
-# 2.7.0(LB 대상 선 · ADR 0002 §8): 대상 정체도 쓴다 — `app-1`(i-…3333)은 두 그룹에 걸쳐 등록됐다(→ 선 하나 · 등록 2 ·
-# 포트 80·8080) · `bastion`(i-…2222) 하나 · i-…0004 는 수집하지 않은 인스턴스(→ 선 없음 · `unresolved_targets`).
+# Target health, split by target group ARN. By default green has two healthy
+# targets and blue has one healthy plus one still registering, since `initial`
+# is not unhealthy. Structure collection takes only the count, the number of
+# registered targets, while the state tier reads the health from the same
+# response.
+# Since 2.7.0 the target identities are used as well: `app-1` (i-…3333) is
+# registered in two groups, which produces one edge with two registrations on
+# ports 80 and 8080; `bastion` (i-…2222) appears once; and i-…0004 is an
+# instance that was not collected, which produces no edge and lands in
+# `unresolved_targets`.
 TARGET_HEALTH: dict[str, list[dict[str, Any]]] = {
     f"{APP_ALB_ARN}/tg/green": [
         {
@@ -1009,12 +1085,14 @@ TARGET_HEALTH: dict[str, list[dict[str, Any]]] = {
     ],
 }
 
-# ---- W2 7종 -------------------------------------------------------------------------------------
-# 🔴 모든 항목에 **수집기가 담으면 안 되는 상태값**을 일부러 넣는다(불변식 ②) — 담으면 test_services 가
-#    잡는다. id·서브넷·SG 를 오름차순이 아닌 순서로 줘 정렬이 코드에 있는지 잰다.
+# ---- Seven more resource types ---------------------------------------------
+# Every entry deliberately carries state values the collector must not pick up.
+#    If it does, test_services catches it. The ids, subnets and security groups
+#    arrive out of ascending order, so the sorting has to come from the code.
 
-# RDS — 응답에 서브넷이 없다. 서브넷 그룹 후보 중 AZ 가 맞는 것이 **하나**면 그것이 부모다.
-# PRIVATE_SUBNET 은 us-east-1b · PUBLIC_SUBNET 은 us-east-1a 다(SUBNETS).
+# RDS: the response carries no subnet. When exactly one subnet group candidate
+# matches the AZ, that one is the parent.
+# PRIVATE_SUBNET is in us-east-1b and PUBLIC_SUBNET in us-east-1a (see SUBNETS).
 RDS_INSTANCE = "app-db"
 RDS_STATE_LEAKS = ("backing-up", "2026-10-01T00:00:00Z")
 RDS_DB_INSTANCES: list[dict[str, Any]] = [
@@ -1050,9 +1128,12 @@ RDS_DB_INSTANCES: list[dict[str, Any]] = [
     }
 ]
 
-# #114(2.9.0) ElastiCache — 복제 그룹 하나(주·복제 클러스터 둘 · AZ 마다 서브넷 하나 → 각자 그 서브넷) + 다중 AZ Memcached
-# 하나(노드 둘 · 두 서브넷에 걸친다 → VPC + `subnet_ids`). 🔴 상태 값(`CacheClusterStatus`·`CurrentRole`)을 일부러 넣는다 —
-# 구조 문서에 새면 FAIL 해야 한다(`test_new_collectors.py`).
+# ElastiCache (2.9.0): one replication group, with a primary and a replica
+# cluster and one subnet per AZ, so each sits in its own subnet, plus one
+# multi-AZ Memcached cluster, whose two nodes span two subnets, so it sits on
+# the VPC with `subnet_ids`. The state values `CacheClusterStatus` and
+# `CurrentRole` are included on purpose: if they leak into the structure
+# document, `test_new_collectors.py` must fail.
 CACHE_GROUP = "app-cache-subnets"
 CACHE_RG = "app-redis"
 CACHE_PRIMARY = "app-redis-001"
@@ -1091,7 +1172,7 @@ def _cache(cid: str, engine: str, zones: list[str], **extra: Any) -> dict[str, A
     }
 
 
-# 일부러 id 오름차순이 아니다 — 정렬이 코드에 있는지 잰다.
+# Deliberately not in ascending id order, so the sorting is measured.
 ELASTICACHE_CLUSTERS: list[dict[str, Any]] = [
     _cache(CACHE_REPLICA, "valkey", ["us-east-1b"], ReplicationGroupId=CACHE_RG),
     _cache(CACHE_MEMCACHED, "memcached", ["us-east-1a", "us-east-1b"]),
@@ -1136,9 +1217,12 @@ CACHE_REPLICATION_GROUPS: list[dict[str, Any]] = [
     }
 ]
 
-# #114(2.9.0) Aurora/RDS DB 클러스터 — 멤버 0개인 Aurora 클러스터(실측 2026-10-20 의 모양 · 인스턴스 없이 클러스터만 있다).
-#   응답의 `DBSubnetGroup` 은 **이름 문자열**이다(인스턴스 응답과 다르다) → VPC 는 `DescribeDBSubnetGroups` 로 안다.
-#   🔴 상태 값(`Status`)·멤버 역할(`IsClusterWriter`)을 일부러 넣는다 — 구조 문서에 새면 FAIL.
+# Aurora and RDS DB clusters (2.9.0): an Aurora cluster with no members, a
+#   shape seen in a real account, where the cluster exists without instances.
+#   In this response `DBSubnetGroup` is a name string, unlike the instance
+#   response, so the VPC comes from `DescribeDBSubnetGroups`.
+#   The state value `Status` and the member role `IsClusterWriter` are included
+#   on purpose: if they leak into the structure document, the test must fail.
 DB_CLUSTER = "app-aurora"
 DB_CLUSTER_STATE_LEAKS = ("backing-up",)
 RDS_DB_CLUSTERS: list[dict[str, Any]] = [
@@ -1179,8 +1263,11 @@ DB_SUBNET_GROUPS: list[dict[str, Any]] = [
     }
 ]
 
-# #114(2.9.0) OpenSearch — VPC 도메인 하나(두 서브넷 · 영역 인식) + 공개 도메인 하나(VPCOptions 없음 = 고객 VPC 밖).
-#   목록은 이름만 · 상세는 `describe_domains`(5개씩). 🔴 상태 불리언(`Processing`·`UpgradeProcessing`)을 일부러 넣는다.
+# OpenSearch (2.9.0): one VPC domain, zone-aware across two subnets, and one
+#   public domain, which has no VPCOptions and therefore sits outside the
+#   customer VPC. The list carries names only and `describe_domains` fills in
+#   the details, five at a time. The state booleans `Processing` and
+#   `UpgradeProcessing` are included on purpose.
 OS_DOMAIN = "app-search"
 OS_PUBLIC = "public-logs"
 OS_STATE_LEAKS = ("DomainProcessingStatus",)
@@ -1230,8 +1317,11 @@ OPENSEARCH_DETAILS: dict[str, dict[str, Any]] = {
     },
 }
 
-# #114(2.9.0) MSK — 프로비저닝(브로커 둘 · 클라이언트 서브넷 둘) + 서버리스(VPC 설정 하나). 응답에 VPC 가 없다(부모 = 리전).
-#   🔴 상태(`State`)를 일부러 넣는다. 브로커 ENI 는 `ListNodes`(프로비저닝만) — 서버리스는 묻지 않는다.
+# MSK (2.9.0): one provisioned cluster, with two brokers in two client subnets,
+#   and one serverless cluster with a single VPC configuration. The response
+#   carries no VPC, so the parent is the Region. The state value `State` is
+#   included on purpose. Broker ENIs come from `ListNodes`, for provisioned
+#   clusters only; the serverless one is never asked.
 MSK_CLUSTER = "app-kafka"
 MSK_SERVERLESS = "app-kafka-sls"
 MSK_ARN = f"arn:aws:kafka:{REGION}:{ACCOUNT}:cluster/{MSK_CLUSTER}/0a1b2c3d-1111-2222-3333-4444aaaa5555-1"
@@ -1293,7 +1383,8 @@ MSK_NODES: dict[str, list[dict[str, Any]]] = {
     ]
 }
 
-# EIC — 서브넷 하나에 산다(EC2 인스턴스와 같은 부모 체인).
+# EC2 Instance Connect endpoints live in a single subnet, on the same parent
+# chain as an EC2 instance.
 EIC_ENDPOINT = "eice-0aaa1111bbbb2222"
 INSTANCE_CONNECT_ENDPOINTS: list[dict[str, Any]] = [
     {
@@ -1315,13 +1406,17 @@ INSTANCE_CONNECT_ENDPOINTS: list[dict[str, Any]] = [
     }
 ]
 
-# 2차 Site-to-Site VPN(2.6.0) — VGW 하나(앱 VPC 에 붙음) · CGW 하나 · 연결 둘(TGW 종단 · VGW 종단).
-# TGW 종단 연결의 id 는 위 TGW 어태치먼트(`ResourceType=vpn`)의 `ResourceId` 와 같다 — 그 엣지가 이 노드로 풀린다.
+# Site-to-Site VPN (2.6.0): one VGW, attached to the app VPC, one CGW, and two
+# connections, one terminating on the TGW and one on the VGW.
+# The id of the TGW-terminated connection equals the `ResourceId` of the TGW
+# attachment above, where `ResourceType=vpn`, so that edge resolves to this node.
 VGW = "vgw-0aaa1111bbbb4444"
 CGW = "cgw-0aaa1111bbbb5555"
 VPN_TGW = "vpn-0aaa1111bbbb3333"
 VPN_VGW = "vpn-0bbb2222cccc4444"
-# 🔴 비밀 표지 — 응답에 평문으로 오는 PSK·장비 설정 XML. 스냅샷 어디에도 나오면 안 된다(test_vpn).
+# Secret markers: the pre-shared key and the device configuration XML, which
+# arrive in the response as plain text. Neither may appear anywhere in a
+# snapshot (see test_vpn).
 VPN_SECRET = "PSK-must-not-leak-0x5ec7e7"  # pragma: allowlist secret
 VPN_GATEWAYS: list[dict[str, Any]] = [
     {
@@ -1332,7 +1427,8 @@ VPN_GATEWAYS: list[dict[str, Any]] = [
         "VpcAttachments": [{"VpcId": APP_VPC, "State": "attached"}],
         "Tags": [{"Key": "Name", "Value": "app-vgw"}],
     },
-    # 떨어진 VGW — 노드는 남고(부모 = 리전) VPC 선은 0
+    # A detached VGW: the node stays, with the Region as its parent, and it
+    # gets no VPC edge.
     {
         "VpnGatewayId": "vgw-0dead0000beef2222",
         "State": "available",
@@ -1353,8 +1449,10 @@ CUSTOMER_GATEWAYS: list[dict[str, Any]] = [
         "Tags": [{"Key": "Name", "Value": "onprem-cgw"}],
     }
 ]
-# Lambda 함수(2.8.0 · P2-6) — VPC 에 붙은 함수 하나(서브넷 하나) + 붙지 않은 함수 하나. 🔴 `LastModified`·`CodeSha256` 은
-#    배포마다 바뀌는 값이라 수집기가 담으면 안 된다(불변식 ②) — 일부러 넣는다.
+# Lambda functions (2.8.0): one attached to the VPC, in a single subnet, and
+#    one not attached. `LastModified` and `CodeSha256` change with every
+#    deployment, so the collector must not carry them; they are included on
+#    purpose.
 LAMBDA_FN_VPC = "orders-worker"
 LAMBDA_FN_PLAIN = "nightly-report"
 LAMBDA_STATE_LEAKS = ("2026-10-01T00:00:00.000+0000", "c2hhMjU2LWV4YW1wbGU=")
@@ -1405,7 +1503,8 @@ VPN_CONNECTIONS: list[dict[str, Any]] = [
             ],
         },
         "Routes": [],
-        # 상태 — 구조에는 싣지 않는다(상태 단 탐침만). 한 터널만 UP.
+        # State, which the structure document does not carry; only the state
+        # tier probes it. Just one tunnel is UP.
         "VgwTelemetry": [
             {
                 "OutsideIpAddress": "203.0.113.1",
@@ -1454,7 +1553,8 @@ VPN_CONNECTIONS: list[dict[str, Any]] = [
     },
 ]
 
-# TGW 라우트 테이블 — 연결·전파·경로는 테이블 id 로 갈라지는 후속 호출이다(`_FOLLOWUPS`).
+# TGW route tables. The associations, propagations and routes come from
+# follow-up calls that split by table id (see `_FOLLOWUPS`).
 TGW_ROUTE_TABLE = "tgw-rtb-0aaa1111bbbb2222"
 TGW_ROUTE_TABLES: list[dict[str, Any]] = [
     {
@@ -1481,7 +1581,8 @@ TGW_RT_ASSOCIATIONS: dict[str, list[dict[str, Any]]] = {
             "ResourceType": "vpc",
             "State": "associated",
         },
-        # 🔴 끊긴 연결 — 담으면 「이 VPC 가 이 표를 쓴다」가 거짓이 된다.
+        # A disassociated association. Carrying it would make "this VPC uses
+        # this table" false.
         {
             "TransitGatewayAttachmentId": "tgw-attach-0ccc3333dddd0000",
             "ResourceId": EGRESS_VPC,
@@ -1498,7 +1599,7 @@ TGW_RT_PROPAGATIONS: dict[str, list[dict[str, Any]]] = {
             "ResourceType": "vpc",
             "State": "enabled",
         },
-        # 🔴 꺼진 전파 — 경로를 알려 주지 않는다.
+        # A disabled propagation, which tells us nothing about the path.
         {
             "TransitGatewayAttachmentId": "tgw-attach-0bbb2222cccc9999",
             "ResourceId": "vpn-0aaa1111bbbb3333",
@@ -1537,12 +1638,17 @@ TGW_RT_ROUTES: dict[str, list[dict[str, Any]]] = {
     ]
 }
 
-# ECS — 목록은 **클러스터 ARN 문자열**이고 노드는 그 안의 서비스다(`ecs_service.enrich` 가 편다).
-# 🔴 클러스터당 서비스 **1개**로 둔다: RESOURCE_NODE_COUNT 가 목록 항목(클러스터) 수를 세므로 여럿을
-# 넣으면 노드 수 어서션이 조용히 어긋난다(EC2 예약과 같은 규칙). 여럿·10개 배치는 test_services 가 잰다.
-# 🔴 `list_clusters` 는 EKS 와 **메서드 이름이 같다** — 가짜는 한 객체로 두 서비스를 흉내 내므로
-#    `get_paginator("list_clusters")` 가 두 키(`clusters`·`clusterArns`)를 한 페이지에 같이 싣는다.
-#    각 수집기는 자기 `result_key` 만 읽는다(`base.dig`).
+# ECS: the list holds cluster ARN strings, and the nodes are the services
+# inside them, which `ecs_service.enrich` flattens out.
+# Each cluster holds exactly one service here, because RESOURCE_NODE_COUNT
+# counts list entries, that is clusters, and several would quietly break the
+# node-count assertion; this is the same rule as for EC2 reservations. The
+# cases with several services and with batches of ten are measured in
+# test_services.
+# `list_clusters` has the same method name as the EKS one. The fake imitates
+#    both services from a single object, so `get_paginator("list_clusters")`
+#    carries both keys, `clusters` and `clusterArns`, on one page.
+#    Each collector reads only its own `result_key` (see `base.dig`).
 ECS_CLUSTER = "app-ecs"
 ECS_CLUSTER_ARN = f"arn:aws:ecs:{REGION}:{ACCOUNT}:cluster/{ECS_CLUSTER}"
 ECS_SERVICE = "web"
@@ -1561,9 +1667,14 @@ ECS_SERVICES: dict[str, dict[str, Any]] = {
         "desiredCount": 2,
         "taskDefinition": f"arn:aws:ecs:{REGION}:{ACCOUNT}:{ECS_STATE_LEAKS[1]}",
         "deployments": [{"status": ECS_STATE_LEAKS[0], "runningCount": 2}],
-        # 🔵 2.8.0 — 서비스가 든 대상 그룹은 이 세계의 LB 에 없다(다른 계정·수집 범위 밖 LB 의 그룹). 그룹을 든 ECS 서비스는
-        #    그 그룹의 등록을 전부 가져간다(`lb_targets._Index.claimer`) — 예전처럼 `blue`(instance 대상)를 들면 Fargate 가
-        #    가질 수 없는 인스턴스 등록이 이 서비스 선이 된다(AWS 에 없는 모양). LB → ECS 선은 `lbt_world.py` 가 잰다.
+        # The target group this service holds belongs to no load balancer in
+        #    this world; it is the group of a load balancer in another account
+        #    or outside the collection scope. An ECS service that holds a group
+        #    claims every registration in it (see `lb_targets._Index.claimer`).
+        #    If it held `blue`, which has instance targets, instance
+        #    registrations that Fargate cannot own would become edges of this
+        #    service, a shape that does not exist in AWS. The load balancer to
+        #    ECS edges are measured in `lbt_world.py`.
         "loadBalancers": [
             {
                 "targetGroupArn": f"arn:aws:elasticloadbalancing:{REGION}:{ACCOUNT}:targetgroup/web-ecs/0f1e2d3c4b5a6999",
@@ -1581,7 +1692,8 @@ ECS_SERVICES: dict[str, dict[str, Any]] = {
     }
 }
 
-# SageMaker 3종 — 목록에는 네트워크가 없고 상세(직접 호출)에 있다.
+# Three SageMaker resource types. The list carries no network information; the
+# details, read with a direct call, do.
 SM_NOTEBOOK = "app-notebook"
 SM_NOTEBOOKS: list[dict[str, Any]] = [
     {
@@ -1640,7 +1752,8 @@ SM_ENDPOINT_DETAILS: dict[str, dict[str, Any]] = {
 SM_ENDPOINT_CONFIGS: dict[str, dict[str, Any]] = {
     "app-infer-cfg": {
         "EndpointConfigName": "app-infer-cfg",
-        # 모델 둘 — 서브넷·SG 를 **합친다**. 역순으로 둬 정렬을 잰다.
+        # Two models, whose subnets and security groups are merged. They are
+        # in reverse order, so the sorting is measured.
         "ProductionVariants": [
             {"VariantName": "b", "ModelName": "app-model-b"},
             {"VariantName": "a", "ModelName": "app-model-a"},
@@ -1658,9 +1771,12 @@ SM_MODELS: dict[str, dict[str, Any]] = {
     },
 }
 
-# (kwarg 이름, describe 메서드, 응답 키, 부모 kwarg, 기본 픽스처)
-# Route 53(2.8.0 · P2-4) — 공개 영역 하나(별칭: www → app-alb · cdn → CloudFront · 꼴이 아닌 별칭 하나) + 사설 영역 하나(app VPC).
-#   🔴 레코드 값(IP·CNAME)은 수집기가 담으면 안 된다(민감) — 일부러 평범한 A 레코드 값을 넣는다.
+# (kwarg name, describe method, response key, parent kwarg, default fixture)
+# Route 53 (2.8.0): one public zone, whose aliases are www to app-alb, cdn to
+#   CloudFront, and one alias in a form we do not recognize, plus one private
+#   zone on the app VPC.
+#   Record values such as IPs and CNAMEs are sensitive, so the collector must
+#   not carry them; an ordinary A record value is included on purpose.
 ZONE_PUBLIC = "Z0AAA1111BBBB2222"
 ZONE_PRIVATE = "Z0BBB2222CCCC3333"
 ZONE_LEAK = "203.0.113.77"
@@ -1740,9 +1856,14 @@ ZONE_DETAILS: dict[str, dict[str, Any]] = {
     },
 }
 
-# 배치 D(스키마 2.10.0) — 관리형 접두사 목록(`DescribeManagedPrefixLists` · 노드가 아니다 = `_REGIONAL`) + 고객 관리형 목록의 항목
-#   (`GetManagedPrefixListEntries` · `PrefixListId` 로 갈린다 = `_FOLLOWUPS`). 기본 세계의 앱 퍼블릭 테이블이 `pl-0aaa1111bbbb2222`(S3) 로
-#   게이트웨이 엔드포인트에 간다 — AWS 관리형이라 항목을 묻지 않는다. 고객 관리형 `corp-onprem` 은 쓰는 테이블이 없다(쓰지 않는 목록의 항목을 묻지 않는지를 잰다).
+# Schema 2.10.0: managed prefix lists from `DescribeManagedPrefixLists`, which
+#   are not nodes and so live in `_REGIONAL`, plus the entries of
+#   customer-managed lists from `GetManagedPrefixListEntries`, which split by
+#   `PrefixListId` and so live in `_FOLLOWUPS`. In the default world the app
+#   public table reaches a gateway endpoint through `pl-0aaa1111bbbb2222`, the
+#   S3 list; being AWS-managed, its entries are never asked for. No table uses
+#   the customer-managed `corp-onprem`, which measures whether the entries of
+#   an unused list are left alone.
 PL_S3 = "pl-0aaa1111bbbb2222"
 PL_CORP = "pl-0ccc3333dddd4444"
 MANAGED_PREFIX_LISTS: list[dict[str, Any]] = [
@@ -1772,7 +1893,8 @@ PREFIX_LIST_ENTRIES: dict[str, list[dict[str, Any]]] = {
     ]
 }
 
-# 배치 D(2.10.0) — 탄력적 IP 둘: bastion 인스턴스에 붙은 것 · 어디에도 안 붙은 것(왼쪽 아래 「!」 목록)
+# Two Elastic IPs (2.10.0): one associated with the bastion instance and one
+# associated with nothing, which appears in the warnings list.
 EIP_BASTION = "eipalloc-0aaa1111bbbb2222"
 EIP_IDLE = "eipalloc-0bbb2222cccc3333"
 ELASTIC_IPS: list[dict[str, Any]] = [
@@ -1798,14 +1920,16 @@ ELASTIC_IPS: list[dict[str, Any]] = [
     },
 ]
 
-# 2.13.0(정보창 개편 · 사용자 결정 2026-10-24) — 콘솔이 보여 주는 라우팅 쪽 값.
-#   DHCP 옵션 세트(쌍 하나에 한 번 · `DescribeDhcpOptions`) — 두 VPC 가 같은 세트를 쓴다(기본 세트 모양)
+# The routing values the console shows (2.13.0).
+#   The DHCP options set, read once per pair with `DescribeDhcpOptions`. Both
+#   VPCs use the same set, which is the shape of the default set.
 DHCP_OPTIONS_ID = "dopt-0aaa1111bbbb2222"
 DHCP_OPTIONS: list[dict[str, Any]] = [
     {
         "DhcpOptionsId": DHCP_OPTIONS_ID,
         "OwnerId": ACCOUNT,
-        # 일부러 키 순서를 뒤집었다 — 정렬이 코드에 있는지
+        # The keys are deliberately reversed, so the sorting has to come from
+        # the code.
         "DhcpConfigurations": [
             {"Key": "domain-name-servers", "Values": [{"Value": "AmazonProvidedDNS"}]},
             {"Key": "domain-name", "Values": [{"Value": "ec2.internal"}]},
@@ -1813,12 +1937,15 @@ DHCP_OPTIONS: list[dict[str, Any]] = [
         "Tags": [],
     }
 ]
-# VPC id → `DescribeVpcAttribute` 의 두 값(목록 응답에 없다 · VPC 마다 2번). egress 는 DNS 호스트 이름을 껐다(콘솔 기본값 = 꺼짐)
+# VPC id to the two values from `DescribeVpcAttribute`, which the list response
+# does not carry, read twice per VPC. The egress VPC has DNS hostnames turned
+# off, which is the console default.
 VPC_DNS: dict[str, dict[str, bool]] = {
     APP_VPC: {"enableDnsSupport": True, "enableDnsHostnames": True},
     EGRESS_VPC: {"enableDnsSupport": True, "enableDnsHostnames": False},
 }
-# VPC 어태치먼트 상세(쌍 하나에 한 번 · `DescribeTransitGatewayVpcAttachments`) — 서브넷을 일부러 역순으로
+# The VPC attachment details, read once per pair with
+# `DescribeTransitGatewayVpcAttachments`. The subnets are deliberately reversed.
 TGW_VPC_ATTACHMENTS: list[dict[str, Any]] = [
     {
         "TransitGatewayAttachmentId": "tgw-attach-0aaa1111bbbb8888",
@@ -1844,7 +1971,8 @@ TGW_VPC_ATTACHMENTS: list[dict[str, Any]] = [
         "Options": {"DnsSupport": "enable", "ApplianceModeSupport": "enable"},
     },
 ]
-# TGW 라우팅 테이블 → 접두사 목록 참조(`GetTransitGatewayPrefixListReferences` · 표 id 로 갈린다)
+# TGW route table to its prefix list references, from
+# `GetTransitGatewayPrefixListReferences`, which splits by table id.
 TGW_RT_PREFIX_REFERENCES: dict[str, list[dict[str, Any]]] = {
     TGW_ROUTE_TABLE: [
         {
@@ -1907,7 +2035,7 @@ _FOLLOWUPS: tuple[tuple[str, str, str, str, dict[str, list[dict[str, Any]]]], ..
         "TransitGatewayRouteTableId",
         TGW_RT_ROUTES,
     ),
-    # 2.13.0 — 콘솔 「접두사 목록 참조」 탭
+    # The console's prefix list references tab (2.13.0).
     (
         "tgw_rt_prefix_references",
         "get_transit_gateway_prefix_list_references",
@@ -1915,9 +2043,9 @@ _FOLLOWUPS: tuple[tuple[str, str, str, str, dict[str, list[dict[str, Any]]]], ..
         "TransitGatewayRouteTableId",
         TGW_RT_PREFIX_REFERENCES,
     ),
-    # #114(2.9.0) — MSK 프로비저닝 클러스터의 브로커(ENI id)
+    # The brokers of the provisioned MSK cluster, by ENI id (2.9.0).
     ("msk_nodes", "list_nodes", "NodeInfoList", "ClusterArn", MSK_NODES),
-    # 배치 D(2.10.0) — 고객 관리형 접두사 목록의 항목
+    # The entries of a customer-managed prefix list (2.10.0).
     (
         "prefix_list_entries",
         "get_managed_prefix_list_entries",
@@ -1925,13 +2053,17 @@ _FOLLOWUPS: tuple[tuple[str, str, str, str, dict[str, list[dict[str, Any]]]], ..
         "PrefixListId",
         PREFIX_LIST_ENTRIES,
     ),
-    # 배치 D — API Gateway REST 의 리소스(embed=methods) · HTTP API 의 통합 · RDS 프록시 대상 · GA 리스너·엔드포인트 그룹(기본 세계 = 없음)
+    # The resources of a REST API (embed=methods), the integrations of an HTTP
+    # API, RDS proxy targets, and Global Accelerator listeners and endpoint
+    # groups, none of which the default world holds.
     ("rest_resources", "get_resources", "items", "restApiId", {}),
     ("v2_integrations", "get_integrations", "Items", "ApiId", {}),
     ("proxy_targets", "describe_db_proxy_targets", "Targets", "DBProxyName", {}),
     ("ga_listeners", "list_listeners", "Listeners", "AcceleratorArn", {}),
     ("ga_endpoint_groups", "list_endpoint_groups", "EndpointGroups", "ListenerArn", {}),
-    # #129 — Cloud WAN 연결 · Lattice 서비스 네트워크의 VPC·서비스 연관 · 대상 그룹의 등록 대상(기본 세계 = 없음)
+    # Cloud WAN attachments, the VPC and service associations of a Lattice
+    # service network, and the registered targets of a target group, none of
+    # which the default world holds.
     ("cwan_attachments", "list_attachments", "Attachments", "CoreNetworkId", {}),
     (
         "sn_vpc_associations",
@@ -1950,14 +2082,18 @@ _FOLLOWUPS: tuple[tuple[str, str, str, str, dict[str, list[dict[str, Any]]]], ..
     ("lattice_targets", "list_targets", "items", "targetGroupIdentifier", {}),
 )
 
-# 후속 호출이 **반드시** 받아야 하는 인자 — 실제 API 가 그것 없이 부르면 거부한다.
-# 🔴 `search_transit_gateway_routes` 는 `Filters` 가 필수다(없으면 InvalidParameterValue). 가짜가
-#    친절하게 받아 주면 실계정에서만 터진다.
+# Arguments a follow-up call must receive, because the real API rejects the
+# call without them.
+# `search_transit_gateway_routes` requires `Filters`; without it the API answers
+#    InvalidParameterValue. If the fake accepted the call anyway, the failure
+#    would only surface against a real account.
 _REQUIRED_KWARGS: dict[str, str] = {"search_transit_gateway_routes": "Filters"}
 
-# (kwarg 이름, describe 메서드, 응답 키, 기본 픽스처)
-# 🔴 EKS 는 목록이 **이름 문자열**이라 마지막 자리가 list[str] 다(다른 종류는 list[dict]).
-#    그래서 항목 타입을 넓게 잡는다 — RESOURCE_NODE_COUNT 는 len() 만 세므로 무관하다.
+# (kwarg name, describe method, response key, default fixture)
+# For EKS the list holds name strings, so the last position is a list[str]
+#    rather than the list[dict] every other type uses. The item type is
+#    therefore kept wide. RESOURCE_NODE_COUNT only takes len(), so this makes
+#    no difference to it.
 _DATASETS: tuple[tuple[str, str, str, list[Any]], ...] = (
     ("vpcs", "describe_vpcs", "Vpcs", VPCS),
     ("subnets", "describe_subnets", "Subnets", SUBNETS),
@@ -2021,7 +2157,8 @@ _DATASETS: tuple[tuple[str, str, str, list[Any]], ...] = (
     (
         "cloudfront_distributions",
         "list_distributions",
-        # 🔴 점이 있는 키 — `_Pages` 가 이 표기를 보고 **실제로 중첩된** 페이지를 만든다.
+        # A key containing a dot. `_Pages` reads that notation and builds a
+        # genuinely nested page.
         "DistributionList.Items",
         CLOUDFRONT_DISTRIBUTIONS,
     ),
@@ -2032,7 +2169,8 @@ _DATASETS: tuple[tuple[str, str, str, list[Any]], ...] = (
         TGW_ROUTE_TABLES,
     ),
     ("rds_instances", "describe_db_instances", "DBInstances", RDS_DB_INSTANCES),
-    # 🔴 메서드 자리에 `#ecs` 가 붙은 이유 = EKS 와 이름이 같다(`get_paginator` 가 두 키를 합친다).
+    # `#ecs` is appended in the method position because the name collides with
+    # the EKS one, and `get_paginator` merges the two keys.
     ("ecs_clusters", "list_clusters#ecs", "clusterArns", ECS_CLUSTER_ARNS),
     ("sm_notebooks", "list_notebook_instances", "NotebookInstances", SM_NOTEBOOKS),
     ("sm_domains", "list_domains", "Domains", SM_DOMAINS),
@@ -2053,7 +2191,7 @@ _DATASETS: tuple[tuple[str, str, str, list[Any]], ...] = (
     ("vpn_connections", "describe_vpn_connections", "VpnConnections", VPN_CONNECTIONS),
     ("lambda_functions", "list_functions", "Functions", LAMBDA_FUNCTIONS),
     ("hosted_zones", "list_hosted_zones", "HostedZones", HOSTED_ZONES),
-    # #114(2.9.0) — VPC 안 IP 를 쓰는 서비스.
+    # Services that use an IP inside the VPC (2.9.0).
     (
         "elasticache_clusters",
         "describe_cache_clusters",
@@ -2063,21 +2201,28 @@ _DATASETS: tuple[tuple[str, str, str, list[Any]], ...] = (
     ("rds_clusters", "describe_db_clusters", "DBClusters", RDS_DB_CLUSTERS),
     ("opensearch_domains", "list_domain_names", "DomainNames", OPENSEARCH_DOMAIN_NAMES),
     ("msk_clusters", "list_clusters_v2", "ClusterInfoList", MSK_CLUSTERS),
-    # 배치 D(2.10.0) — 탄력적 IP(기본 둘) · API Gateway REST·HTTP · RDS 프록시 · Global Accelerator(기본 세계 = 없음 · `rel_world.py` 가 채운다)
+    # Elastic IPs, two by default, REST and HTTP API Gateway, RDS proxies, and
+    # Global Accelerator (2.10.0). The default world holds no accelerator;
+    # `rel_world.py` fills that in.
     ("elastic_ips", "describe_addresses", "Addresses", ELASTIC_IPS),
     ("rest_apis", "get_rest_apis", "items", []),
     ("http_apis", "get_apis", "Items", []),
     ("db_proxies", "describe_db_proxies", "DBProxies", []),
     ("accelerators", "list_accelerators", "Accelerators", []),
-    # #129(2.11.0) — Cloud WAN 코어 네트워크 · VPC Lattice 서비스 네트워크 · 서비스(기본 세계 = 없음 · `rel_world.py` 가 채운다)
-    # 🔴 `#lattice` = ECS 후속 호출 `list_services`(cluster=…)와 메서드 이름이 같다 — `cluster` 없이 부르면 이 목록이다(`_ByCluster`)
+    # Cloud WAN core networks and VPC Lattice service networks and services
+    # (2.11.0). The default world holds none; `rel_world.py` fills them in.
+    # `#lattice` marks a name collision with the ECS follow-up call
+    # `list_services(cluster=…)`. Called without `cluster`, it returns this
+    # list instead (see `_ByCluster`).
     ("core_networks", "list_core_networks", "CoreNetworks", []),
     ("service_networks", "list_service_networks", "items", []),
     ("lattice_services", "list_services#lattice", "items", []),
 )
 
-# 노드가 되지 않는 **리전 단위** 후속 목록(서브넷 그룹·복제 그룹 …) — 페이지네이터로 한 번에 읽는다. `_DATASETS` 밖이라
-# `RESOURCE_NODE_COUNT` 가 세지 않는다. 거부는 `errors={메서드: 예외}` 로 넣는다(목록 호출과 같은 문).
+# Region-wide follow-up lists that never become nodes, such as subnet groups
+# and replication groups, read in one go through a paginator. They sit outside
+# `_DATASETS`, so `RESOURCE_NODE_COUNT` does not count them. A denial is
+# injected with `errors={method: exception}`, the same way as for a list call.
 _REGIONAL: tuple[tuple[str, str, str, list[Any]], ...] = (
     (
         "cache_subnet_groups",
@@ -2097,14 +2242,17 @@ _REGIONAL: tuple[tuple[str, str, str, list[Any]], ...] = (
         "DBSubnetGroups",
         DB_SUBNET_GROUPS,
     ),
-    # 배치 D(2.10.0) — 이 계정이 보는 관리형 접두사 목록 전부(AWS 관리형 + 고객 관리형)
+    # Every managed prefix list this account can see, both AWS-managed and
+    # customer-managed (2.10.0).
     (
         "managed_prefix_lists",
         "describe_managed_prefix_lists",
         "PrefixLists",
         MANAGED_PREFIX_LISTS,
     ),
-    # #129(2.11.0) — TGW Connect · 그 GRE 피어(쌍 하나에 한 번 · 기본 세계 = 없음) · Lattice 대상 그룹(쌍 하나에 한 번)
+    # TGW Connect attachments, their GRE peers, read once per pair, and Lattice
+    # target groups, also once per pair (2.11.0). The default world holds no
+    # GRE peers.
     (
         "tgw_connects",
         "describe_transit_gateway_connects",
@@ -2118,7 +2266,8 @@ _REGIONAL: tuple[tuple[str, str, str, list[Any]], ...] = (
         [],
     ),
     ("lattice_target_groups", "list_target_groups", "items", []),
-    # 2.13.0(정보창 개편) — DHCP 옵션 세트 · VPC 어태치먼트 상세(쌍 하나에 한 번)
+    # The DHCP options set and the VPC attachment details, read once per pair
+    # (2.13.0).
     ("dhcp_options", "describe_dhcp_options", "DhcpOptions", DHCP_OPTIONS),
     (
         "tgw_vpc_attachments",
@@ -2128,22 +2277,32 @@ _REGIONAL: tuple[tuple[str, str, str, list[Any]], ...] = (
     ),
 )
 
-# 컨테이너 2개(account·region)를 뺀 「1계정 1리전에서 나와야 하는 리소스 노드 수」.
+# The number of resource nodes one account in one Region must produce, with the
+# two container nodes (account and region) left out.
 RESOURCE_NODE_COUNT = sum(len(items) for _, _, _, items in _DATASETS)
 
 
 def client_error(
     code: str, operation: str, message: str = "재현용 오류"
 ) -> ClientError:
+    """Build a ClientError for the fakes to raise.
+
+    The default message stays in Korean on purpose. It reaches the reason text
+    of a denied read, and `fixtures/relations.json` carries that text; a test
+    compares the fixture byte for byte, and the renderer harness reads it.
+    Translating this string would mean regenerating that fixture.
+    """
     return ClientError({"Error": {"Code": code, "Message": message}}, operation)
 
 
 def _nest(key: str, items: list[Any]) -> dict[str, Any]:
-    """점으로 끊은 경로대로 **실제로 중첩된** 페이지를 만든다.
+    """Build a genuinely nested page, following a path split on dots.
 
-    🔴 여기서 평평하게 만들면 `base.dig()` 의 중첩 지원이 **미측정**이 된다 — 가짜가 진짜와
-    다른 모양을 주면 검사는 가짜의 문법을 재는 것이다(2026-09-23 fixtures 사고와 같은 종류).
-    CloudFront `list_distributions` 는 `{"DistributionList": {"Items": [...]}}` 를 준다.
+    Flattening it here would leave the nesting support in `base.dig()`
+    unmeasured. When the fake hands back a shape the real API does not use, the
+    checks end up measuring the fake's own grammar.
+    CloudFront `list_distributions` answers with
+    `{"DistributionList": {"Items": [...]}}`.
     """
     page: Any = items
     for part in reversed(key.split(".")):
@@ -2157,7 +2316,8 @@ class _Pages:
         self._items = items
 
     def paginate(self, **_: Any) -> list[dict[str, Any]]:
-        # 페이지를 2장으로 쪼갠다 — 병합을 빼먹으면 개수 어서션이 깨진다.
+        # Split into two pages, so that a missing merge breaks the count
+        # assertion.
         middle = len(self._items) // 2
         return [
             _nest(self._key, self._items[:middle]),
@@ -2166,11 +2326,14 @@ class _Pages:
 
 
 class _MergedPages:
-    """메서드 이름이 같은 두 서비스(EKS·ECS 의 `list_clusters`)를 한 가짜가 흉내 낼 때 쓴다.
+    """Used when one fake imitates two services that share a method name, as
+    EKS and ECS do with `list_clusters`.
 
-    각 장에 두 키를 **같이** 싣는다 — 수집기는 자기 `result_key` 만 읽으므로 서로의 항목을 못 본다.
-    🔴 실제 응답은 한 키만 준다. 그래서 이 합침은 「상대 키를 읽어 버리는」 결함은 못 잡는다 —
-       그것은 `test_services` 가 서비스별 결과 수로 잰다.
+    Every page carries both keys at once. A collector reads only its own
+    `result_key`, so it never sees the other one's items.
+    A real response carries just one key, so this merge cannot catch a defect
+       where a collector reads the other key. `test_services` measures that
+       instead, through the result count per service.
     """
 
     def __init__(self, parts: list[tuple[str, list[Any]]]) -> None:
@@ -2195,7 +2358,9 @@ class _Raises:
 
 
 class _Keyed:
-    """부모 ARN 으로 갈라지는 응답 — 후속 호출용. LB 별로 다른 결과·다른 실패를 줄 수 있다."""
+    """A response that splits by parent ARN, for follow-up calls. It can hand
+    back a different result, and a different failure, per load balancer.
+    """
 
     def __init__(
         self,
@@ -2211,28 +2376,32 @@ class _Keyed:
     def paginate(self, **kwargs: Any) -> list[dict[str, Any]]:
         parent = kwargs.get(self._kwarg)
         if parent is None:
-            # 전체를 훑어 오면 LB 별 귀속이 거짓이 된다 — 조용히 답하지 않는다.
-            raise AssertionError(f"{self._method} 를 {self._kwarg} 없이 불렀다")
+            # Sweeping everything would make the per-load-balancer attribution
+            # false, so this does not answer quietly.
+            raise AssertionError(f"{self._method} was called without {self._kwarg}")
         required = _REQUIRED_KWARGS.get(self._method)
         if required is not None and not kwargs.get(required):
             raise client_error("InvalidParameterValue", self._method)
         if parent in self._errors:
             raise self._errors[parent]
-        # 등록하지 않은 부모는 0개 — 실제 AWS 도 리스너 없는 LB 에 빈 목록을 준다.
+        # A parent that was never registered has none. Real AWS also answers
+        # with an empty list for a load balancer with no listeners.
         return [{self._key: self._data.get(parent, [])}]
 
 
 class _FilteredPages:
-    """`Filters` 를 실제처럼 적용하는 페이지 — `describe_network_interfaces` 용(W3②).
+    """A page that applies `Filters` the way the real API does, for
+    `describe_network_interfaces`.
 
-    🔴 가짜가 필터를 무시하면 「다른 VPC 의 ENI 로 좁혔다」가 테스트에서 안 보인다.
+    If the fake ignored the filters, a narrowing down to the ENIs of another
+    VPC would be invisible to the tests.
     """
 
     _FIELDS = {
         "requester-id": "RequesterId",
         "vpc-id": "VpcId",
         "availability-zone": "AvailabilityZone",
-        # 2.8.0(P2-2) — 라우트의 `eni-` 대상을 id 로 묻는다
+        # Ask about the `eni-` target of a route by its id (2.8.0).
         "network-interface-id": "NetworkInterfaceId",
     }
 
@@ -2241,7 +2410,9 @@ class _FilteredPages:
 
     @staticmethod
     def _addresses(eni: dict[str, Any]) -> set[str]:
-        # `addresses.private-ip-address` = 주 IP + 보조 IP 전부(AWS 필터 정의 그대로 — EKS 파드 IP 는 보조 IP 다)
+        # `addresses.private-ip-address` covers the primary IP and every
+        # secondary one, exactly as the AWS filter is defined. An EKS pod IP is
+        # a secondary IP.
         return {str(eni.get("PrivateIpAddress") or "")} | {
             str(p.get("PrivateIpAddress") or "")
             for p in eni.get("PrivateIpAddresses") or []
@@ -2249,8 +2420,11 @@ class _FilteredPages:
 
     def paginate(self, **kwargs: Any) -> list[dict[str, Any]]:
         filters = kwargs.get("Filters")
-        if not filters:  # 계정 전체 ENI 를 훑으면 대형 계정에서 느리고 귀속도 못 한다
-            raise AssertionError("describe_network_interfaces 를 Filters 없이 불렀다")
+        if not filters:  # sweeping every ENI in the account is slow in a large
+            # account and leaves nothing to attribute them to
+            raise AssertionError(
+                "describe_network_interfaces was called without Filters"
+            )
 
         def hit(e: dict[str, Any], f: dict[str, Any]) -> bool:
             if f["Name"] == "addresses.private-ip-address":
@@ -2262,7 +2436,9 @@ class _FilteredPages:
 
 
 class _ByCluster:
-    """`list_services` — ECS 는 `cluster=…` 로, VPC Lattice 는 인자 없이 부른다(#129). 인자로 두 가짜를 가른다."""
+    """`list_services`, which ECS calls with `cluster=…` and VPC Lattice calls
+    with no arguments. The arguments tell the two fakes apart.
+    """
 
     def __init__(self, ecs: Any, lattice: Any) -> None:
         self._ecs, self._lattice = ecs, lattice
@@ -2272,7 +2448,10 @@ class _ByCluster:
 
 
 class FakeAws:
-    """1차 12종 + Direct Connect 3종의 `describe_*` 를 아는 가짜 클라이언트(ec2 · elbv2 · directconnect 겸용)."""
+    """A fake client that knows the `describe_*` calls of the first twelve
+    resource types and the three Direct Connect ones. It stands in for ec2,
+    elbv2 and directconnect alike.
+    """
 
     def __init__(
         self,
@@ -2311,8 +2490,9 @@ class FakeAws:
             | {name for name, _, _, _ in _REGIONAL}
         )
         unknown = set(overrides) - known
-        if unknown:  # 오타 난 kwarg 가 조용히 무시되면 「기본 픽스처로 통과」가 된다
-            raise TypeError(f"모르는 데이터셋: {sorted(unknown)}")
+        if unknown:  # a misspelled kwarg that is ignored quietly turns into a
+            # pass against the default fixture
+            raise TypeError(f"unknown dataset: {sorted(unknown)}")
         self._data = {
             method: (key, default if overrides.get(name) is None else overrides[name])
             for name, method, key, default in _DATASETS
@@ -2330,78 +2510,112 @@ class FakeAws:
             for name, method, key, default in _REGIONAL
         }
         self._errors = errors or {}
-        # ResourceArn → web ACL. `{}` 를 주면 「어느 ALB 에도 안 붙었다」를 잰다(기본은 ALB 하나에 붙음).
+        # ResourceArn to web ACL. Passing `{}` measures the case where nothing
+        # is attached to any ALB; by default one ALB has one attached.
         self._web_acls = WEB_ACLS if web_acls is None else web_acls
-        # (메서드, 부모 ARN) → 예외. **한 LB 의 후속 호출만** 거부되는 경우를 만드는 데 쓴다.
+        # (method, parent ARN) to exception, used to build the case where only
+        # one load balancer's follow-up call is denied.
         self._followup_errors = followup_errors or {}
-        # W3② — 노드가 되지 않는 응답이라 `_DATASETS` 밖이다(노드 수 어서션이 안 센다).
+        # This response never becomes a node, so it sits outside `_DATASETS`
+        # and the node-count assertion does not count it.
         self._enis = list(network_interfaces or [])
         self._target_health = (
             TARGET_HEALTH if target_health is None else dict(target_health)
         )
-        # 서비스 ARN → `DescribeServices` 항목(LB 대상 선 2.7.0 — 대상 그룹을 든 ECS 서비스를 바꿔 끼운다)
+        # Service ARN to a `DescribeServices` entry (2.7.0), used to swap in
+        # the ECS service that holds a target group.
         self._ecs = ECS_SERVICES if ecs_details is None else dict(ecs_details)
-        # 2.8.0 — 이 계정이 **제공하는** 엔드포인트 서비스 구성(GWLB·NLB 뒤 · `DescribeVpcEndpointServiceConfigurations`).
-        #   노드가 되지 않는 응답이라 `_DATASETS` 밖이다. 기본 = 없음(기본 세계의 LB 는 엔드포인트 서비스 뒤에 있지 않다).
+        # The endpoint service configurations this account provides, sitting
+        #   behind a GWLB or an NLB, from
+        #   `DescribeVpcEndpointServiceConfigurations` (2.8.0). The response
+        #   never becomes a node, so it sits outside `_DATASETS`. There are
+        #   none by default, because no load balancer in the default world sits
+        #   behind an endpoint service.
         self._endpoint_services = list(endpoint_services or [])
-        # Network Firewall 상세(`describe_firewall`) — 기본 = 모듈의 `NETWORK_FIREWALL_DETAILS`(다른 세계가 바꿔 끼운다)
+        # The Network Firewall details from `describe_firewall`, which default
+        # to the module's `NETWORK_FIREWALL_DETAILS`; other worlds swap them.
         self._firewall_details = (
             NETWORK_FIREWALL_DETAILS
             if firewall_details is None
             else dict(firewall_details)
         )
-        # 2.8.0(P2-1) — 소비자 쪽 엔드포인트 서비스 이름 → 주인 계정(`DescribeVpcEndpointServices`). 기본 = 없음(이름을 물으면
-        #   AWS 처럼 `InvalidServiceName`)
+        # The consumer-side endpoint service name to its owner account, from
+        #   `DescribeVpcEndpointServices` (2.8.0). There are none by default,
+        #   and asking for a name answers `InvalidServiceName`, as AWS does.
         self._consumer_services = dict(consumer_services or {})
-        # Route 53 사설 영역 상세(`get_hosted_zone`) — 기본 = 모듈의 `ZONE_DETAILS`
+        # The Route 53 private zone details from `get_hosted_zone`, which
+        # default to the module's `ZONE_DETAILS`.
         self._zones = ZONE_DETAILS if zone_details is None else dict(zone_details)
-        # CloudFront VPC 원본(2.8.0 · P2-3 · `list_vpc_origins` — 페이지네이터 없음 · Marker) — 기본 = 없음
+        # CloudFront VPC origins from `list_vpc_origins` (2.8.0), which has no
+        # paginator and uses Marker. There are none by default.
         self._vpc_origins = list(vpc_origins or [])
-        # 2.8.0(P2-5) — 대상 그룹 ARN → 태그(`elbv2:DescribeTags`). 기본 = 태그 없음
+        # Target group ARN to its tags, from `elbv2:DescribeTags` (2.8.0).
+        # There are no tags by default.
         self._tg_tags = dict(tg_tags or {})
-        # EKS 상세(`describe_cluster`) — 기본 = 모듈의 `EKS_CLUSTERS`
+        # The EKS details from `describe_cluster`, which default to the
+        # module's `EKS_CLUSTERS`.
         self._eks = EKS_CLUSTERS if eks_details is None else dict(eks_details)
-        # 도메인 이름 → `DescribeDomains` 항목(#114 · OpenSearch)
+        # Domain name to a `DescribeDomains` entry, for OpenSearch.
         self._os = (
             OPENSEARCH_DETAILS
             if opensearch_details is None
             else dict(opensearch_details)
         )
-        # 배치 D — API Gateway VPC 링크(v1 = `items` · v2 = `Items` · 두 서비스가 같은 메서드 이름 `get_vpc_links` — EKS·ECS 의 `list_clusters` 처럼 한 장에 두 키)
+        # API Gateway VPC links. v1 uses `items` and v2 uses `Items`, and both
+        # services share the method name `get_vpc_links`, so one page carries
+        # both keys, as it does for `list_clusters` on EKS and ECS.
         self._vpc_links = list(vpc_links or [])
         self._vpc_links_v2 = list(vpc_links_v2 or [])
-        # 2.12.0(ADR 0014) — WAF 웹 ACL. 범위(`Scope`)마다 목록 · Id → `GetWebACL` 의 `WebACL` · web ACL ARN → API Gateway 스테이지 ARN.
-        #   기본 = 없음(기본 세계에는 web ACL 노드가 없다 — `rel_world.py` 가 채운다). 거부: 목록 = `errors["list_web_acls#<Scope>"]` ·
-        #   상세 = `followup_errors[("get_web_acl", Id)]` · 보호 대상 = `followup_errors[("list_resources_for_web_acl", ARN)]`
+        # WAF web ACLs (2.12.0): one list per `Scope`, an Id to the `WebACL` of
+        #   `GetWebACL`, and a web ACL ARN to an API Gateway stage ARN.
+        #   There are none by default, since the default world has no web ACL
+        #   nodes; `rel_world.py` fills them in. To deny a call, use
+        #   `errors["list_web_acls#<Scope>"]` for the list,
+        #   `followup_errors[("get_web_acl", Id)]` for the details, and
+        #   `followup_errors[("list_resources_for_web_acl", ARN)]` for the
+        #   protected resources.
         self._waf = {
             "REGIONAL": list(waf_regional or []),
             "CLOUDFRONT": list(waf_cloudfront or []),
         }
         self._waf_details = dict(waf_details or {})
         self._waf_resources = dict(waf_resources or {})
-        # 2.13.0 — VPC id → `DescribeVpcAttribute` 값(기본 = `VPC_DNS` · 없는 VPC 는 AWS 기본값 support=켬·hostnames=끔).
-        #   거부 = `followup_errors[("describe_vpc_attribute", VPC id)]`
+        # VPC id to the `DescribeVpcAttribute` values (2.13.0), defaulting to
+        #   `VPC_DNS`. A VPC that is absent gets the AWS defaults, support on
+        #   and hostnames off. To deny the call, use
+        #   `followup_errors[("describe_vpc_attribute", VPC id)]`.
         self._vpc_dns = VPC_DNS if vpc_dns is None else dict(vpc_dns)
-        # 콘솔식 정보창(사용자 결정 2026-10-24) — CloudFront 캐시 정책 · 원본 접근 제어 목록(Marker · 두 장) ·
-        #   ELBv2 리스너 규칙(ListenerArn → Rules) · 리스너 인증서(ListenerArn → Certificates). 기본 = 없음.
+        # The console-style detail panels: CloudFront cache policies and the
+        #   origin access control list, which uses Marker across two pages,
+        #   plus the ELBv2 listener rules (ListenerArn to Rules) and listener
+        #   certificates (ListenerArn to Certificates). There are none by
+        #   default.
         self._cache_policies = list(cache_policies or [])
         self._oacs = list(oacs or [])
         self._lb_rules = dict(lb_rules or {})
         self._listener_certs = dict(listener_certificates or {})
-        # 두 ELBv2 API 는 페이지네이터가 있다(boto3 `can_paginate` True) → 리스너 ARN 으로 갈라지는 `_Keyed` 로 흉내 낸다.
-        #   거부는 `followup_errors[("describe_rules", 리스너 ARN)]` · `followup_errors[("describe_listener_certificates", …)]`.
+        # Both ELBv2 APIs do have paginators, since boto3 answers
+        #   `can_paginate` with True, so they are imitated with `_Keyed`, which
+        #   splits by listener ARN. To deny a call, use
+        #   `followup_errors[("describe_rules", listener ARN)]` or
+        #   `followup_errors[("describe_listener_certificates", …)]`.
         self._keyed["describe_rules"] = ("Rules", "ListenerArn", self._lb_rules)
         self._keyed["describe_listener_certificates"] = (
             "Certificates",
             "ListenerArn",
             self._listener_certs,
         )
-        # 계정 이름(`get_account_information` · 구조 수집만 부른다) — `None` = 응답에 `AccountName` 키가 없다.
-        #   거부 = `errors["get_account_information"]`. `calls` 에 넣지 않는다(종류별 호출 목록을 재는 검사가 많다) — 따로 센다.
+        # The account name from `get_account_information`, which only structure
+        #   collection calls. `None` means the response carries no
+        #   `AccountName` key. To deny the call, use
+        #   `errors["get_account_information"]`. It is kept out of `calls`,
+        #   because many checks measure the per-type call list, and counted
+        #   separately instead.
         self._account_name = account_name
         self.account_calls = 0
         self.calls: list[str] = []
-        # 페이지네이터 없는 메서드의 직접 호출 인자 — 토큰이 되돌아왔는지 재는 데 쓴다.
+        # The arguments of a direct call to a method with no paginator, used to
+        # measure whether the token came back round.
         self.direct_calls: list[tuple[str, dict[str, Any]]] = []
 
     @classmethod
@@ -2416,7 +2630,9 @@ class FakeAws:
         return method not in UNPAGINATED
 
     def _unpaginated(self, method: str, **kwargs: Any) -> dict[str, Any]:
-        """`nextToken` 을 손으로 돌려야 하는 API 흉내 — 2장으로 쪼개고 첫 장에만 토큰을 싣는다."""
+        """Imitate an API whose `nextToken` has to be carried by hand: split
+        into two pages, with the token on the first page only.
+        """
         self.calls.append(method)
         self.direct_calls.append((method, dict(kwargs)))
         if method in self._errors:
@@ -2426,14 +2642,16 @@ class FakeAws:
         if kwargs.get("nextToken") == "page-2":
             return {key: items[middle:]}
         if kwargs.get("nextToken"):
-            raise AssertionError(f"{method} 에 모르는 토큰: {kwargs['nextToken']}")
+            raise AssertionError(f"unknown token for {method}: {kwargs['nextToken']}")
         page: dict[str, Any] = {key: items[:middle]}
         if items[middle:]:
             page["nextToken"] = "page-2"
         return page
 
     def describe_vpc_attribute(self, VpcId: str, Attribute: str) -> dict[str, Any]:
-        """VPC 속성 하나(2.13.0) — 페이지네이터 없음 · 요청 하나에 속성 하나(AWS 와 같다: 두 속성을 한 번에 못 묻는다)."""
+        """One VPC attribute (2.13.0). There is no paginator, and one request
+        carries one attribute, as in AWS: two cannot be asked for at once.
+        """
         self.calls.append("describe_vpc_attribute")
         self.direct_calls.append(
             ("describe_vpc_attribute", {"VpcId": VpcId, "Attribute": Attribute})
@@ -2452,8 +2670,13 @@ class FakeAws:
         return {"VpcId": VpcId, known[Attribute]: {"Value": value}}
 
     def get_account_information(self, **kwargs: Any) -> dict[str, Any]:
-        """🔴 `AccountId` 를 넘기면 AssertionError — 계정마다 **그 계정의 세션**으로 자기 자신만 묻는 것이 계약이다(`account_name.py`)."""
-        assert not kwargs, f"AccountId 없이 불러야 한다(자기 계정만): {kwargs}"
+        """Passing `AccountId` raises AssertionError. The contract in
+        `account_name.py` is that each account asks only about itself, through
+        its own session.
+        """
+        assert not kwargs, (
+            f"must be called without AccountId, for its own account only: {kwargs}"
+        )
         self.account_calls += 1
         if "get_account_information" in self._errors:
             raise self._errors["get_account_information"]
@@ -2470,14 +2693,13 @@ class FakeAws:
 
     def get_paginator(self, method: str) -> Any:
         if method in UNPAGINATED:
-            raise AssertionError(
-                f"{method} 에는 페이지네이터가 없다 — can_paginate 를 봐라"
-            )
+            raise AssertionError(f"{method} has no paginator; check can_paginate")
         self.calls.append(method)
         if method in self._errors:
             return _Raises(self._errors[method])
         if method == "list_services" and method in self._keyed:
-            # #129 — ECS(`cluster=…` 후속 호출)와 Lattice(인자 없는 목록)가 같은 이름이다. 인자로 가른다
+            # ECS, as a `cluster=…` follow-up call, and Lattice, as a list with
+            # no arguments, share this name. The arguments tell them apart.
             key, kwarg, data = self._keyed[method]
             errors = {
                 parent: exc
@@ -2509,7 +2731,8 @@ class FakeAws:
                 [("items", self._vpc_links), ("Items", self._vpc_links_v2)]
             )
         if method == "list_clusters":
-            # EKS·ECS 가 같은 이름을 쓴다 — 두 키를 한 장에 싣는다(`_MergedPages`).
+            # EKS and ECS share this name, so one page carries both keys (see
+            # `_MergedPages`).
             return _MergedPages(
                 [self._data["list_clusters"], self._data["list_clusters#ecs"]]
             )
@@ -2517,8 +2740,10 @@ class FakeAws:
         return _Pages(key, items)
 
     def describe_cluster(self, name: str) -> dict[str, Any]:
-        # EKS 상세는 단일 객체다(리스트가 아님) → 페이지네이터가 아니라 직접 호출한다.
-        # 후속 호출 거부는 followup_errors[("describe_cluster", 이름)] 로 넣는다(LB 리스너와 같은 방식).
+        # The EKS details are a single object rather than a list, so they are
+        # read with a direct call instead of a paginator.
+        # To deny the follow-up call, use followup_errors[("describe_cluster",
+        # name)], the same way as for load balancer listeners.
         self.calls.append("describe_cluster")
         err = self._followup_errors.get(("describe_cluster", name))
         if err is not None:
@@ -2556,7 +2781,9 @@ class FakeAws:
         )
 
     def list_vpc_origins(self, **kwargs: Any) -> dict[str, Any]:
-        """두 장으로 쪼개 첫 장에 `NextMarker` 를 싣는다(수집기가 끝까지 도는지 잰다)."""
+        """Split into two pages, with `NextMarker` on the first, to measure
+        whether the collector runs to the end.
+        """
         self.calls.append("list_vpc_origins")
         self.direct_calls.append(("list_vpc_origins", dict(kwargs)))
         if "list_vpc_origins" in self._errors:
@@ -2578,7 +2805,9 @@ class FakeAws:
         return {"VpcOriginList": page}
 
     def get_hosted_zone(self, Id: str) -> dict[str, Any]:
-        """Route 53 영역 상세(단일 객체) — 거부는 `followup_errors[("get_hosted_zone", Id)]`."""
+        """The Route 53 zone details, a single object. To deny the call, use
+        `followup_errors[("get_hosted_zone", Id)]`.
+        """
         self.calls.append("get_hosted_zone")
         err = self._followup_errors.get(("get_hosted_zone", Id))
         if err is not None:
@@ -2589,7 +2818,9 @@ class FakeAws:
         return detail
 
     def describe_vpc_endpoint_services(self, ServiceNames: list[str]) -> dict[str, Any]:
-        """소비자 쪽 서비스 정보 — 이름 하나라도 모르면 AWS 처럼 **호출 전체**를 `InvalidServiceName` 으로 거절한다."""
+        """The consumer-side service information. If even one name is unknown,
+        the whole call is rejected with `InvalidServiceName`, as AWS does.
+        """
         self.calls.append("describe_vpc_endpoint_services")
         self.direct_calls.append(
             ("describe_vpc_endpoint_services", {"ServiceNames": list(ServiceNames)})
@@ -2601,7 +2832,7 @@ class FakeAws:
             raise client_error(
                 "InvalidServiceName",
                 "DescribeVpcEndpointServices",
-                f"없는 서비스 {missing}",
+                f"service not found: {missing}",
             )
         return {
             "ServiceDetails": [
@@ -2616,7 +2847,9 @@ class FakeAws:
         }
 
     def describe_tags(self, ResourceArns: list[str]) -> dict[str, Any]:
-        """`elbv2:DescribeTags` — 페이지네이터가 없고 ARN 20개까지 받는다(넘으면 AWS 가 거절한다 — 그 한도도 잰다)."""
+        """`elbv2:DescribeTags`, which has no paginator and takes up to twenty
+        ARNs. AWS rejects a call above that, and the limit is measured here too.
+        """
         self.calls.append("describe_tags")
         self.direct_calls.append(
             ("describe_tags", {"ResourceArns": list(ResourceArns)})
@@ -2624,7 +2857,7 @@ class FakeAws:
         if "describe_tags" in self._errors:
             raise self._errors["describe_tags"]
         if len(ResourceArns) > 20:
-            raise client_error("ValidationError", "DescribeTags", "ARN 20개 넘음")
+            raise client_error("ValidationError", "DescribeTags", "more than 20 ARNs")
         return {
             "TagDescriptions": [
                 {
@@ -2639,9 +2872,12 @@ class FakeAws:
         }
 
     def list_web_acls(self, **kwargs: Any) -> dict[str, Any]:
-        """WAFv2 `ListWebACLs` — 페이지네이터가 없다 · 두 장으로 쪼개 첫 장에만 `NextMarker` 를 싣는다(수집기가 끝까지 도는지 잰다).
+        """WAFv2 `ListWebACLs`, which has no paginator. It is split into two
+        pages, with `NextMarker` on the first only, to measure whether the
+        collector runs to the end.
 
-        🔴 `Scope` 없이 부르면 AWS 처럼 거절한다 — 범위를 빼먹은 호출이 「없음」으로 통과하지 않게.
+        A call without `Scope` is rejected, as AWS does, so that a call missing
+        the scope cannot pass as "none".
         """
         self.calls.append("list_web_acls")
         self.direct_calls.append(("list_web_acls", dict(kwargs)))
@@ -2659,7 +2895,7 @@ class FakeAws:
             return {"WebACLs": items[middle:]}
         if kwargs.get("NextMarker"):
             raise AssertionError(
-                f"list_web_acls 에 모르는 표지: {kwargs['NextMarker']}"
+                f"unknown marker for list_web_acls: {kwargs['NextMarker']}"
             )
         page: dict[str, Any] = {"WebACLs": items[:middle]}
         if items[middle:]:
@@ -2682,7 +2918,10 @@ class FakeAws:
     def list_resources_for_web_acl(
         self, WebACLArn: str, ResourceType: str
     ) -> dict[str, Any]:
-        """보호 대상 ARN — `ResourceType` 이 API_GATEWAY 일 때만 답을 든다(그 밖을 물으면 AssertionError · 묻지 않기로 한 종류)."""
+        """The protected resource ARNs. Only `ResourceType` API_GATEWAY carries
+        an answer; asking for any other type raises AssertionError, because
+        those are the types we decided not to ask about.
+        """
         self.calls.append("list_resources_for_web_acl")
         self.direct_calls.append(
             (
@@ -2692,13 +2931,13 @@ class FakeAws:
         )
         if ResourceType != "API_GATEWAY":
             raise AssertionError(
-                f"list_resources_for_web_acl 를 {ResourceType} 로 불렀다"
+                f"list_resources_for_web_acl was called with {ResourceType}"
             )
         if ":global/webacl/" in WebACLArn:
             raise client_error(
                 "WAFInvalidParameterException",
                 "ListResourcesForWebACL",
-                "CloudFront 범위",
+                "CloudFront scope",
             )
         err = self._followup_errors.get(("list_resources_for_web_acl", WebACLArn))
         if err is not None:
@@ -2706,11 +2945,15 @@ class FakeAws:
         return {"ResourceArns": list(self._waf_resources.get(WebACLArn, []))}
 
     def get_web_acl_for_resource(self, ResourceArn: str) -> dict[str, Any]:
-        """ALB 에 붙은 web ACL — 단일 객체이고 페이지네이터가 없다(실측: `can_paginate` False).
+        """The web ACL attached to an ALB: a single object with no paginator,
+        since `can_paginate` is False.
 
-        🔴 **안 붙은 자원에는 `WebACL` 키를 주지 않는다** — AWS 가 그렇게 답한다. 가짜가 `{}` 대신
-        `{"WebACL": {}}` 를 주면 「붙지 않았다」 경로가 실제와 다른 모양으로 측정된다.
-        거부는 `followup_errors[("get_web_acl_for_resource", ARN)]` 로 넣는다(다른 후속 호출과 같다).
+        A resource with nothing attached gets no `WebACL` key at all, which is
+        how AWS answers. If the fake handed back `{"WebACL": {}}` instead of
+        `{}`, the "nothing attached" path would be measured in a shape the real
+        API never produces.
+        To deny the call, use `followup_errors[("get_web_acl_for_resource",
+        ARN)]`, as for any other follow-up call.
         """
         self.calls.append("get_web_acl_for_resource")
         err = self._followup_errors.get(("get_web_acl_for_resource", ResourceArn))
@@ -2720,8 +2963,10 @@ class FakeAws:
         return {"WebACL": acl} if acl is not None else {}
 
     def describe_firewall(self, FirewallArn: str) -> dict[str, Any]:
-        # Network Firewall 상세도 단일 객체다(리스트가 아님) → 페이지네이터가 아니라 직접 호출한다.
-        # 거부는 followup_errors[("describe_firewall", ARN)] 로 넣는다(EKS·LB 와 같은 방식).
+        # The Network Firewall details are a single object rather than a list
+        # too, so they are read with a direct call instead of a paginator.
+        # To deny the call, use followup_errors[("describe_firewall", ARN)], as
+        # for EKS and the load balancers.
         self.calls.append("describe_firewall")
         err = self._followup_errors.get(("describe_firewall", FirewallArn))
         if err is not None:
@@ -2734,7 +2979,8 @@ class FakeAws:
     def _detail(
         self, method: str, key: str, table: dict[str, dict[str, Any]], code: str
     ) -> dict[str, Any]:
-        # 단일 객체 상세(W2) — 거부는 followup_errors[(메서드, 키)] 로 넣는다(EKS 와 같은 방식).
+        # Single-object details. To deny the call, use followup_errors[(method,
+        # key)], as for EKS.
         self.calls.append(method)
         err = self._followup_errors.get((method, key))
         if err is not None:
@@ -2745,7 +2991,8 @@ class FakeAws:
         return dict(detail)
 
     def describe_services(self, cluster: str, services: list[str]) -> dict[str, Any]:
-        # 🔴 실제 API 는 한 번에 10개까지만 받는다 — 가짜도 넘으면 거부한다(배치를 안 나누면 터진다).
+        # The real API takes at most ten at a time, so the fake rejects more
+        # as well: code that does not batch breaks here.
         self.calls.append("describe_services")
         self.direct_calls.append(
             ("describe_services", {"cluster": cluster, "services": list(services)})
@@ -2762,8 +3009,11 @@ class FakeAws:
         return {"services": found, "failures": missing}
 
     def describe_domains(self, DomainNames: list[str]) -> dict[str, Any]:
-        # 🔴 실제 API 는 한 번에 5개까지만 받는다 — 넘으면 거부한다(배치를 안 나누면 터진다).
-        # 거부는 `errors={"describe_domains": 예외}`(전부) 또는 `followup_errors[("describe_domains", 첫 이름)]`(그 묶음만).
+        # The real API takes at most five at a time and rejects more, so code
+        # that does not batch breaks here.
+        # To deny every call use `errors={"describe_domains": exception}`, and
+        # to deny one batch use `followup_errors[("describe_domains", first
+        # name)]`.
         self.calls.append("describe_domains")
         self.direct_calls.append(
             ("describe_domains", {"DomainNames": list(DomainNames)})
@@ -2782,7 +3032,8 @@ class FakeAws:
         }
 
     def describe_target_health(self, TargetGroupArn: str) -> dict[str, Any]:
-        # 페이지네이터·토큰이 없는 API(boto3 elbv2). 거부는 followup_errors[(메서드, TG ARN)].
+        # An API with neither a paginator nor a token (boto3 elbv2). To deny
+        # the call, use followup_errors[(method, target group ARN)].
         self.calls.append("describe_target_health")
         err = self._followup_errors.get(("describe_target_health", TargetGroupArn))
         if err is not None:
@@ -2824,33 +3075,44 @@ class FakeAws:
         )
 
 
-# 이름을 바꾸면 기존 테스트가 전부 깨진다 — 별칭으로 남긴다(내용은 15종을 안다).
+# Renaming this would break every existing test, so it stays as an alias. It
+# knows all fifteen resource types.
 FakeEc2 = FakeAws
 
 
 def series_key(
     namespace: str, metric: str, dimensions: dict[str, str]
 ) -> tuple[str, str, tuple[tuple[str, str], ...]]:
-    """`FakeCloudWatch` 의 계열 키. 차원은 **이름·값이 정확히** 맞아야 한다."""
+    """The series key of `FakeCloudWatch`. A dimension has to match exactly, in
+    both name and value.
+    """
     return (namespace, metric, tuple(sorted(dimensions.items())))
 
 
 class FakeCloudWatch:
-    """`GetMetricData` 만 아는 가짜 CloudWatch.
+    """A fake CloudWatch that knows `GetMetricData` and nothing else.
 
-    🔴 **이 가짜의 값은 등록한 차원과 정확히 일치할 때만 나온다.** 이름이 한 글자 달라도 빈
-    배열 + `StatusCode: Complete` 가 돌아간다 — ADR 0006 §O7-1 함정 1 의 실측 그대로다(오타 난
-    차원 이름·존재하지 않는 값 둘 다 `dp=0`·`Complete`·`Messages` 없음). 가짜가 여기서
-    친절하게 에러를 내면 차원 상수를 재는 검사가 **실패할 수 없는 어서션**이 된다(통과가 아니라 미측정).
+    A value comes back from this fake only when the dimensions match exactly.
+    One character out of place in a name still returns an empty array with
+    `StatusCode: Complete`, which is what a real account does: a misspelled
+    dimension name and a value that does not exist both answer with no data
+    points, `Complete`, and no `Messages`. If the fake raised a helpful error
+    here, the checks that measure the dimension constants would become
+    assertions that cannot fail, which is not a pass but an absence of
+    measurement.
 
-    `values` 는 **최신 우선**으로 적는다(제품이 `ScanBy=TimestampDescending` 으로 부른다).
-    `ScanBy` 를 `TimestampAscending` 으로 부르면 뒤집어 준다 — 「값이 있는 마지막 지점」을
-    `Values[0]` 으로 읽는 규칙이 정렬에 기대고 있음을 검사가 잴 수 있어야 한다.
+    Write `values` newest first, because the product calls with
+    `ScanBy=TimestampDescending`. A call with `ScanBy=TimestampAscending` gets
+    them reversed, so that the checks can measure how much the rule of reading
+    the last data point that has a value from `Values[0]` leans on the ordering.
 
-    `Timestamps` 는 실제 응답처럼 **값과 같은 순서의 짝**이다. i 번째 값(최신 우선)은
-    `EndTime` 을 `Period` 로 내린 시각에서 (i+1)칸 앞 구간의 **시작**이다(CloudWatch 의 지점 시각 =
-    구간 시작 — 실측 2026-09-27 · 멈춤 02:24:23Z 의 마지막 지점이 02:24:00Z). 빈 칸이 없는 연속
-    계열만 만든다. `with_timestamps=False` 면 키를 빼서 「시각을 못 받았다」를 만든다.
+    As in a real response, `Timestamps` pairs with the values in the same order.
+    The i-th value, counting newest first, is the start of the interval (i+1)
+    slots before `EndTime` rounded down to `Period`, because a CloudWatch data
+    point is stamped with the start of its interval: a stop at 02:24:23Z has its
+    last data point at 02:24:00Z. Only continuous series with no gaps are built
+    here. With `with_timestamps=False` the key is left out, which builds the
+    case where no timestamps were received.
     """
 
     def __init__(
@@ -2867,10 +3129,13 @@ class FakeCloudWatch:
         self._series = dict(series or {})
         self._error = error
         self._with_timestamps = with_timestamps
-        # 계열 → 그 쿼리의 `StatusCode`(기본 `Complete`). `Forbidden` 은 호출은 성공했는데 그 계열만 거부된 응답이다
-        # (교차 계정 관측 등) — 빈 배열이 오지만 「쟀고 0」이 아니다.
+        # Series to the `StatusCode` of that query, `Complete` by default.
+        # `Forbidden` is the response where the call succeeded but that one
+        # series was denied, as happens with cross-account observation. An
+        # empty array comes back, but it does not mean measured and zero.
         self._status = dict(status_codes or {})
-        # 응답에서 통째로 빠지는 쿼리 id — 쿼리↔결과 대응이 깨진 경우를 만든다.
+        # Query ids that drop out of the response entirely, to build the case
+        # where queries and results no longer line up.
         self._missing = set(missing_ids)
         self.calls: list[dict[str, Any]] = []
 
@@ -2904,7 +3169,8 @@ class FakeCloudWatch:
             result: dict[str, Any] = {
                 "Id": query["Id"],
                 "Label": metric["MetricName"],
-                # 🔴 값이 없어도 `Complete` 다(실측). 「모름」과 「흐름 없음」이 여기서 섞인다.
+                # It is `Complete` even with no values, which is what a real
+                # account does. Unknown and no traffic meet here.
                 "StatusCode": self._status.get(key, "Complete"),
                 "Values": values,
             }
@@ -2915,13 +3181,20 @@ class FakeCloudWatch:
 
 
 class FakeMinuteCloudWatch:
-    """시각이 있는 1분 점으로 `GetMetricData` 를 흉내 낸다(#27 사용률).
+    """Imitate `GetMetricData` with timestamped one-minute data points, for
+    utilization.
 
-    `FakeCloudWatch` 는 「끝에서부터 빈칸 없는 계열」만 만든다 — 기간 · 단위 · 몰림을 잴 수 없다. 여기서는
-    계열마다 `{1분 시작 시각: 값}` 을 받고 묻는 `Period` · `Stat` 으로 **CloudWatch 처럼 접는다**:
-    단위 시작 = 시각을 `Period` 로 내린 값 · `Sum` = 합 · `Maximum` = 최대 · `Average` = 평균.
-    단위 안에 점이 없으면 그 단위는 응답에 없다(실측: 빈 단위는 0 이 아니라 「없음」).
-    `StartTime` 이상 · `EndTime` 미만인 단위만 준다. `page_size` 를 주면 그 수씩 끊고 `NextToken` 을 준다.
+    `FakeCloudWatch` only builds series that run back from the end with no
+    gaps, which leaves the period, the bucket and any bunching unmeasurable.
+    This fake takes a mapping of one-minute start time to value per series and
+    folds it the way CloudWatch does, according to the `Period` and `Stat` being
+    asked for: a bucket starts at the timestamp rounded down to `Period`, `Sum`
+    adds, `Maximum` takes the largest and `Average` the mean.
+    A bucket with no data points in it is absent from the response, because a
+    real account reports an empty bucket as missing rather than as zero.
+    Only buckets at or after `StartTime` and before `EndTime` are returned.
+    Given `page_size`, the response is cut into pages of that size with a
+    `NextToken`.
     """
 
     def __init__(
@@ -2995,10 +3268,13 @@ class FakeMinuteCloudWatch:
 
 
 class FakeServiceQuotas:
-    """`GetServiceQuota` · `GetAWSDefaultServiceQuota` 만 아는 가짜.
+    """A fake that knows `GetServiceQuota` and `GetAWSDefaultServiceQuota` and
+    nothing else.
 
-    `applied` = 계정에 적용된 값(코드 → 값) · `defaults` = AWS 기본값. 없는 코드는 실제처럼
-    `NoSuchResourceException` 이다. `applied_error` · `default_error` 를 주면 그 호출이 그 예외를 낸다.
+    `applied` maps a quota code to the value applied to the account, and
+    `defaults` holds the AWS defaults. A code that does not exist answers with
+    `NoSuchResourceException`, as the real API does. Passing `applied_error` or
+    `default_error` makes that call raise the given exception.
     """
 
     def __init__(
@@ -3056,21 +3332,24 @@ class FakeServiceQuotas:
 def factory_by_service(
     clients: dict[str, Any], *, fail_services: dict[str, Exception] | None = None
 ) -> Any:
-    """서비스 이름으로 갈라지는 팩토리 — 1층(ec2·elbv2)과 2층(cloudwatch)이 다른 가짜다."""
+    """A factory that splits by service name, so that the structure tier (ec2
+    and elbv2) and the state tier (cloudwatch) use different fakes.
+    """
 
     def make(account_id: str, region: str, service: str) -> Any:
         if fail_services and service in fail_services:
             raise fail_services[service]
         if service not in clients:
-            # 등록하지 않은 서비스를 조용히 받아 주면 「2층을 안 불렀다」가 통과한다.
-            raise AssertionError(f"등록하지 않은 서비스를 불렀다: {service}")
+            # Accepting an unregistered service quietly would let "the state
+            # tier was never called" pass.
+            raise AssertionError(f"called an unregistered service: {service}")
         return clients[service]
 
     return make
 
 
 def factory(client: Any, *, fail_services: dict[str, Exception] | None = None) -> Any:
-    """`collect()` 가 받는 ClientFactory 형태로 감싼다."""
+    """Wrap it in the ClientFactory shape that `collect()` expects."""
 
     def make(account_id: str, region: str, service: str) -> Any:
         if fail_services and service in fail_services:
@@ -3081,7 +3360,9 @@ def factory(client: Any, *, fail_services: dict[str, Exception] | None = None) -
 
 
 def factory_for(clients: dict[str, Any]) -> Any:
-    """계정마다 다른 응답을 주는 팩토리 — 공유 자원 중복 제거를 재는 데 쓴다."""
+    """A factory that answers differently per account, used to measure the
+    deduplication of shared resources.
+    """
 
     def make(account_id: str, region: str, service: str) -> Any:
         return clients[account_id]
@@ -3089,73 +3370,93 @@ def factory_for(clients: dict[str, Any]) -> Any:
     return make
 
 
-# 배치 D — Global Accelerator 클라이언트는 수집 리전과 무관하게 us-west-2 로 만든다(`Spec.region`). 리전·쌍으로 갈라 주는 팩토리는 그 리전을
-#   모를 수 있다 → 빈 가짜(가속기 없음)를 준다. 🔴 다른 서비스는 그대로 KeyError — 모르는 쌍을 조용히 받아 주면 「안 불렀다」가 통과한다
+# The Global Accelerator client is built in us-west-2 regardless of the
+#   collection Region, as `Spec.region` says. A factory that splits by Region or
+#   by pair may not know that Region, so it hands back an empty fake with no
+#   accelerators. Every other service still raises KeyError, because accepting
+#   an unknown pair quietly would let "it was never called" pass.
 GA_SERVICE = "globalaccelerator"
-# #129(2.11.0) — Cloud WAN(networkmanager)도 us-west-2 고정이다(`Spec.region`) — 같은 처분
+# Cloud WAN (networkmanager) is fixed to us-west-2 as well (2.11.0), and is
+# treated the same way.
 PINNED_SERVICES = frozenset({GA_SERVICE, "networkmanager"})
 
 
 def factory_by_pair(clients: dict[tuple[str, str], Any]) -> Any:
-    """(계정, 리전) 쌍마다 다른 응답을 주는 팩토리 — 「한 자원을 두 쌍에서 본다」를 재는 데 쓴다.
+    """A factory that answers differently per (account, Region) pair, used to
+    measure seeing one resource from two pairs.
 
-    계정 축·리전 축 팩토리로는 TGW 피어링 어태치먼트를 만들 수 없다: 그 어태치먼트는 «계정 A 의
-    리전 R1» 과 «계정 B 의 리전 R2» 두 쌍에만 나오고 나머지 쌍(A/R2·B/R1)에는 나오지 않는다.
-    한 축만 갈라주면 나오지 않아야 할 쌍에도 나와서, 병합이 실제로 잰 것보다 쉬워진다.
+    A TGW peering attachment cannot be built with a factory that splits by
+    account alone or by Region alone. Such an attachment appears in exactly two
+    pairs, account A in Region R1 and account B in Region R2, and not in the
+    remaining pairs, A/R2 and B/R1. Splitting on one axis makes it appear in
+    pairs where it should not, which makes merging easier than what is actually
+    being measured.
     """
 
     def make(account_id: str, region: str, service: str) -> Any:
         if service in PINNED_SERVICES and (account_id, region) not in clients:
             return (
                 FakeAws.empty()
-            )  # 가속기 API 리전(us-west-2)은 이 세계의 쌍이 아니다 — 가속기 없음
+            )  # the accelerator API Region, us-west-2, is not a pair in this
+            # world, so there are no accelerators
         return clients[(account_id, region)]
 
     return make
 
 
 def factory_by_region(clients: dict[str, Any]) -> Any:
-    """리전마다 다른 응답을 주는 팩토리 — 크로스리전 자원의 정본 리전을 재는 데 쓴다.
+    """A factory that answers differently per Region, used to measure which
+    Region a cross-Region resource belongs to.
 
-    한 클라이언트를 모든 리전에 주면 리전 간 자원(피어링)이 **양쪽에서 보이는** 상황만
-    만들어진다. 「한쪽 리전 응답에만 나온다」는 실제 케이스는 이 팩토리로만 잴 수 있다.
+    Handing one client to every Region only ever builds the situation where a
+    cross-Region resource, such as a peering, is visible from both sides. The
+    real case, where it appears in the response of one Region only, can be
+    measured with this factory alone.
     """
 
     def make(account_id: str, region: str, service: str) -> Any:
         if service in PINNED_SERVICES and region not in clients:
             return (
                 FakeAws.empty()
-            )  # 가속기 API 리전(us-west-2)은 이 세계의 리전이 아니다 — 가속기 없음
+            )  # the accelerator API Region, us-west-2, is not a Region in this
+            # world, so there are no accelerators
         return clients[region]
 
     return make
 
 
-# ---- 흐름 로그 판독기(S5 U6)의 가짜 ---------------------------------------------------------------
+# ---- Fakes for the flow log reader -----------------------------------------
 
 
 class _Forbidden:
-    """판독기가 부르면 안 되는 호출 — 읽기 가드(`awsguard.py`)가 실계정에서 막는 것과 같은 자리다.
+    """A call the reader must never make, standing in the same place where the
+    read-only guard in `awsguard.py` blocks it against a real account.
 
-    `HeadBucket`·`HeadObject` 는 allowlist verb 가 아니다. botocore 가 버킷 리전을 찾으러 조용히 부르는
-    경로(틀린 리전 클라이언트 · `download_file`)를 판독기가 밟으면 실계정에서 `ReadOnlyViolation` 으로 죽는다.
-    가짜가 그 호출을 받아 주면 그 경로가 fixture 에서 통과한다.
+    `HeadBucket` and `HeadObject` are not allowlisted verbs. If the reader takes
+    a path where botocore quietly calls them to find the bucket Region, as it
+    does with a client in the wrong Region or with `download_file`, the run dies
+    with `ReadOnlyViolation` against a real account. If the fake accepted the
+    call, that path would pass against the fixtures.
     """
 
     def __init__(self, name: str) -> None:
         self._name = name
 
     def __call__(self, *_: Any, **__: Any) -> Any:
-        raise AssertionError(f"판독기가 부르면 안 되는 호출: {self._name}")
+        raise AssertionError(f"the reader must not call this: {self._name}")
 
 
 class FakeLogs:
-    """`DescribeLogGroups`·`DescribeLogStreams`·`GetLogEvents` 만 아는 가짜 CloudWatch Logs.
+    """A fake CloudWatch Logs that knows `DescribeLogGroups`,
+    `DescribeLogStreams` and `GetLogEvents` and nothing else.
 
-    `groups[이름] = {"class": "STANDARD", "streams": {스트림: {"last": ms|None, "created": ms,
-    "events": [(ms, 메시지), …]}}}`. 이벤트는 `startTime ≤ ts < endTime` 만 준다(CWL 규약). 끝에 닿으면
-    받은 `nextToken` 을 그대로 돌려준다 — 판독기가 이 규약으로 멈추는지를 잰다. `errors[메서드]` 는
-    그 메서드의 n 번째 호출부터 던질 예외 `(n, 예외)`.
+    `groups[name] = {"class": "STANDARD", "streams": {stream: {"last": ms|None,
+    "created": ms, "events": [(ms, message), …]}}}`. Only events where
+    `startTime <= ts < endTime` are returned, which is the CWL convention. On
+    reaching the end it hands back the `nextToken` it was given, unchanged, so
+    that the checks measure whether the reader stops on that convention.
+    `errors[method]` is `(n, exception)`: the exception to raise from the n-th
+    call to that method onwards.
     """
 
     def __init__(
@@ -3210,7 +3511,9 @@ class FakeLogs:
             and kwargs.get("descending") is True
         )
         streams = self.groups[kwargs["logGroupName"]].get("streams", {})
-        # 최근 이벤트 순. 아직 갱신되지 않은 스트림(last=None)은 맨 뒤(실측 근거 없음 — 판독기는 순서에 기대지 않는다).
+        # Most recent event first, with streams that have not been updated yet
+        # (last=None) at the back. There is no measurement behind that choice;
+        # the reader does not rely on the order.
         order = sorted(
             streams,
             key=lambda s: (
@@ -3236,10 +3539,15 @@ class FakeLogs:
         return response
 
     def get_log_events(self, **kwargs: Any) -> dict[str, Any]:
-        """CWL 규약을 흉내 낸다 — 이벤트는 시각 오름차순 · `startFromHead=True` 는 앞에서부터 `nextForwardToken` ·
-        `False`(기본) 는 **최근 쪽부터** `nextBackwardToken`. 한 쪽 안은 어느 방향이든 오름차순이다. 끝에 닿으면 받은 토큰을
-        그대로 돌려준다(두 토큰 모두 · AWS 문서). 판독기가 어느 방향을 쓰든 같은 가짜가 답한다 — 방향을 되돌리는
-        브레이크가 단언이 아니라 결과(버린 기록)로 FAIL 하게."""
+        """Imitate the CWL convention. Events are in ascending time order.
+        `startFromHead=True` reads from the front with `nextForwardToken`, and
+        `False`, the default, reads from the most recent end with
+        `nextBackwardToken`. Within one page the order is ascending either way.
+        On reaching the end it hands back the token it was given, unchanged, for
+        both tokens, as the AWS documentation describes. The same fake answers
+        whichever direction the reader uses, so that reversing the direction
+        fails on the result, the records it drops, rather than on an assertion.
+        """
         self._enter("get_log_events", kwargs)
         stream = self.groups[kwargs["logGroupName"]]["streams"][kwargs["logStreamName"]]
         events = sorted(
@@ -3292,11 +3600,14 @@ class _Body:
 
 
 class FakeS3:
-    """버킷별 리전을 아는 가짜 S3. `buckets[이름] = {"region": "…", "objects": {키: 바이트}}`.
+    """A fake S3 that knows the Region of each bucket.
+    `buckets[name] = {"region": "…", "objects": {key: bytes}}`.
 
-    🔴 **버킷 리전이 아닌 리전의 클라이언트로 목록·객체를 부르면 터진다.** 실계정에서는 botocore 가 그 리전을
-    `HeadBucket` 으로 찾으러 가고 읽기 가드가 그 호출을 막는다(가드 allowlist 밖). `GetBucketLocation` 은
-    어느 리전에서 불러도 답한다(실계정 동작 — U6 실계정 확인 항목).
+    Listing or reading an object through a client in any Region other than the
+    bucket's breaks here. Against a real account botocore goes looking for that
+    Region with `HeadBucket`, and the read-only guard blocks the call, since it
+    is not an allowlisted verb. `GetBucketLocation` answers from any Region,
+    which is what a real account does.
     """
 
     def __init__(
@@ -3339,7 +3650,8 @@ class _S3View:
         bucket = self._s3.buckets[name]
         if located and bucket["region"] != self.region:
             raise AssertionError(
-                f"버킷 리전({bucket['region']})이 아닌 {self.region} 클라이언트 — 실계정이면 HeadBucket 으로 간다"
+                f"client in {self.region}, not the bucket Region "
+                f"({bucket['region']}); a real account would go to HeadBucket"
             )
         return bucket
 
@@ -3380,7 +3692,9 @@ class _S3View:
 
 
 def gzip_log(lines: list[str], *, members: int = 1) -> bytes:
-    """흐름 로그 텍스트 객체(머리줄 포함)를 gzip 으로 — `members>1` 이면 여러 멤버를 이어 붙인다."""
+    """Gzip a flow log text object, header line included. With `members>1`,
+    several gzip members are concatenated.
+    """
     import gzip
 
     text = "".join(f"{line}\n" for line in lines).encode("utf-8")
