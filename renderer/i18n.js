@@ -2,7 +2,7 @@
 // returned unchanged — nothing is hidden.
 //
 // - Language is chosen in this order: `?lang=` > localStorage (`nettopo.lang`) > `<html data-lang>` (installed
-//   default) > ko.
+//   default) > ko. A code without a loaded table falls back to ko.
 // - Sentences with values look like `NT_T('<original with {0}>', [n])`. `{n}` is substituted only when arguments are given.
 // - `NT_T.both(s, a)` returns `{ t, ko }`: the display string and the Korean original built from the same
 //   arguments (an argument may itself be a `{ t, ko }` pair). Code that classifies text by its wording reads `.ko`,
@@ -24,7 +24,10 @@
     v = v || document.documentElement.dataset.lang || 'ko'
     return /^[a-z]{2}$/.test(v) ? v : 'ko'
   }
-  let lang = pick()
+  // The requested language becomes the current one only when its table is added (`add()` below). Until then — and
+  // for a code that never gets a table — the page is Korean.
+  const want = pick()
+  let lang = 'ko'
 
   function NT_T (s, a) {
     if (typeof s !== 'string') return s
@@ -46,6 +49,7 @@
   NT_T.has = (code) => code === 'ko' || !!TABLES[code]
   NT_T.add = (code, table) => {
     TABLES[code] = table
+    if (code === want) { lang = code; document.documentElement.lang = lang }
   }
   NT_T.addPatterns = (code, list) => { PATTERNS[code] = (PATTERNS[code] || []).concat(list) }
   // Only saves. The caller reloads (module-level constants are already fixed in one language).
