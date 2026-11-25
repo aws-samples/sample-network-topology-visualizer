@@ -1520,7 +1520,8 @@ NT_T.add('en', {
   '흐름 로그 판독 결과는 출처를 탐지했을 때만 붙인다(판독기의 입력이 탐지 결과다)': 'Flow log readings are attached only when a source was detected (the reader takes the detection result as input)',
   '상세 응답을 읽지 못해 상태 값이 없습니다 — 사유는 이 리소스의 거부 사유와 같습니다': 'The detail response could not be read, so there is no status value — the reason is the same as the denial reason of this resource',
   'vpc-cni add-on 을 읽을 수 없는 클러스터가 있다(Helm 설치 가능) — 켜짐·꺼짐을 판정할 수 없다': 'Some clusters have an unreadable vpc-cni add-on (possibly installed via Helm) — on/off cannot be determined',
-  '흐름 로그 읽기를 켜지 않았다 — 켜면 인터넷·피어링 선의 흐름을 이 로그의 왕복 기록으로 확인한다(스택 파라미터 FlowLogReading · 로컬은 --flow-logs)': 'Flow log reading is not enabled — when enabled, flow on internet and peering lines is confirmed from the round-trip records in these logs (stack parameter FlowLogReading · locally --flow-logs)'
+  '흐름 로그 읽기를 켜지 않았다 — 켜면 인터넷·피어링 선의 흐름을 이 로그의 왕복 기록으로 확인한다(스택 파라미터 FlowLogReading · 로컬은 --flow-logs)': 'Flow log reading is not enabled — when enabled, flow on internet and peering lines is confirmed from the round-trip records in these logs (stack parameter FlowLogReading · locally --flow-logs)',
+  '언어 선택을 저장하지 못해 바꾸지 않았습니다 — 이 브라우저가 사이트 저장소를 막고 있습니다': 'The language was not changed because the choice could not be saved — this browser is blocking site storage'
 })
 // Engine sentences with values (observe.py f-strings) and adapter-built sentences — no exact key exists, so they are matched by regex.
 NT_T.addPatterns('en', [

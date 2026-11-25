@@ -53,6 +53,10 @@ body {
 #btn-lang .lg + .lg { border-left: 1px solid var(--line); }
 #btn-lang .lg:hover { color: var(--text); }
 #btn-lang .lg.on { color: var(--text); font-weight: 600; }
+/* Note under the switch (expired link · language choice not saved) — i18n.js creates it on first use. */
+#lang-note { position: fixed; z-index: 60; max-width: 340px; padding: 6px 10px; background: var(--box); border: 1px solid var(--warn);
+  border-radius: 4px; color: var(--text); font-size: 12px; line-height: 1.4; }
+#lang-note[hidden] { display: none; }
 
 /* 햄버거(☰ · `#menu`)는 지웠다(사용자 결정 2026-10-20 · 대장 130). 아래 두 팝오버는 그 메뉴와 같던 형태 그대로다. */
 
