@@ -4,8 +4,9 @@
 // - Language is chosen in this order: `?lang=` > localStorage (`nettopo.lang`) > `<html data-lang>` (installed
 //   default) > ko.
 // - Sentences with values look like `NT_T('<original with {0}>', [n])`. `{n}` is substituted only when arguments are given.
-// - `NT_T.ko(s)` maps a translated string (including sentences built with values) back to the original. Regexes
-//   that classify text by its wording read the original through it, so classification does not depend on the language.
+// - `NT_T.both(s, a)` returns `{ t, ko }`: the display string and the Korean original built from the same
+//   arguments (an argument may itself be a `{ t, ko }` pair). Code that classifies text by its wording reads `.ko`,
+//   so classification does not depend on the language. There is no reverse lookup from a translation.
 // - `NT_T.dom(root)` translates static HTML (flow.html): text nodes, title, placeholder and aria-label. No-op for ko.
 // - Tables are added by `i18n-en.js` via `NT_T.add('en', {...})`. This file is the **first** script in flow.html —
 //   the language must be settled before the other files are evaluated (module-level constants). That is why
@@ -14,9 +15,6 @@
   const KEY = 'nettopo.lang'
   const TABLES = {}            // code → { original: translation }
   const PATTERNS = {}          // code → [[regex, replacement]] — sentences with values that have no exact key (engine f-strings, adapter-built text)
-  const REV = new Map()        // translation → original
-  const MADE = new Map()       // built translated sentence → built original sentence
-  const MADE_CAP = 20000
   const HANGUL = /[가-힣]/
   const fill = (s, a) => (a ? s.replace(/\{(\d)\}/g, (m, i) => (a[i] === undefined ? m : String(a[i]))) : s)
   const pick = () => {
@@ -33,22 +31,21 @@
     const tb = TABLES[lang]
     let e = tb ? tb[s] : undefined
     if (e === undefined && tb && HANGUL.test(s)) {
-      for (const [re, rep] of PATTERNS[lang] || []) if (re.test(s)) { e = s.replace(re, rep); if (MADE.size > MADE_CAP) MADE.clear(); MADE.set(e, s); break }
+      for (const [re, rep] of PATTERNS[lang] || []) if (re.test(s)) { e = s.replace(re, rep); break }
     }
     if (e === undefined) return fill(s, a)
-    if (!a) return e
-    const out = fill(e, a)
-    if (MADE.size > MADE_CAP) MADE.clear()
-    MADE.set(out, fill(s, a))
-    return out
+    return a ? fill(e, a) : e
   }
+  const isPair = (x) => !!x && typeof x === 'object' && typeof x.ko === 'string'
+  NT_T.both = (s, a) => ({
+    t: NT_T(s, a && a.map((x) => (isPair(x) ? x.t : x))),
+    ko: fill(s, a && a.map((x) => (isPair(x) ? x.ko : x)))
+  })
   NT_T.lang = () => lang
   NT_T.langs = () => ['ko', ...Object.keys(TABLES)]
   NT_T.has = (code) => code === 'ko' || !!TABLES[code]
-  NT_T.ko = (s) => (lang === 'ko' || typeof s !== 'string' ? s : (MADE.get(s) ?? REV.get(s) ?? s))
   NT_T.add = (code, table) => {
     TABLES[code] = table
-    for (const [k, v] of Object.entries(table)) if (!REV.has(v)) REV.set(v, k)
   }
   NT_T.addPatterns = (code, list) => { PATTERNS[code] = (PATTERNS[code] || []).concat(list) }
   // Only saves. The caller reloads (module-level constants are already fixed in one language).
