@@ -1869,8 +1869,7 @@
         ? NT_T('추가 근거 {0}종을 함께 반영했습니다', [ss.used.length])
         : (ss.unread.length || ss.unknown.length || !ss.off.length)
             ? NT_T('지표만으로 판정했습니다')
-            : NT_T('VPC 흐름 로그·Container Insights 가 꺼져 있어 지표만으로 ') +
-              NT_T('판정했습니다')
+            : NT_T('VPC 흐름 로그·Container Insights 가 꺼져 있어 지표만으로 판정했습니다')
       const parts = []
       if (ss.used.length) parts.push(NT_T('판정에 쓴 근거: {0}', [list(ss.used)]))
       if (ss.unread.length) {
