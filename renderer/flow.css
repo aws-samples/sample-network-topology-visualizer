@@ -47,6 +47,12 @@ body {
 .btn.warn { border-color: var(--warn); color: var(--warn); }
 /* 사용률 버튼(§17.25 · 대장 127) — 모니터링 값이 없으면 흐리게 서 있다(누를 수 없다는 뜻 · 숨기면 있는 줄을 모른다) */
 .btn.dis, .btn.dis:hover { opacity: .4; cursor: default; color: var(--dim); border-color: var(--line); }
+/* Language switch (KO | EN, `#btn-lang`) — the cells are filled by i18n.js; the current language is bold. */
+#btn-lang { padding: 0; }
+#btn-lang .lg { height: 100%; padding: 0 8px; display: flex; align-items: center; color: var(--dim); }
+#btn-lang .lg + .lg { border-left: 1px solid var(--line); }
+#btn-lang .lg:hover { color: var(--text); }
+#btn-lang .lg.on { color: var(--text); font-weight: 600; }
 
 /* 햄버거(☰ · `#menu`)는 지웠다(사용자 결정 2026-10-20 · 대장 130). 아래 두 팝오버는 그 메뉴와 같던 형태 그대로다. */
 
@@ -227,6 +233,7 @@ body {
 #modechip[hidden], #btn-live[hidden] { display: none; }
 /* 대장 128(§17.26 C-1): 상태를 얻을 길이 없는 화면(상태 함수 없는 스택 A · 구조만 구운 파일)은 세 버튼을 숨긴다 — 흐리게가 아니다 */
 #btn-mon[hidden], #btn-util[hidden], #btn-hist[hidden] { display: none; }
+#btn-lang[hidden] { display: none; }
 
 /* 빈 상태 (§13-56) — 카드 0일 때만 */
 #empty {

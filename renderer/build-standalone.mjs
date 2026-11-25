@@ -34,7 +34,7 @@ if (!process.env.FIX) {
 // 갈라진다 — 실측(2026-09-21): 배열에서만 파일 하나(당시 `levels.js`)를 빼도 정규식이 그 태그를 이미 먹어서
 // 아래 「잔존 참조」 검사가 통과하고, **13KB 가 사라진 산출물로 exit 0** 이 났다. 그래서
 // 정규식을 이 목록에서 만들고, 빌드 뒤에 블록이 전부 있는지 다시 센다.
-const TAGS = ['icons.js', 'fixture-flow.js', 'adapt-core.js', 'aws-icons.js', 'aws-canvas.js', 'flow.js']
+const TAGS = ['i18n.js', 'icons.js', 'fixture-flow.js', 'adapt-core.js', 'aws-icons.js', 'aws-canvas.js', 'flow.js']
 const FILES = TAGS.map((t) => (t === 'fixture-flow.js' ? FIX : t))
 // 태그 사이에 올 수 있는 것은 공백과 HTML 주석뿐이다(`flow.html` 이 실제로 주석을 끼운다).
 // `[\s\S]*?` 로 열어 두면 태그 사이에 들어온 **다른 태그까지** 조용히 먹는다.

@@ -31,10 +31,10 @@
     waf: '#889828' }      // 2.12.0(§17.41 · ✅ §17.18-16) — WAF 짙은 올리브(≈68° · 팔레트·상태색과 ΔE ≥ 28 · 배경 대비 ≥ 6:1 · 가속기 연올리브와 명도로 갈린다)
   const SNF = { pub: 'rgba(93,113,137,.10)', priv: 'rgba(75,93,116,.08)' }
   const SVC = { vpc: 'VPC', subnet: 'Subnet', igw: 'Internet Gateway', nat: 'NAT Gateway', tgw: 'Transit Gateway', vpce: 'VPC Endpoint',
-    ec2: 'EC2', rds: 'RDS', ecs: 'ECS', eks: 'EKS', sm: 'SageMaker', eic: 'EIC Endpoint', dxcon: 'Direct Connect', dxgw: 'DX Gateway', cf: 'CloudFront', asg: 'Auto Scaling Group', nfw: 'Network Firewall', vgw: 'Virtual Private GW', vpn: 'VPN Connection', cgw: 'Customer Gateway', xvpc: 'VPC', inet: '인터넷', lambda: 'Lambda', ec: 'ElastiCache', rdsc: 'DB Cluster', os: 'OpenSearch', msk: 'MSK', r53: 'Route 53', s3: 'S3', brk: 'Bedrock Endpoint', apigw: 'API Gateway', rdsp: 'RDS Proxy', ga: 'Global Accelerator', cwan: 'Cloud WAN', lsn: 'VPC Lattice', lsvc: 'Lattice Service', waf: 'WAF' }
-  const TYPE_KO = { igw: '인터넷 게이트웨이', nat: 'NAT 게이트웨이', vpce: 'VPC 엔드포인트', ec2: 'EC2 인스턴스', eks: 'EKS 클러스터',
-    tgw: 'Transit Gateway', dxcon: 'Direct Connect 연결', dxgw: 'Direct Connect 게이트웨이', lb: '로드밸런서', ecs: 'ECS 서비스', rds: 'RDS DB 인스턴스',
-    sm: 'SageMaker', eic: 'EC2 Instance Connect 엔드포인트', cf: 'CloudFront 배포', asg: 'Auto Scaling 그룹', nfw: 'Network Firewall', vgw: '가상 프라이빗 게이트웨이(VGW)', vpn: 'Site-to-Site VPN 연결', cgw: '고객 게이트웨이(CGW)', xvpc: 'VPC · 수집 범위 밖', inet: '인터넷 · 이 도구가 그린 칸(수집한 리소스가 아닙니다)', lambda: 'Lambda 함수', r53: 'Route 53 호스팅 영역', s3: 'S3 버킷 · CloudFront 오리진', ec: 'ElastiCache 캐시 클러스터', rdsc: 'RDS DB 클러스터(Aurora · 다중 AZ DB 클러스터)', os: 'OpenSearch Service 도메인', msk: 'Amazon MSK(Kafka) 클러스터', brk: 'Bedrock 엔드포인트 · VPC 인터페이스 엔드포인트(PrivateLink)', apigw: 'API Gateway API', rdsp: 'RDS 프록시', ga: 'Global Accelerator', cwan: 'Cloud WAN 코어 네트워크', lsn: 'VPC Lattice 서비스 네트워크', lsvc: 'VPC Lattice 서비스', waf: 'WAF 웹 ACL' }
+    ec2: 'EC2', rds: 'RDS', ecs: 'ECS', eks: 'EKS', sm: 'SageMaker', eic: 'EIC Endpoint', dxcon: 'Direct Connect', dxgw: 'DX Gateway', cf: 'CloudFront', asg: 'Auto Scaling Group', nfw: 'Network Firewall', vgw: 'Virtual Private GW', vpn: 'VPN Connection', cgw: 'Customer Gateway', xvpc: 'VPC', inet: NT_T('인터넷'), lambda: 'Lambda', ec: 'ElastiCache', rdsc: 'DB Cluster', os: 'OpenSearch', msk: 'MSK', r53: 'Route 53', s3: 'S3', brk: 'Bedrock Endpoint', apigw: 'API Gateway', rdsp: 'RDS Proxy', ga: 'Global Accelerator', cwan: 'Cloud WAN', lsn: 'VPC Lattice', lsvc: 'Lattice Service', waf: 'WAF' }
+  const TYPE_KO = { igw: NT_T('인터넷 게이트웨이'), nat: NT_T('NAT 게이트웨이'), vpce: NT_T('VPC 엔드포인트'), ec2: NT_T('EC2 인스턴스'), eks: NT_T('EKS 클러스터'),
+    tgw: 'Transit Gateway', dxcon: NT_T('Direct Connect 연결'), dxgw: NT_T('Direct Connect 게이트웨이'), lb: NT_T('로드밸런서'), ecs: NT_T('ECS 서비스'), rds: NT_T('RDS DB 인스턴스'),
+    sm: 'SageMaker', eic: NT_T('EC2 Instance Connect 엔드포인트'), cf: NT_T('CloudFront 배포'), asg: NT_T('Auto Scaling 그룹'), nfw: 'Network Firewall', vgw: NT_T('가상 프라이빗 게이트웨이(VGW)'), vpn: NT_T('Site-to-Site VPN 연결'), cgw: NT_T('고객 게이트웨이(CGW)'), xvpc: NT_T('VPC · 수집 범위 밖'), inet: NT_T('인터넷 · 이 도구가 그린 칸(수집한 리소스가 아닙니다)'), lambda: NT_T('Lambda 함수'), r53: NT_T('Route 53 호스팅 영역'), s3: NT_T('S3 버킷 · CloudFront 오리진'), ec: NT_T('ElastiCache 캐시 클러스터'), rdsc: NT_T('RDS DB 클러스터(Aurora · 다중 AZ DB 클러스터)'), os: NT_T('OpenSearch Service 도메인'), msk: NT_T('Amazon MSK(Kafka) 클러스터'), brk: NT_T('Bedrock 엔드포인트 · VPC 인터페이스 엔드포인트(PrivateLink)'), apigw: 'API Gateway API', rdsp: NT_T('RDS 프록시'), ga: 'Global Accelerator', cwan: NT_T('Cloud WAN 코어 네트워크'), lsn: NT_T('VPC Lattice 서비스 네트워크'), lsvc: NT_T('VPC Lattice 서비스'), waf: NT_T('WAF 웹 ACL') }
   // 모델 타입 → 그림 종류. SageMaker 세 종류는 한 그림(같은 색·아이콘)이고 종류 글자만 다르다(SM_KO).
   //   TGW 라우트 테이블은 여기 없다 — 아이콘이 아니라 TGW 정보창의 칸이다(아래 model 의 마지막 루프).
   const KIND = { internet_gateway: 'igw', nat_gateway: 'nat', load_balancer: 'lb', vpc_endpoint: 'vpce', ec2_instance: 'ec2',
@@ -45,12 +45,13 @@
     elasticache_cluster: 'ec', rds_db_cluster: 'rdsc', opensearch_domain: 'os', msk_cluster: 'msk',   // #114(2.9.0 · §17.32)
     api_gateway: 'apigw', rds_db_proxy: 'rdsp', global_accelerator: 'ga',
     core_network: 'cwan', lattice_service_network: 'lsn', lattice_service: 'lsvc', waf_web_acl: 'waf' }   // #129(2.11.0 · §17.39~40) · TGW Connect 는 아이콘이 아니다(전송 어태치먼트 선 위의 오버레이 · §17.38)   // 배치 D(2.10.0 · §17.35~37) · 탄력적 IP 는 아이콘이 아니다(주인 정보창 줄 · §17.34)
-  const SM_KO = { sagemaker_notebook_instance: 'SageMaker 노트북 인스턴스', sagemaker_domain: 'SageMaker Studio 도메인', sagemaker_endpoint: 'SageMaker 추론 엔드포인트' }
+  const SM_KO = { sagemaker_notebook_instance: NT_T('SageMaker 노트북 인스턴스'), sagemaker_domain: NT_T('SageMaker Studio 도메인'), sagemaker_endpoint: NT_T('SageMaker 추론 엔드포인트') }
   // 구성을 읽었는데 서브넷이 비었다(어댑터 `noSubnets`) — 종류마다 그 뜻이 다르다. 「걸친 서브넷이 이 화면에 없다」와 섞지 않는다.
   //   여기 있는 종류는 서브넷에 ENI 를 두지 않는 리전 단위 자원이다 → 리전 줄에 선다(§17.12 ①) · 정보창 「서브넷」 칸이 이 글로 이유를 말한다
-  const NOSUB_WHY = { ecs_service: '이 서비스는 서브넷을 지정하지 않습니다(awsvpc 네트워크 모드가 아닙니다 — 태스크는 컨테이너 인스턴스(EC2)에서 실행되고, 그 EC2 는 자기 서브넷에 표시됩니다)',
-    sagemaker_endpoint: 'VPC 설정이 없습니다 — 고객 VPC 밖(SageMaker 관리 네트워크)에서 실행됩니다',
-    opensearch_domain: 'VPC 설정이 없습니다 — 퍼블릭 엔드포인트 도메인입니다(고객 VPC 밖에 있어 이 VPC 에 네트워크 인터페이스가 없습니다)' }
+  const NOSUB_WHY_P = { ecs_service: NT_T.both('이 서비스는 서브넷을 지정하지 않습니다(awsvpc 네트워크 모드가 아닙니다 — 태스크는 컨테이너 인스턴스(EC2)에서 실행되고, 그 EC2 는 자기 서브넷에 표시됩니다)'),
+    sagemaker_endpoint: NT_T.both('VPC 설정이 없습니다 — 고객 VPC 밖(SageMaker 관리 네트워크)에서 실행됩니다'),
+    opensearch_domain: NT_T.both('VPC 설정이 없습니다 — 퍼블릭 엔드포인트 도메인입니다(고객 VPC 밖에 있어 이 VPC 에 네트워크 인터페이스가 없습니다)') }
+  const NOSUB_WHY = Object.fromEntries(Object.entries(NOSUB_WHY_P).map(([k, v]) => [k, v.t]))
   // Lambda(2.7.0 · §17.27) = 리전 자원 줄 — VPC 에 붙었는지 모른다(`lambda:GetFunctionConfiguration` 을 더하지 않았다)
   // API Gateway(2.10.0 · §17.35) = 리전 자원 줄 — API 는 VPC 에 살지 않는다(VPC 링크가 LB 로 들어간다)
   // VPC Lattice(2.11.0 · §17.40) = 리전 자원 줄 — 서비스 네트워크는 붙은 VPC 위 변 포트 가운데(TGW 와 같은 자리) · 서비스는 줄의 맨 끝
@@ -68,15 +69,16 @@
   // 계정 줄바꿈(§17.15): 기준 화면(1600×1000)에서 「화면 맞춤」 배율(100% 상한)이 가장 커지게 한 줄의 계정 수를 고른다.
   // 한 줄보다 WRAP_GAIN 배 이상 커질 때만 내린다 — 한 줄로도 100% 로 보이는 몇 개짜리는 지금처럼 한 줄이다
   const REF_W = 1600, REF_H = 1000, WRAP_GAIN = 1.5
-  const NC = '이 도구는 수집하지 않습니다'
+  const NC = NT_T('이 도구는 수집하지 않습니다')
   // 규칙 공백(§3i) — 표 사유 열의 어휘는 flow.js `WHY_NONE` 과 **같은 말로 시작한다**. 「그리지 않는 종류」(§7)와 갈라야 개발이 할 일이 보인다.
   //   옛 화면을 걷어낸 뒤라 「새 도식에 아직」은 대비할 화면이 없는 말이다(W5 2026-10-03)
-  const WHY_NEW = '아직 그리지 못하는 종류'
-  const REGION_KO = { 'us-east-1': '버지니아 북부', 'us-east-2': '오하이오', 'us-west-1': '캘리포니아 북부', 'us-west-2': '오리건',
-    'ca-central-1': '캐나다 중부', 'sa-east-1': '상파울루', 'eu-central-1': '프랑크푸르트', 'eu-west-1': '아일랜드', 'eu-west-2': '런던',
-    'eu-west-3': '파리', 'eu-north-1': '스톡홀름', 'eu-south-1': '밀라노', 'ap-northeast-1': '도쿄', 'ap-northeast-2': '서울',
-    'ap-northeast-3': '오사카', 'ap-southeast-1': '싱가포르', 'ap-southeast-2': '시드니', 'ap-south-1': '뭄바이', 'ap-east-1': '홍콩',
-    'me-south-1': '바레인', 'af-south-1': '케이프타운' }
+  const WHY_NEW_P = NT_T.both('아직 그리지 못하는 종류')
+  const WHY_NEW = WHY_NEW_P.t
+  const REGION_KO = { 'us-east-1': NT_T('버지니아 북부'), 'us-east-2': NT_T('오하이오'), 'us-west-1': NT_T('캘리포니아 북부'), 'us-west-2': NT_T('오리건'),
+    'ca-central-1': NT_T('캐나다 중부'), 'sa-east-1': NT_T('상파울루'), 'eu-central-1': NT_T('프랑크푸르트'), 'eu-west-1': NT_T('아일랜드'), 'eu-west-2': NT_T('런던'),
+    'eu-west-3': NT_T('파리'), 'eu-north-1': NT_T('스톡홀름'), 'eu-south-1': NT_T('밀라노'), 'ap-northeast-1': NT_T('도쿄'), 'ap-northeast-2': NT_T('서울'),
+    'ap-northeast-3': NT_T('오사카'), 'ap-southeast-1': NT_T('싱가포르'), 'ap-southeast-2': NT_T('시드니'), 'ap-south-1': NT_T('뭄바이'), 'ap-east-1': NT_T('홍콩'),
+    'me-south-1': NT_T('바레인'), 'af-south-1': NT_T('케이프타운') }
   // 정보창에 넣지 않는 값(§17.11) — BGP 인증 키 · 고객 라우터 설정 · EKS CA · SG 짝 계정 · 흐름 로그 목적지
   const SECRET = /auth.?key|router.?config|certificate|ca.?data|userid|flow.?log|bucket|arn/i
 
@@ -156,9 +158,10 @@
     const up = (n, t) => { let c = n; let g = 0; while (c && g++ < 40) { if (c.type === t) return c; c = c.parent_id ? mById.get(c.parent_id) : null } return null }
     const aiOf = (n) => { const a = up(n, 'account'); return a ? X.accounts.indexOf(a) : -1 }
     const Mo = { accts: [], regs: new Map(), vpcs: new Map(), subnets: new Map(), items: new Map(), hubs: new Map(), globs: new Map(),
-      ports: new Map(), portOf: new Map(), peers: [], xpeers: [], tgwPeers: [], dxtgw: [], stubLines: [], hidden: new Map(), why: new Map(),
+      ports: new Map(), portOf: new Map(), peers: [], xpeers: [], tgwPeers: [], dxtgw: [], stubLines: [], hidden: new Map(), why: new Map(), whyKo: new Map(),
       partial: new Set(), list: new Map(), rel: new Map(), vifOf: new Map(), attOf: new Map(), tgwRt: new Map(), pp: new Map(), ppOf: new Map(), cfo: [], vpnl: [], cnx: [], ltg: [], wfl: [], wfg: [] }
-    const why = (n, w) => Mo.why.set(n.id, w)
+    // `w` = `NT_T.both(...)` — the shown reason and its Korean original (flow.js classifies the 「!」 rows on the original)
+    const why = (n, w) => { Mo.why.set(n.id, w.t); Mo.whyKo.set(n.id, w.ko) }
     const natIx = new Map(); for (const n of T.nodes) natIx.set(X.acctOf(n) + '|' + natId(n), n.id)
     const byNat = (n, v) => (v ? natIx.get(X.acctOf(n) + '|' + v) || null : null)
     const eOf = new Map(); for (const e of T.edges) { push(eOf, e.source, e); if (e.target !== e.source) push(eOf, e.target, e) }
@@ -171,7 +174,7 @@
     const live = T.nodes.filter((n) => !gone(n.id))
     for (const n of live) {
       if (n.type !== 'region') continue
-      const i = aiOf(n); if (i < 0 || !Mo.accts.includes(i)) { why(n, '들어갈 계정 상자가 없다'); continue }
+      const i = aiOf(n); if (i < 0 || !Mo.accts.includes(i)) { why(n, NT_T.both('들어갈 계정 상자가 없다')); continue }
       push(Mo.regs, i, n)
     }
     for (const rs of Mo.regs.values()) rs.sort((a, b) => X.regionRank(a.name) - X.regionRank(b.name) || a.name.localeCompare(b.name))
@@ -180,7 +183,7 @@
 
     for (const n of live) {
       if (n.type !== 'vpc') continue
-      const r = regOk(n); if (!r) { why(n, '들어갈 리전 상자가 없다'); continue }
+      const r = regOk(n); if (!r) { why(n, NT_T.both('들어갈 리전 상자가 없다')); continue }
       const a = n.attrs || {}
       Mo.vpcs.set(n.id, { id: n.id, n, acct: aiOf(n), region: r.id, code: r.name, name: disp(n), named: named(n), cidr: a.cidr || '',
         subnets: [], items: [], ports: [] })
@@ -188,7 +191,7 @@
     for (const n of live) {
       if (n.type !== 'subnet') continue
       const vn = up(mById.get(n.parent_id), 'vpc'); const v = vn && Mo.vpcs.get(vn.id)
-      if (!v) { why(n, '들어갈 VPC 상자가 없다'); continue }
+      if (!v) { why(n, NT_T.both('들어갈 VPC 상자가 없다')); continue }
       const s = { id: n.id, n, vpc: v.id, acct: v.acct, az: n.az || (n.attrs || {}).az || '?', name: disp(n), named: named(n),
         tier: n.tier === 'public' ? 'public' : 'private', items: [], exits: new Set(), routes: [] }
       Mo.subnets.set(n.id, s); v.subnets.push(s)
@@ -201,11 +204,11 @@
       const base = { id: n.id, n, kind: k, acct: aiOf(n), name: disp(n), named: named(n), state: a.state, subnets: [] }
       // CloudFront 범위 WAF(2.12.0 · §17.41) = 리전이 없다 → 전역 줄(아래 다른 전역 자원과 같은 자리) · 리전 범위 WAF = 리전 자원 줄(아래 `hubK`)
       if (k === 'waf' && n.wafScope === 'cloudfront') {
-        if (base.acct < 0 || !Mo.accts.includes(base.acct)) { why(n, '들어갈 계정 상자가 없다'); continue }
+        if (base.acct < 0 || !Mo.accts.includes(base.acct)) { why(n, NT_T.both('들어갈 계정 상자가 없다')); continue }
         Mo.globs.set(n.id, base); continue
       }
       if (k === 'dxgw' || k === 'cf' || k === 'r53' || k === 's3' || k === 'ga' || k === 'cwan') { // 리전이 없는 자원 → 계정 상자의 전역 줄(§17.1 · Route 53 = 2.8.0 §17.30 · S3 = §17.31 · 가속기 = 2.10.0 §17.37)
-        if (base.acct < 0 || !Mo.accts.includes(base.acct)) { why(n, '들어갈 계정 상자가 없다'); continue }
+        if (base.acct < 0 || !Mo.accts.includes(base.acct)) { why(n, NT_T.both('들어갈 계정 상자가 없다')); continue }
         // S3 버킷(§17.31) — 버킷 이름이 native id 이자 사람이 알아보는 이름이다(Name 태그가 없다) → 이름표 `S3 (버킷 이름)`
         if (k === 's3') base.named = true
         Mo.globs.set(n.id, base); continue
@@ -217,15 +220,15 @@
       const inVpcFn = k === 'lambda' && v && Array.isArray(n.spans) && n.spans.length
       const hubK = HUB.has(k) || k === 'waf'   // 리전 범위 WAF(2.12.0 · §17.41) = 리전 자원 줄
       if ((hubK && !inVpcFn) || (k === 'igw' && !v) || regional) {
-        const r = regOk(n); if (!r) { why(n, '들어갈 리전 상자가 없다'); continue }
+        const r = regOk(n); if (!r) { why(n, NT_T.both('들어갈 리전 상자가 없다')); continue }
         Mo.hubs.set(n.id, { ...base, region: r.id, detached: k === 'igw', ...(regional ? { regional: true } : {}) }); continue
       }
       // ASG·ECS·엔드포인트는 VPC 를 서브넷으로만 안다(어댑터) — 그 서브넷이 이 화면에 없으면 VPC 상자가 아니라 서브넷이 없는 것이다.
       //   서브넷이 **비었다**(읽었고 없다)는 다른 일이다 · 구성을 못 읽어(권한 부족) 자리를 모르는 것도 다른 일이다
       if (!v) {
-        why(n, n.noSubnets ? NOSUB_WHY[n.type] || '구성에 서브넷이 없다 — 들어갈 VPC 를 말하지 않는다'
-          : Array.isArray(n.spans) ? '걸친 서브넷이 이 화면에 없다'
-            : Mo.partial.has(n.id) ? '구성 일부를 읽지 못해(권한 부족) 들어갈 자리를 모른다' : '들어갈 VPC 상자가 없다')
+        why(n, n.noSubnets ? NOSUB_WHY_P[n.type] || NT_T.both('구성에 서브넷이 없다 — 들어갈 VPC 를 말하지 않는다')
+          : Array.isArray(n.spans) ? NT_T.both('걸친 서브넷이 이 화면에 없다')
+            : Mo.partial.has(n.id) ? NT_T.both('구성 일부를 읽지 못해(권한 부족) 들어갈 자리를 모른다') : NT_T.both('들어갈 VPC 상자가 없다'))
         continue
       }
       const it = { ...base, region: v.region, vpc: v.id }
@@ -255,7 +258,7 @@
         }
         if (!pl) continue
         xg.add(n.id)
-        Mo.hubs.set(n.id, { id: n.id, n, kind: 'tgw', ghost: true, xscope: true, acct: pl.acct, xacct: aiOf(n), region: pl.region, name: '범위 밖', named: false, subnets: [] })
+        Mo.hubs.set(n.id, { id: n.id, n, kind: 'tgw', ghost: true, xscope: true, acct: pl.acct, xacct: aiOf(n), region: pl.region, name: NT_T('범위 밖'), named: false, subnets: [] })
       }
     }
     Mo.xg = xg
@@ -275,11 +278,11 @@
       it.subnets = [...S].sort()
       // 걸친 서브넷을 말하는 종류인데 이 화면에 하나도 없으면 놓을 곳이 없다 — 오른쪽 열에 세우면 「어느 서브넷에도 없다」는 거짓이 된다
       if (Array.isArray(it.n.spans) && !it.subnets.length) {
-        why(it.n, it.n.noSubnets ? NOSUB_WHY[it.n.type] || '구성에 서브넷이 없다 — 들어갈 VPC 를 말하지 않는다' : '걸친 서브넷이 이 화면에 없다'); Mo.items.delete(it.id); const v = Mo.vpcs.get(it.vpc); v.items.splice(v.items.indexOf(it), 1); continue
+        why(it.n, it.n.noSubnets ? NOSUB_WHY_P[it.n.type] || NT_T.both('구성에 서브넷이 없다 — 들어갈 VPC 를 말하지 않는다') : NT_T.both('걸친 서브넷이 이 화면에 없다')); Mo.items.delete(it.id); const v = Mo.vpcs.get(it.vpc); v.items.splice(v.items.indexOf(it), 1); continue
       }
       for (const sid of it.subnets) Mo.subnets.get(sid).items.push(it)
       // NAT 은 서브넷 하나에만 선다(AWS 규칙 · 엔진 = 부모 서브넷) — 그 서브넷이 이 화면에 없으면 놓을 곳이 없다(#45 리뷰)
-      if (it.kind === 'nat' && it.subnets.length !== 1) why(it.n, 'NAT 게이트웨이가 선 서브넷이 이 화면에 없다')
+      if (it.kind === 'nat' && it.subnets.length !== 1) why(it.n, NT_T.both('NAT 게이트웨이가 선 서브넷이 이 화면에 없다'))
     }
     // CloudFront → 원본 LB(#43 · §17.1) — 전역 줄의 배포와 VPC 안의 LB 가 둘 다 이 화면에 있을 때만 선이 된다(아니면 정보창 · 잔차)
     //   2.8.0(§17.31) — VPC 원본은 EC2 인스턴스도 원본이다(같은 길 · 끝 = 그 아이콘·묶음 칸) · `via`(VPC 원본 · Route 53 별칭)는 정보창 「오리진 유형」 줄.
@@ -340,7 +343,7 @@
       const t2 = byNat(n, a['transit gateway']); if (t2 && Mo.hubs.has(t2)) tg.add(t2)
       const tgs = [...tg]
       const par = mById.get(n.parent_id); const v = par && par.type === 'vpc' ? Mo.vpcs.get(par.id) : null
-      if (!tgs.length) { why(n, '연결된 Transit Gateway 가 이 화면에 없습니다(수집 범위 밖일 수 있습니다)'); continue }
+      if (!tgs.length) { why(n, NT_T.both('연결된 Transit Gateway 가 이 화면에 없습니다(수집 범위 밖일 수 있습니다)')); continue }
       for (const t of tgs) push(Mo.attOf, t, n)
       if (v) {
         const t = tgs[0]; const k = v.id + '|' + t
@@ -358,7 +361,7 @@
         else {
           const gid = 'aws:ghost:' + n.id; const t = Mo.hubs.get(tgs[0])
           Mo.globs.set(gid, { id: gid, n: { id: gid, type: 'aws-ghost-dxgw', parent_id: null, region: null, attrs: {} }, kind: 'dxgw', ghost: true,
-            acct: t.acct, name: 'DX 게이트웨이', named: false, subnets: [], att: n.id })
+            acct: t.acct, name: NT_T('DX 게이트웨이'), named: false, subnets: [], att: n.id })
           Mo.dxtgw.push({ tgw: tgs[0], dxgw: gid, att: n.id })
         }
       } else if (/peering/i.test(kd) && tgs.length === 2) Mo.tgwPeers.push({ a: tgs[0], b: tgs[1], att: n.id })
@@ -403,7 +406,7 @@
       if (pk) { c.port = pk; Mo.hidden.set(c.id, pk) } else if (dx) c.dx = dx
       else {
         Mo.hidden.delete(c.id)
-        why(c.n, on ? `TGW Connect 어태치먼트 — 올라탄 어태치먼트(${natId(mById.get(on) || { id: on })})가 이 화면에 없습니다` : `TGW Connect 어태치먼트 — 올라탄 어태치먼트(${(c.n.connect || {}).transport || '?'})가 이 수집본에 없습니다`)
+        why(c.n, on ? NT_T.both('TGW Connect 어태치먼트 — 올라탄 어태치먼트({0})가 이 화면에 없습니다', [natId(mById.get(on) || { id: on })]) : NT_T.both('TGW Connect 어태치먼트 — 올라탄 어태치먼트({0})가 이 수집본에 없습니다', [(c.n.connect || {}).transport || '?']))
       }
     }
     // VPN 연결 ↔ CGW · VGW(엔진 `attachment` · TGW 쪽은 위 어태치먼트 루프)
@@ -417,8 +420,8 @@
     // 스텁(수집 범위 밖 계정의 TGW) = 흐린 허브
     for (const n of live) {
       if (n.type !== 'stub') continue
-      const r = regOk(n); if (!r) { why(n, '들어갈 리전 상자가 없다'); continue }
-      Mo.hubs.set(n.id, { id: n.id, n, kind: 'tgw', ghost: true, stub: true, acct: aiOf(n), region: r.id, name: '다른 계정', named: false, subnets: [] })
+      const r = regOk(n); if (!r) { why(n, NT_T.both('들어갈 리전 상자가 없다')); continue }
+      Mo.hubs.set(n.id, { id: n.id, n, kind: 'tgw', ghost: true, stub: true, acct: aiOf(n), region: r.id, name: NT_T('다른 계정'), named: false, subnets: [] })
     }
     // TGW ↔ TGW · TGW → 스텁 (엣지로 온 피어링)
     for (const e of T.edges) {
@@ -445,29 +448,29 @@
         if (vs.length === 2) { Mo.peers.push({ a: vs[0], b: vs[1], pcx: n.id, n }); Mo.hidden.set(n.id, 'aws:rep') } else if (side) {
           const v = Mo.vpcs.get(vs[0]); const gid = 'aws:xvpc:' + n.id
           Mo.xpeers.push({ a: vs[0], pcx: n.id, n, it: { id: gid, n: { id: gid, type: 'aws-xvpc', parent_id: null, region: null, attrs: {} }, kind: 'xvpc', ghost: true, outside: true,
-            side, other: mine && side.acct && mine.acct === side.acct ? '다른 리전' : '다른 계정', acct: v.acct, region: v.region, name: '범위 밖', named: false, subnets: [] } })
+            side, other: mine && side.acct && mine.acct === side.acct ? NT_T('다른 리전') : NT_T('다른 계정'), acct: v.acct, region: v.region, name: NT_T('범위 밖'), named: false, subnets: [] } })
           Mo.hidden.set(n.id, 'aws:rep')
-        } else why(n, 'VPC 피어링의 두 VPC 가 이 화면에 다 있지 않다')
+        } else why(n, NT_T.both('VPC 피어링의 두 VPC 가 이 화면에 다 있지 않다'))
       } else if (t === 'direct_connect_virtual_interface') {
         const p = Mo.hubs.get(n.parent_id)
-        if (p && p.kind === 'dxcon') { Mo.hidden.set(n.id, p.id); push(Mo.vifOf, p.id, n) } else why(n, '이 VIF 의 Direct Connect 연결이 이 화면에 없다')
+        if (p && p.kind === 'dxcon') { Mo.hidden.set(n.id, p.id); push(Mo.vifOf, p.id, n) } else why(n, NT_T.both('이 VIF 의 Direct Connect 연결이 이 화면에 없다'))
       } else if (t === 'internet') {
         // 픽스처의 인터넷 노드(§16.8) — 칸이 있는 IGW 중 첫째의 칸이 대표한다(§17.24). 칸이 없으면 전처럼 IGW 가
         const gs = eo(n.id).map((e) => other(e, n.id)).filter((id) => Mo.items.has(id) && Mo.items.get(id).kind === 'igw').sort()
         const gc = gs.find((id) => Mo.dflt.has(id))
-        if (gc) Mo.hidden.set(n.id, 'aws:inet:' + gc); else if (gs[0]) Mo.hidden.set(n.id, gs[0]); else why(n, '이 인터넷 노드에 닿는 인터넷 게이트웨이가 이 화면에 없다')
+        if (gc) Mo.hidden.set(n.id, 'aws:inet:' + gc); else if (gs[0]) Mo.hidden.set(n.id, gs[0]); else why(n, NT_T.both('이 인터넷 노드에 닿는 인터넷 게이트웨이가 이 화면에 없다'))
       } else if (t === 'external_ip') {
         // 아이콘이 없다(§17.27) — LB → 출구 포트 선이 대표한다(모델 끝의 LB 대상 절이 숨긴다). 그 LB 가 이 화면에 없으면 놓을 곳이 없다
-        if (!eo(n.id).some((e) => e.kind === 'lbtarget' && e.target === n.id && Mo.items.has(e.source) && !gone(e.source))) why(n, '이 외부 IP 를 대상으로 하는 로드밸런서가 이 화면에 없습니다')
+        if (!eo(n.id).some((e) => e.kind === 'lbtarget' && e.target === n.id && Mo.items.has(e.source) && !gone(e.source))) why(n, NT_T.both('이 외부 IP 를 대상으로 하는 로드밸런서가 이 화면에 없습니다'))
       } else if (t === 'aws_service' || t === 'endpoint_service') {
         const g = eo(n.id).map((e) => other(e, n.id)).find((id) => Mo.items.has(id) && Mo.items.get(id).kind === 'vpce')
-        if (g) Mo.hidden.set(n.id, g); else why(n, '이 서비스에 닿는 VPC 엔드포인트가 이 화면에 없다')
+        if (g) Mo.hidden.set(n.id, g); else why(n, NT_T.both('이 서비스에 닿는 VPC 엔드포인트가 이 화면에 없다'))
       } else if (t === 'transit_gateway_route_table') {
         // TGW 정보창의 「라우트 테이블」 칸이 대표한다(§17.11) — 흐린 TGW(범위 밖·스텁)에는 정보창 칸이 없으므로 사유로 남긴다
         const h = Mo.hubs.get(n.parent_id)
-        if (h && h.kind === 'tgw' && !h.ghost) { Mo.hidden.set(n.id, h.id); push(Mo.tgwRt, h.id, n) } else why(n, '이 라우트 테이블의 Transit Gateway 가 이 화면에 없다')
+        if (h && h.kind === 'tgw' && !h.ghost) { Mo.hidden.set(n.id, h.id); push(Mo.tgwRt, h.id, n) } else why(n, NT_T.both('이 라우트 테이블의 Transit Gateway 가 이 화면에 없다'))
       } else if (t === 'route_table' || t === 'security_group' || t === 'network_acl') {
-        const v = up(n, 'vpc'); if (v && Mo.vpcs.has(v.id)) Mo.hidden.set(n.id, v.id); else why(n, '이 리소스의 VPC 가 이 화면에 없습니다')
+        const v = up(n, 'vpc'); if (v && Mo.vpcs.has(v.id)) Mo.hidden.set(n.id, v.id); else why(n, NT_T.both('이 리소스의 VPC 가 이 화면에 없습니다'))
       } else if (t === 'elastic_ip') {
         // 탄력적 IP(2.10.0 · §17.34) = 아이콘이 아니라 **주인의 정보창 줄**이다 — 주인이 이 화면에 있으면 주인이 대표한다(규칙상 그리지 않는다).
         //   🔁 연결이 없는 EIP 는 대리 상자가 대표한다 — 「!」 에 없다(사용자 결정 2026-10-21 오전 · 「!」 = 도구가 못 읽거나 못 그린 것만 · 쓰지 않는 EIP 는 AWS 쪽 사실)
@@ -475,9 +478,9 @@
         const o = n.eipOwner
         if (o && (Mo.items.has(o) || Mo.hubs.has(o) || Mo.globs.has(o))) Mo.hidden.set(n.id, o)
         else if (n.eipIdle) Mo.hidden.set(n.id, 'aws:rep')
-        else if (n.eipWhy) why(n, `연결 대상을 찾지 못한 탄력적 IP입니다 — ${eipWhyWord(n.eipWhy)}`)
-        else why(n, o ? '이 탄력적 IP 가 연결된 리소스가 이 화면에 없습니다' : '연결 대상을 찾지 못한 탄력적 IP입니다')
-      } else why(n, `${WHY_NEW} — 타입 «${t}»`)
+        else if (n.eipWhy) why(n, NT_T.both('연결 대상을 찾지 못한 탄력적 IP입니다 — {0}', [{ t: eipWhyWord(n.eipWhy), ko: eipWhyWord(n.eipWhy) }]))
+        else why(n, o ? NT_T.both('이 탄력적 IP 가 연결된 리소스가 이 화면에 없습니다') : NT_T.both('연결 대상을 찾지 못한 탄력적 IP입니다'))
+      } else why(n, NT_T.both('{0} — 타입 «{1}»', [WHY_NEW_P, t]))
     }
     // VPC 피어링 포트(§17.1 · §17.18-11) — VPC 한쪽마다 키 하나. 그 VPC 서브넷이 이 피어링으로 라우트를 보낼 때만 그린다(layoutVpc)
     const ppAdd = (vid, pcx, n, other) => { const key = `aws:pp:${vid}|${pcx}`; Mo.ppOf.set(vid + '|' + pcx, key); Mo.pp.set(key, { key, vpc: vid, pcx, n, other }) }
@@ -578,23 +581,23 @@
   // ======================================================================== 정보(누르면 보이는 것)
   // CloudFront 오리진 유형(§17.31 · 엔진 `via`) — 주소 꼴(#43)은 null(줄 없음)
   // 탄력적 IP 의 못 이은 까닭(2.10.0 · §17.34 · 엔진 `association_unresolved` = 「<id> <까닭>」) — LB 대상과 같은 까닭 코드는 같은 말(`lbtWhy`)
-  const EIP_WHY = { no_eni: '연결된 ENI 를 찾지 못했습니다(삭제되었거나 다른 계정의 ENI)', eni_unread: '권한이 없어 연결된 ENI 를 읽지 못했습니다', not_collected: '연결된 리소스가 이 수집본에 없습니다(수집하지 않음)' }
+  const EIP_WHY = { no_eni: NT_T('연결된 ENI 를 찾지 못했습니다(삭제되었거나 다른 계정의 ENI)'), eni_unread: NT_T('권한이 없어 연결된 ENI 를 읽지 못했습니다'), not_collected: NT_T('연결된 리소스가 이 수집본에 없습니다(수집하지 않음)') }
   const eipWhyWord = (line) => { const [id, code] = String(line).split(' '); return `${id} · ${EIP_WHY[code] || lbtWhy(code)}` }
   // 배치 D 까닭 코드(VPC 링크 · 프록시 대상 · 가속기 엔드포인트 · §17.35~37) → 고객 말
-  const BD_WHY = { stage_variable: '단계 변수로 지정한 VPC 링크입니다(배포 단계마다 다를 수 있어 선으로 잇지 않습니다)', link_not_found: '이 VPC 링크를 찾지 못했습니다',
-    cloud_map: 'Cloud Map 서비스로 연결합니다(이 도구는 Cloud Map 을 수집하지 않습니다)', unknown_target: '연결 대상을 해석하지 못했습니다',
-    not_collected: '이 수집본에 없는 리소스입니다(삭제되었거나 수집하지 않음)', not_in_scope: '수집 범위 밖 계정·리전입니다',
-    eip_no_owner: '탄력적 IP 가 어느 리소스에도 연결되어 있지 않습니다', unknown_type: '이 도구가 모르는 엔드포인트 유형입니다' }
-  const bdWhy = (u) => (u.code === 'not_in_scope' && u.region ? `수집 범위 밖 리전(${REGION_KO[u.region] ? `${REGION_KO[u.region]} · ${u.region}` : u.region})입니다 — 이 리전을 수집 범위에 넣으면 선으로 이어집니다` : BD_WHY[u.code] || `${u.code} — 연결하지 못했습니다`)
+  const BD_WHY = { stage_variable: NT_T('단계 변수로 지정한 VPC 링크입니다(배포 단계마다 다를 수 있어 선으로 잇지 않습니다)'), link_not_found: NT_T('이 VPC 링크를 찾지 못했습니다'),
+    cloud_map: NT_T('Cloud Map 서비스로 연결합니다(이 도구는 Cloud Map 을 수집하지 않습니다)'), unknown_target: NT_T('연결 대상을 해석하지 못했습니다'),
+    not_collected: NT_T('이 수집본에 없는 리소스입니다(삭제되었거나 수집하지 않음)'), not_in_scope: NT_T('수집 범위 밖 계정·리전입니다'),
+    eip_no_owner: NT_T('탄력적 IP 가 어느 리소스에도 연결되어 있지 않습니다'), unknown_type: NT_T('이 도구가 모르는 엔드포인트 유형입니다') }
+  const bdWhy = (u) => (u.code === 'not_in_scope' && u.region ? NT_T('수집 범위 밖 리전({0})입니다 — 이 리전을 수집 범위에 넣으면 선으로 이어집니다', [REGION_KO[u.region] ? `${REGION_KO[u.region]} · ${u.region}` : u.region]) : BD_WHY[u.code] || NT_T('{0} — 연결하지 못했습니다', [u.code]))
   // WAF 웹 ACL(2.12.0 · §17.41 · ADR 0014) — 보호 대상이 없을 때의 말. 🔴 「어디에도 붙지 않았다」고 쓰지 않는다 — 엔진은 이 툴이 그리는 셋
   //   (CloudFront · ALB · API Gateway)만 묻는다(AppSync · Cognito · App Runner · Verified Access 는 묻지 않는다)
-  const WAF_NONE = '이 툴이 그리는 CloudFront·ALB·API Gateway 중 보호 대상이 없습니다'
-  const WAF_RES = '연결된 AWS 리소스'   // 칸 이름 = WAF 콘솔 탭 「Associated AWS resources」(§17.11 「콘솔 표현 원칙」 · 옛 「보호 대상」 · WAF 콘솔은 한국어 화면에서도 영어라 그 탭 이름을 옮긴다)
+  const WAF_NONE = NT_T('이 툴이 그리는 CloudFront·ALB·API Gateway 중 보호 대상이 없습니다')
+  const WAF_RES = NT_T('연결된 AWS 리소스')   // 칸 이름 = WAF 콘솔 탭 「Associated AWS resources」(§17.11 「콘솔 표현 원칙」 · 옛 「보호 대상」 · WAF 콘솔은 한국어 화면에서도 영어라 그 탭 이름을 옮긴다)
   // WAF 보호 선의 정보창(세 길 모두 같은 말 · §17.41)
   function wafLineDet (w, name, what, stages) {
-    return { title: `WAF 웹 ACL → ${what}`, sub: '이 웹 ACL 의 규칙이 이 리소스로 들어오는 요청을 먼저 검사합니다',
-      rows: [['웹 ACL', w ? w.name : '?'], [what, name], ...(stages && stages.length ? [['스테이지', stages.join(', ')]] : []),
-        ['기본 동작', ((w && w.n.attrs) || {})['기본 동작'] || '?']], secs: [] }
+    return { title: NT_T('WAF 웹 ACL → {0}', [what]), sub: NT_T('이 웹 ACL 의 규칙이 이 리소스로 들어오는 요청을 먼저 검사합니다'),
+      rows: [[NT_T('웹 ACL'), w ? w.name : '?'], [what, name], ...(stages && stages.length ? [[NT_T('스테이지'), stages.join(', ')]] : []),
+        [NT_T('기본 동작'), ((w && w.n.attrs) || {})['기본 동작'] || '?']], secs: [] }
   }
   // 이 자원을 보호하는 WAF 웹 ACL(엔진 `waf_protection` 의 출발) — 정보창 「웹 ACL」 줄을 누르면 그 WAF 정보창으로(§17.41)
   const wafOf = (id) => { const e = X.T.edges.find((x) => x.kind === 'wafp' && x.target === id); return e ? e.source : null }
@@ -606,29 +609,29 @@
       const tg = g.n.gaTargets || []; const un = g.n.gaUnres || []
       for (const r of [...new Set([...tg.map((t) => t.region), ...un.map((u) => u.region).filter(Boolean), ...(g.n.gaEmpty || [])])].sort()) {   // 빈 그룹 리전도 돈다 — 줄을 내지 않는 것은 아래 `n` 이 정한다
         const n = un.filter((u) => (u.code === 'not_in_scope' ? u.region === r : u.region ? u.region === r : tg.some((t) => t.ref === u.ref && t.region === r))).length
-        if (n) out.push({ id: `${g.id}|${r}`, ga: g.id, name: g.name, region: r, text: `Global Accelerator ${g.name} — ${gaRegion(r)}의 대상 ${n}개를 그리지 못했습니다` })
+        if (n) out.push({ id: `${g.id}|${r}`, ga: g.id, name: g.name, region: r, text: NT_T('Global Accelerator {0} — {1}의 대상 {2}개를 그리지 못했습니다', [g.name, gaRegion(r), n]) })
       }
     }
     // #129(2.11.0 · §17.39~40) — 그린 자원의 그리지 못한 연결·대상(정보창의 주의색 줄과 같은 셈) · 자원마다 한 줄
     const code = (h) => { const r = X.mById.get(h.region); return r ? r.name : '—' }
     for (const g of [...M.globs.values()].filter((x) => x.kind === 'cwan').sort((a, b) => (a.id < b.id ? -1 : 1))) {
       const n = (g.n.cwanUnres || []).length + (g.n.cwanOther || []).length
-      if (n) out.push({ id: `${g.id}|cwan`, open: g.id, type: 'core_network', name: g.name, region: '—', text: `Cloud WAN ${g.name} — 연결 ${n}개를 그리지 못했습니다` })
+      if (n) out.push({ id: `${g.id}|cwan`, open: g.id, type: 'core_network', name: g.name, region: '—', text: NT_T('Cloud WAN {0} — 연결 {1}개를 그리지 못했습니다', [g.name, n]) })
     }
     for (const h of [...M.hubs.values()].filter((x) => x.kind === 'lsn' || x.kind === 'lsvc').sort((a, b) => (a.id < b.id ? -1 : 1))) {
       const n = h.kind === 'lsn' ? (h.n.lsnUnres || []).length + (h.n.lsnSvcUnres || []).length : (h.n.lsvcUnres || []).length
       if (n) out.push({ id: `${h.id}|${h.kind}`, open: h.id, type: h.kind === 'lsn' ? 'lattice_service_network' : 'lattice_service', name: h.name, region: code(h),
-        text: h.kind === 'lsn' ? `VPC Lattice 서비스 네트워크 ${h.name} — 연결 ${n}개를 그리지 못했습니다` : `VPC Lattice 서비스 ${h.name} — 대상 ${n}개를 그리지 못했습니다` })
+        text: h.kind === 'lsn' ? NT_T('VPC Lattice 서비스 네트워크 {0} — 연결 {1}개를 그리지 못했습니다', [h.name, n]) : NT_T('VPC Lattice 서비스 {0} — 대상 {1}개를 그리지 못했습니다', [h.name, n]) })
     }
     return out
   }
   // Global Accelerator 정보창(§17.37) — 리전 = 「시드니(ap-southeast-2)」 꼴(지도의 `REGION_KO` 그대로 · 표에 없으면 코드만) · 종류 이름 · 을/를
   const gaRegion = (r) => (REGION_KO[r] ? `${REGION_KO[r]}(${r})` : r)
-  const GA_KIND = { alb: '로드 밸런서', nlb: '로드 밸런서', gwlb: '로드 밸런서', lb: '로드 밸런서', ec2: 'EC2 인스턴스', eip: '탄력적 IP' }
-  const eulReul = (w) => { const c = String(w).charCodeAt(String(w).length - 1); return c >= 0xac00 && c <= 0xd7a3 ? w + ((c - 0xac00) % 28 ? '을' : '를') : w + '을(를)' }
-  const cfVia = (via, alias) => (via === 'vpc_origin' ? 'VPC 오리진' : via === 'dns_alias' ? `Route 53 별칭 (${alias || '?'})` : via === 's3' ? 'S3' : null)
+  const GA_KIND = { alb: NT_T('로드 밸런서'), nlb: NT_T('로드 밸런서'), gwlb: NT_T('로드 밸런서'), lb: NT_T('로드 밸런서'), ec2: NT_T('EC2 인스턴스'), eip: NT_T('탄력적 IP') }
+  const eulReul = (w) => { const c = String(w).charCodeAt(String(w).length - 1); return c >= 0xac00 && c <= 0xd7a3 ? w + ((c - 0xac00) % 28 ? NT_T('을') : NT_T('를')) : w + NT_T('을(를)') }
+  const cfVia = (via, alias) => (via === 'vpc_origin' ? NT_T('VPC 오리진') : via === 'dns_alias' ? NT_T('Route 53 별칭 ({0})', [alias || '?']) : via === 's3' ? 'S3' : null)
   // 계정 = `계정 이름 (앞4…뒤4)` · 이름 없으면 `계정 앞4…뒤4`(§17.5 「계정은 이름으로 부른다」 · 꼴은 flow.js `acctLabel` 한 곳) — 정보창 「계정」·「소유자 ID」 줄 = 전체 이름
-  const acctName = (i) => `계정 ${X.acctLabel(i)}`
+  const acctName = (i) => NT_T('계정 {0}', [X.acctLabel(i)])
   const regName = (id) => { const r = X.mById.get(id); const c = r ? r.name : ''; return REGION_KO[c] ? `${REGION_KO[c]} · ${c}` : c }
   const subnetName = (sid) => { const s = M.subnets.get(sid); return s ? `${s.name} · ${s.az}` : sid }
   // 전역 줄(Cloud WAN 코어 네트워크 · 2.11.0)도 포트 끝이 된다 — 이름은 그 칸에서
@@ -638,10 +641,10 @@
   const byNatOf = (n, v) => { if (!v) return null; const a = X.acctOf(n); const hit = X.T.nodes.find((m) => X.acctOf(m) === a && natId(m) === v); return hit ? hit.id : null }
   const svcOf = (it) => (it.kind === 'lb' ? it.lbType || 'LB' : it.kind === 'rdsc' && /^aurora/i.test(String(((it.n || {}).attrs || {})['엔진'] || '')) ? 'Aurora' : SVC[it.kind])
   const hasNm = (it) => !it.ghost && (it.kind === 'lb' || !!it.named)
-  const typeKo = (it) => it.ghost ? (it.outside ? 'VPC · 수집 범위 밖' : it.xscope ? 'Transit Gateway · 다른 계정(보기 범위 밖)' : it.stub ? 'Transit Gateway · 다른 계정(수집 범위 밖)' : 'DX 게이트웨이 · 읽지 못함')
-    : it.kind === 'lb' ? `${it.lbType} · ${it.internet ? '인터넷용' : '내부용'}`
-      : it.kind === 'vpce' ? `엔드포인트 · ${it.epType ? epTypeKo(it.epType) : '?'}`
-        : it.kind === 'igw' && it.detached ? '인터넷 게이트웨이 · VPC 에 연결되지 않음' : it.kind === 'sm' ? SM_KO[it.n.type] || TYPE_KO.sm
+  const typeKo = (it) => it.ghost ? (it.outside ? NT_T('VPC · 수집 범위 밖') : it.xscope ? NT_T('Transit Gateway · 다른 계정(보기 범위 밖)') : it.stub ? NT_T('Transit Gateway · 다른 계정(수집 범위 밖)') : NT_T('DX 게이트웨이 · 읽지 못함'))
+    : it.kind === 'lb' ? `${it.lbType} · ${it.internet ? NT_T('인터넷용') : NT_T('내부용')}`
+      : it.kind === 'vpce' ? NT_T('엔드포인트 · {0}', [it.epType ? epTypeKo(it.epType) : '?'])
+        : it.kind === 'igw' && it.detached ? NT_T('인터넷 게이트웨이 · VPC 에 연결되지 않음') : it.kind === 'sm' ? SM_KO[it.n.type] || TYPE_KO.sm
           : it.kind === 'apigw' ? `API Gateway · ${({ REST: 'REST API', HTTP: 'HTTP API', WebSocket: 'WebSocket API' })[((it.n.attrs || {})['프로토콜'])] || 'API'}` : TYPE_KO[it.kind]
   const fmt = (v) => (Array.isArray(v) ? v.map((x) => (x && typeof x === 'object' ? JSON.stringify(x) : String(x))).join('\n') : v && typeof v === 'object' ? JSON.stringify(v) : String(v))
   const SKIP_ATTR = new Set(['id', 'state', 'routes', 'route_table'])
@@ -649,35 +652,35 @@
   //   🔴 키는 바꾸지 않는다 — 그 키를 읽는 곳(LB 종류·체계·리스너 수 · 대상 그룹 칸 · 검사 129 · 실계정 R 축)과 자유 검색(값)이 그대로다.
   //   이미 구운 화면 파일의 옛 키도 같은 이름표를 거친다. `null` = 줄로 적지 않는다(같은 말이 부제·칸에 이미 있다).
   //   종류마다 뜻이 다른 키(`type`)는 `ATTR_LABEL_OF` 가 먼저 정한다. 표에 없는 영문 키는 검사 129 가 잡는다
-  const ATTR_LABEL = { 'target group': '대상 그룹', 'route table': '라우팅 테이블', 'private DNS': '프라이빗 DNS', service: '서비스', vpc: 'VPC',
-    cidr: 'CIDR', region: '리전', asn: 'Amazon 측 ASN', attachments: '연결', 'available IP': '사용 가능한 IP', 'public IP': '퍼블릭 IP', via: '경유',
-    'virtual interface': '가상 인터페이스', 'stateful 규칙 그룹': '상태 저장 규칙 그룹', 'stateless 규칙 그룹': '상태 비저장 규칙 그룹',
+  const ATTR_LABEL = { 'target group': NT_T('대상 그룹'), 'route table': NT_T('라우팅 테이블'), 'private DNS': NT_T('프라이빗 DNS'), service: NT_T('서비스'), vpc: 'VPC',
+    cidr: 'CIDR', region: NT_T('리전'), asn: NT_T('Amazon 측 ASN'), attachments: NT_T('연결'), 'available IP': NT_T('사용 가능한 IP'), 'public IP': NT_T('퍼블릭 IP'), via: NT_T('경유'),
+    'virtual interface': NT_T('가상 인터페이스'), 'stateful 규칙 그룹': NT_T('상태 저장 규칙 그룹'), 'stateless 규칙 그룹': NT_T('상태 비저장 규칙 그룹'),
     scheme: null, listeners: null }   // LB 체계 = 부제 「인터넷용·내부용」 · 리스너 수 = 「리스너」 칸 개수(copy-a ⑩ 「뺀다」)
   const ATTR_LABEL_OF = { load_balancer: { type: null },   // ALB·NLB·GWLB = 부제
-    ec2_instance: { type: '인스턴스 유형' }, sagemaker_notebook_instance: { type: '인스턴스 유형' }, vpc_endpoint: { type: '엔드포인트 유형' },
-    internet_gateway: { vpc: null }, nat_gateway: { '연결': '연결 유형' },   // IGW 의 VPC = 「VPC」 줄 · 떼어낸 IGW = 부제
+    ec2_instance: { type: NT_T('인스턴스 유형') }, sagemaker_notebook_instance: { type: NT_T('인스턴스 유형') }, vpc_endpoint: { type: NT_T('엔드포인트 유형') },
+    internet_gateway: { vpc: null }, nat_gateway: { '연결': NT_T('연결 유형') },   // IGW 의 VPC = 「VPC」 줄 · 떼어낸 IGW = 부제
     // 어댑터의 한글 키가 정보창이 손으로 적는 줄(「종류」 = 리소스 종류 · 「리전」 = 그린 자리)과 같은 이름이라 한 창에 두 번 나오던 것 — 콘솔 이름으로 가른다
-    vpn_gateway: { '종류': '유형' }, customer_gateway: { '종류': '유형' }, msk_cluster: { '종류': '클러스터 유형' }, s3_bucket: { '리전': '버킷 리전' } }
+    vpn_gateway: { '종류': NT_T('유형') }, customer_gateway: { '종류': NT_T('유형') }, msk_cluster: { '종류': NT_T('클러스터 유형') }, s3_bucket: { '리전': NT_T('버킷 리전') } }
   // 값도 샌다(copy-a ⑩) — AWS 영문 열거값을 고객 말로 · 표에 없는 값은 원문 그대로(이름·ID·CIDR·포트·`t3.small` 같은 유형 값은 옮기지 않는다)
-  const EP_TYPE_KO = { Interface: '인터페이스', Gateway: '게이트웨이', GatewayLoadBalancer: 'Gateway Load Balancer', 'Interface (PrivateLink)': '인터페이스(PrivateLink)' }
+  const EP_TYPE_KO = { Interface: NT_T('인터페이스'), Gateway: NT_T('게이트웨이'), GatewayLoadBalancer: 'Gateway Load Balancer', 'Interface (PrivateLink)': NT_T('인터페이스(PrivateLink)') }
   const epTypeKo = (v) => EP_TYPE_KO[v] || String(v)
-  const ATTR_VALUE = { '엔드포인트 유형': EP_TYPE_KO, '연결 유형': { public: '퍼블릭', private: '프라이빗' },
-    '엔진 모드': { provisioned: '프로비저닝', serverless: '서버리스' } }   // Aurora `engine_mode` — MSK 「종류」(어댑터)와 같은 말
+  const ATTR_VALUE = { '엔드포인트 유형': EP_TYPE_KO, '연결 유형': { public: NT_T('퍼블릭'), private: NT_T('프라이빗') },
+    '엔진 모드': { provisioned: NT_T('프로비저닝'), serverless: NT_T('서버리스') } }   // Aurora `engine_mode` — MSK 「종류」(어댑터)와 같은 말
   const attrLabel = (n, k) => { const o = ATTR_LABEL_OF[n && n.type]; return o && k in o ? o[k] : k in ATTR_LABEL ? ATTR_LABEL[k] : k }
   // VPC·서브넷 카드의 공통 줄 — `attrRows` 중 그 카드가 손으로 적지 않는 것만(중복 방지).
   //   계수 속성(`route table`·`network ACL`·`security group`)은 칸이 이미 개수로 보여준다 — 줄로 또 적지 않는다
   //   (검사 129 가 그 값을 오라클로 쓰므로 `attrs` 에서는 지우지 않고 표시만 뺀다).
-  const VS_SKIP = new Set(['cidr', 'AZ', 'AZ ID', 'default VPC', 'public IP 자동할당', 'public IP',
+  const VS_SKIP = new Set(['cidr', 'AZ', 'AZ ID', 'default VPC', NT_T('public IP 자동할당'), 'public IP',
     'route table', 'network ACL', 'security group'])
   const vsRows = (n) => attrRows(n, VS_SKIP)   // 🔴 원래 키로 거른다 — 이름표를 거친 뒤(cidr → CIDR)에 거르면 같은 줄이 두 번 나온다
   // 「상태」 줄 — 모든 종류가 이 한 표를 쓴다(VPC·서브넷 #120 → 아이콘·피어링·어태치먼트·VIF·묶음 멤버). AWS 영문 값을 AWS 한국어 콘솔 말로
   //   (docs/qa/copy-a.md ⑩ 「값도 샌다」) · 표에 없는 값은 원문 그대로. VPC 엔드포인트는 첫 글자가 대문자다(`Available`) — 소문자로 한 번 더 찾는다
-  const STATE_KO = { available: '사용 가능', pending: '보류 중', unavailable: '사용 불가', failed: '실패', 'failed-insufficient-capacity': '실패(용량 부족)',
-    running: '실행 중', stopped: '중지됨', stopping: '중지 중', 'shutting-down': '종료 중', terminated: '종료됨',
-    active: '활성', provisioning: '프로비저닝 중', active_impaired: '활성(손상됨)', attached: '연결됨', attaching: '연결 중', detaching: '분리 중', detached: '분리됨',
-    associated: '연결됨', modifying: '수정 중', deleting: '삭제 중', deleted: '삭제됨', rejected: '거부됨', expired: '만료됨',
-    pendingacceptance: '수락 대기 중', 'pending-acceptance': '수락 대기 중', 'initiating-request': '요청 시작 중',
-    'create-in-progress': '생성 중', 'create-complete': '생성 완료', 'create-failed': '생성 실패', 'delete-in-progress': '삭제 중', 'delete-complete': '삭제 완료', 'delete-failed': '삭제 실패' }
+  const STATE_KO = { available: NT_T('사용 가능'), pending: NT_T('보류 중'), unavailable: NT_T('사용 불가'), failed: NT_T('실패'), 'failed-insufficient-capacity': NT_T('실패(용량 부족)'),
+    running: NT_T('실행 중'), stopped: NT_T('중지됨'), stopping: NT_T('중지 중'), 'shutting-down': NT_T('종료 중'), terminated: NT_T('종료됨'),
+    active: NT_T('활성'), provisioning: NT_T('프로비저닝 중'), active_impaired: NT_T('활성(손상됨)'), attached: NT_T('연결됨'), attaching: NT_T('연결 중'), detaching: NT_T('분리 중'), detached: NT_T('분리됨'),
+    associated: NT_T('연결됨'), modifying: NT_T('수정 중'), deleting: NT_T('삭제 중'), deleted: NT_T('삭제됨'), rejected: NT_T('거부됨'), expired: NT_T('만료됨'),
+    pendingacceptance: NT_T('수락 대기 중'), 'pending-acceptance': NT_T('수락 대기 중'), 'initiating-request': NT_T('요청 시작 중'),
+    'create-in-progress': NT_T('생성 중'), 'create-complete': NT_T('생성 완료'), 'create-failed': NT_T('생성 실패'), 'delete-in-progress': NT_T('삭제 중'), 'delete-complete': NT_T('삭제 완료'), 'delete-failed': NT_T('삭제 실패') }
   const stateKo = (v) => STATE_KO[v] || STATE_KO[String(v).toLowerCase()] || String(v)
   // 콘솔 표현(§17.11 「콘솔 표현 원칙」 · 사용자 결정 2026-10-24) — 콘솔식 표의 상태 말 = **그 화면의 한국어 콘솔 낱말 그대로**.
   //   한국어 콘솔도 화면마다 다르다(실측 2026-10-24): VPC 라우팅 = 「활성」 · TGW 계열·NAT = 영어 그대로(Available·Associated·Enabled) ·
@@ -687,17 +690,17 @@
       disabled: 'Disabled', disabling: 'Disabling', active: 'Active', blackhole: 'Blackhole', pending: 'Pending', deleting: 'Deleting', deleted: 'Deleted',
       modifying: 'Modifying', rejected: 'Rejected', failed: 'Failed', static: 'Static', propagated: 'Propagated', yes: 'Yes', no: 'No', true: 'Yes', false: 'No' },
     nat: { available: 'Available', pending: 'Pending', failed: 'Failed', deleting: 'Deleting', deleted: 'Deleted', public: 'Public', private: 'Private' },
-    rtb: { active: '활성', blackhole: '블랙홀', yes: '예', no: '아니요', true: '예', false: '아니요' },
+    rtb: { active: NT_T('활성'), blackhole: NT_T('블랙홀'), yes: NT_T('예'), no: NT_T('아니요'), true: NT_T('예'), false: NT_T('아니요') },
     tunnel: { up: 'Up', down: 'Down' }
   }
   const conState = (screen, v) => { if (v === null || v === undefined || v === '') return '–'; const t = CON_STATE[screen]; const k = String(v).toLowerCase(); return (t && t[k]) || stateKo(v) }
   // 상태 칸의 색(§17 상태색 — 정상 = 초록 ✓ · 이상 = 빨강) · 낱말은 위 표가 정하고 색은 뜻으로 고른다(같은 「Available」·「사용 가능」·「활성」 = 정상)
-  const ST_OK = new Set(['available', 'associated', 'enabled', 'active', 'up', 'healthy', 'attached', 'in-use', '활성', '사용 가능', '연결됨'])
-  const ST_BAD = new Set(['blackhole', 'down', 'failed', 'unhealthy', 'rejected', '블랙홀', '실패'])
+  const ST_OK = new Set(['available', 'associated', 'enabled', 'active', 'up', 'healthy', 'attached', 'in-use', NT_T('활성'), NT_T('사용 가능'), NT_T('연결됨')])
+  const ST_BAD = new Set(['blackhole', 'down', 'failed', 'unhealthy', 'rejected', NT_T('블랙홀'), NT_T('실패')])
   const stCls = (v) => { const k = String(v || '').toLowerCase(); return ST_OK.has(k) ? 'ok' : ST_BAD.has(k) ? 'bad' : '' }
   // 태그 값도 정보창 규칙(§17.11 「정보창에 넣지 않는 값」)을 따른다 — 키가 `SECRET` 이거나 값이 ARN 이면 값을 가린다.
   //   🔴 `aws:cloudformation:stack-id` 는 키에 「arn」이 없는데 값이 전체 ARN(계정ID 포함)이다 — 키만 보면 샌다.
-  const TAG_HIDE = '(표시하지 않는 값입니다 — ARN·민감 정보)'
+  const TAG_HIDE = NT_T('(표시하지 않는 값입니다 — ARN·민감 정보)')
   const tagMask = (r) => (SECRET.test(r.a) || /\barn:aws[\w-]*:/i.test(r.b) ? { ...r, b: TAG_HIDE } : r)
   // 태그 칸 — 묶음 머리를 그룹으로 나눠 보여준다(필터의 묶음 순서와 같다 · §17.11)
   const tagSec = (n) => {
@@ -705,7 +708,7 @@
     if (!rs.length) return []
     const gs = []
     for (const r of rs) { const g = gs[gs.length - 1]; if (g && g.h === r.h) g.rows.push(r); else gs.push({ h: r.h, rows: [r] }) }
-    return [{ label: '태그', n: rs.length, nc: false, groups: gs, empty: '(없음)' }]
+    return [{ label: NT_T('태그'), n: rs.length, nc: false, groups: gs, empty: NT_T('(없음)') }]
   }
   function attrRows (n, skip) {
     const out = []
@@ -721,7 +724,7 @@
   //    W5-3 뒤 한 줄로 줄어 조치가 사라졌고, 배너는 여전히 「정보창 「수집」 줄이 이 사실을 말한다」고 가리킨다
   //    — 가리킨 곳에 조치가 없었다(QA 기능개발 7 · A-01 과 같은 뿌리).
   //    조치 문구 = §17.26 C-3 표의 `access_denied` 줄(고객 말 · 「스택 B」 같은 내부 이름 대신 설치 안내의 단계).
-  const DENY_WHY = '비어 보이는 것은 「없다」가 아니라 「모른다」입니다 · 읽기 전용 역할(설치 안내 4단계)의 권한을 확인하면 다음 수집부터 표시됩니다'
+  const DENY_WHY = NT_T('비어 보이는 것은 「없다」가 아니라 「모른다」입니다 · 읽기 전용 역할(설치 안내 4단계)의 권한을 확인하면 다음 수집부터 표시됩니다')
   // VPC 「일부 못 읽음」 줄 — 🔴 조치(역할 확인)는 **거부일 때만** 붙인다. 스로틀·오류·잘림에 붙이면 거짓 조치다(`flow.js` 해치 주석 · H1).
   //   거부가 아닌 이유는 「!」 상자와 같은 이유 문장(`popReason`)만 적는다. 「권한이 없어」는 쓰지 않는다 — 검사 92 가 그 말을 계정·리전 거부 줄로 센다.
   const DENIED = new Set(['access_denied', 'denied'])
@@ -730,12 +733,12 @@
     if (!M.partial.has(v.id)) return []
     const rest = X.popReason ? [...new Set(cs.filter((c) => !DENIED.has(c)).map(X.popReason))].filter((w) => w !== X.popReason('')) : []
     const den = cs.some((c) => DENIED.has(c))
-    const head = den ? `이 VPC 의 일부를 권한 부족으로 읽지 못했습니다 — ${DENY_WHY}` : '이 VPC 의 일부를 읽지 못했습니다'
-    return [['수집', rest.length ? `${head}${den ? ' · ' : ' — '}${rest.join(' ')}` : head, 'wn']]
+    const head = den ? NT_T('이 VPC 의 일부를 권한 부족으로 읽지 못했습니다 — {0}', [DENY_WHY]) : NT_T('이 VPC 의 일부를 읽지 못했습니다')
+    return [[NT_T('수집'), rest.length ? `${head}${den ? ' · ' : ' — '}${rest.join(' ')}` : head, 'wn']]
   }
-  const denyRow = (n) => (X.denyOf && n && X.denyOf(n) ? [['수집', `이 계정·리전의 일부를 권한이 없어 읽지 못했습니다 — ${DENY_WHY}`, 'wn']] : [])
+  const denyRow = (n) => (X.denyOf && n && X.denyOf(n) ? [[NT_T('수집'), NT_T('이 계정·리전의 일부를 권한이 없어 읽지 못했습니다 — {0}', [DENY_WHY]), 'wn']] : [])
   // 접는 칸 하나(「▸ 라우트 표 N개」). rows: {a,b,tk,cls} | {t}. nc = 엔진이 아직 안 모은다
-  const sec = (label, rows, o = {}) => ({ label, n: o.nc ? null : (o.n ?? rows.length), nc: !!o.nc, groups: rows.length ? [{ h: o.h || '', rows }] : [], empty: o.nc ? NC : (o.empty || '(없음)') })
+  const sec = (label, rows, o = {}) => ({ label, n: o.nc ? null : (o.n ?? rows.length), nc: !!o.nc, groups: rows.length ? [{ h: o.h || '', rows }] : [], empty: o.nc ? NC : (o.empty || NT_T('(없음)')) })
   const ncSec = (label, why) => ({ label, n: null, nc: true, groups: [], empty: why ? `${NC} — ${why}` : NC })
   // 콘솔식 표 하나(§17.11 「콘솔 표현 원칙」) — 칸(`sec`)의 묶음(`groups[]`)이 `tbl`(표 하나) 또는 `tabs`(칸 안의 작은 탭 = 콘솔 탭 순서의 표들)를 갖는다.
   //   cols = [{ h: 열 이름(한국어 콘솔 그대로), w: 폭(px), id: ID 칸(한 줄 · 끊지 않는다), st: 상태 칸(정상 초록 ✓ · 이상 빨강) }]
@@ -764,39 +767,39 @@
   // 칸 하나 = 표 하나(콘솔 탭 하나가 표 하나뿐인 칸) — 머리 숫자·세 어휘는 그 표의 것
   const tsec = (t, o = {}) => ({ label: t.label, n: t.n, nc: t.nc, ur: t.ur, groups: t.nc || t.ur || !t.rows.length ? [] : [{ h: o.h || '', dl: o.dl, tbl: t }], empty: t.empty })
   // ---- 갈래 ②(2026-10-24 · 검사 167) 콘솔 열 — 이름은 한국어 콘솔 그대로(`~/…/console-cmp/console/*-ko-*` · 비교정리 B·C) ----
-  const LB_LSN_COLS = [{ h: '프로토콜:포트', w: 100, id: true }, { h: '기본 작업', w: 270 }, { h: '규칙', w: 50 }, { h: '보안 정책', w: 200, x: 1 }, { h: '기본 SSL/TLS 인증서', w: 250, id: true, x: 1 }]
-  const LB_TG_COLS = [{ h: '이름', w: 170, id: true }, { h: '대상 유형', w: 90 }, { h: '프로토콜 : 포트', w: 100, id: true }, { h: '상태 검사', w: 260, x: 1 }, { h: '등록된 대상', w: 110 }]
-  const TG_TYPE = { instance: '인스턴스', ip: 'IP 주소', lambda: 'Lambda 함수', alb: 'Application Load Balancer' }
+  const LB_LSN_COLS = [{ h: NT_T('프로토콜:포트'), w: 100, id: true }, { h: NT_T('기본 작업'), w: 270 }, { h: NT_T('규칙'), w: 50 }, { h: NT_T('보안 정책'), w: 200, x: 1 }, { h: NT_T('기본 SSL/TLS 인증서'), w: 250, id: true, x: 1 }]
+  const LB_TG_COLS = [{ h: NT_T('이름'), w: 170, id: true }, { h: NT_T('대상 유형'), w: 90 }, { h: NT_T('프로토콜 : 포트'), w: 100, id: true }, { h: NT_T('상태 검사'), w: 260, x: 1 }, { h: NT_T('등록된 대상'), w: 110 }]
+  const TG_TYPE = { instance: NT_T('인스턴스'), ip: NT_T('IP 주소'), lambda: NT_T('Lambda 함수'), alb: 'Application Load Balancer' }
   // 기본 작업(엔진 「forward:<대상 그룹>」·「redirect:…」·「fixed-response:…」) → 콘솔 말(「대상 그룹으로 전달 …」)
-  const LB_ACT = { forward: '대상 그룹으로 전달', redirect: 'URL로 리디렉션', 'fixed-response': '고정 응답 반환', 'authenticate-cognito': 'Cognito 인증', 'authenticate-oidc': 'OIDC 인증' }
+  const LB_ACT = { forward: NT_T('대상 그룹으로 전달'), redirect: NT_T('URL로 리디렉션'), 'fixed-response': NT_T('고정 응답 반환'), 'authenticate-cognito': NT_T('Cognito 인증'), 'authenticate-oidc': NT_T('OIDC 인증') }
   const lbAct = (s) => { const t = String(s || ''); if (!t) return NIL; const i = t.indexOf(':'); const k = i < 0 ? t : t.slice(0, i); const v = i < 0 ? '' : t.slice(i + 1); return LB_ACT[k] ? `${LB_ACT[k]}${v ? ' ' + v : ''}` : t }
   // 상태 검사(엔진 대상 그룹 줄 칸 4~12: 프로토콜 · 포트 · 경로 · 정상 임계 · 비정상 임계 · 간격 · 제한 시간 · 성공 코드 · 켜짐)
-  const NAT_SEC_COLS = [{ h: '프라이빗 IPv4 주소', w: 140, id: true }, { h: '네트워크 인터페이스 ID', w: 190, id: true }, { h: '퍼블릭 IPv4 주소', w: 140, id: true }]
-  const VPCE_SN_COLS = [{ h: '서브넷 ID', w: 240, id: true }, { h: '가용 영역', w: 110 }, { h: 'IPv4 주소', w: 120, id: true }, { h: '네트워크 인터페이스 ID', w: 220, id: true, x: 1 }]
+  const NAT_SEC_COLS = [{ h: NT_T('프라이빗 IPv4 주소'), w: 140, id: true }, { h: NT_T('네트워크 인터페이스 ID'), w: 190, id: true }, { h: NT_T('퍼블릭 IPv4 주소'), w: 140, id: true }]
+  const VPCE_SN_COLS = [{ h: NT_T('서브넷 ID'), w: 240, id: true }, { h: NT_T('가용 영역'), w: 110 }, { h: NT_T('IPv4 주소'), w: 120, id: true }, { h: NT_T('네트워크 인터페이스 ID'), w: 220, id: true, x: 1 }]
   // 엔진 줄의 서브넷 native id → 이 화면의 서브넷 칸(그 자원이 선 서브넷 먼저 · 없으면 같은 VPC)
   const subnetIdOf = (it, nat) => (it.subnets || []).find((x) => String(x).split('/').pop() === nat) ||
     [...M.subnets.values()].find((x) => x.vpc === it.vpc && String(x.id).split('/').pop() === nat)?.id || nat
   // VIF(콘솔 「가상 인터페이스」 표) — 한 줄 = VIF ID(이름) · VLAN · 상태 · BGP ASN · **누르면 그 VIF 정보창**(`go` · 캔버스 아이콘 없이 · 사용자 결정 2026-10-24)
   //   상태 = 모니터링 켜짐이면 그 VIF 자신의 관측 판정(`vifState` · BGP 수) · 꺼짐이면 구조 수명주기(BGP 안내는 표 머리 한 번 — `VIF_BGP_NOTE`)
-  const VIF_COLS = [{ h: '가상 인터페이스 ID', w: 260, id: true }, { h: 'VLAN', w: 60 }, { h: '상태', w: 150, st: true }, { h: 'BGP ASN', w: 90, x: 1 }]
-  const VIF_BGP_NOTE = () => (X.obs && X.obs.on() ? '' : 'BGP 상태는 모니터링을 켜면 표시됩니다(구성 정보 수집 시에는 BGP 세션을 확인하지 않습니다)')
+  const VIF_COLS = [{ h: NT_T('가상 인터페이스 ID'), w: 260, id: true }, { h: 'VLAN', w: 60 }, { h: NT_T('상태'), w: 150, st: true }, { h: 'BGP ASN', w: 90, x: 1 }]
+  const VIF_BGP_NOTE = () => (X.obs && X.obs.on() ? '' : NT_T('BGP 상태는 모니터링을 켜면 표시됩니다(구성 정보 수집 시에는 BGP 세션을 확인하지 않습니다)'))
   function vifRow (n) {
     const c = n.con || {}; const on = X.obs && X.obs.on(); const v = on ? vifState(n) : { b: (n.attrs || {}).state ? stateKo(n.attrs.state) : NIL }
     const ck = M.hidden.get(n.id)
     return { c: [`${natId(n)}${c.virtual_interface_name ? ` (${c.virtual_interface_name})` : n.name && n.name !== natId(n) ? ` (${n.name})` : ''}`, dash(c.vlan), v.b, dash(c.asn)],
       tk: ck ? [ck] : [], go: n.id, ...(v.cls ? { cls: v.cls } : {}) }
   }
-  const DXGA_COLS = [{ h: '게이트웨이 ID', w: 200, id: true }, { h: '리전', w: 90 }, { h: 'AWS 계정', w: 130, x: 1 }, { h: '상태', w: 75, st: true }, { h: '허용 접두사', w: 110, id: true }, { h: '연결 유형', w: 150, x: 1 }]
-  const DXGA_TYPE = { transitGateway: 'Transit Gateway', virtualPrivateGateway: '가상 프라이빗 게이트웨이' }
+  const DXGA_COLS = [{ h: NT_T('게이트웨이 ID'), w: 200, id: true }, { h: NT_T('리전'), w: 90 }, { h: NT_T('AWS 계정'), w: 130, x: 1 }, { h: NT_T('상태'), w: 75, st: true }, { h: NT_T('허용 접두사'), w: 110, id: true }, { h: NT_T('연결 유형'), w: 150, x: 1 }]
+  const DXGA_TYPE = { transitGateway: 'Transit Gateway', virtualPrivateGateway: NT_T('가상 프라이빗 게이트웨이') }
   // 오리진 이름 = 사용자가 지은 이름(CDK 가 만든 `FinOpsDevFrontendDistributionOrigin15140D64C` 처럼 끊을 자리 없는 긴 낱말이 흔하다) → `any` = 칸 폭 안에서 아무 데서나 줄을 바꾼다 · 오리진 도메인(S3 버킷 도메인 = 버킷 이름 + 리전 — 60자 넘게 흔하다)도 같다
   //   (ID 칸처럼 한 줄로 묶으면 칸이 넓어져 옆 칸을 밀어내 가로로 넘쳤다 · 실측 2026-10-26 CloudFront ×7 「오리진」·「동작」)
-  const CF_ORG_COLS = [{ h: '오리진 이름', w: 150, any: 1 }, { h: '오리진 도메인', w: 240, any: 1 }, { h: '오리진 경로', w: 100, x: 1 }, { h: '오리진 유형', w: 90 }, { h: '오리진 액세스', w: 260, id: true, x: 1 }]
-  const CF_OTYPE = { s3: 'S3', vpc: 'VPC', custom: '사용자 지정 오리진' }
-  const CF_BHV_COLS = [{ h: '우선순위', w: 55 }, { h: '경로 패턴', w: 110, id: true }, { h: '오리진', w: 160, any: 1 }, { h: '뷰어 프로토콜 정책', w: 150 }, { h: '캐시 정책', w: 260, x: 1 }]
+  const CF_ORG_COLS = [{ h: NT_T('오리진 이름'), w: 150, any: 1 }, { h: NT_T('오리진 도메인'), w: 240, any: 1 }, { h: NT_T('오리진 경로'), w: 100, x: 1 }, { h: NT_T('오리진 유형'), w: 90 }, { h: NT_T('오리진 액세스'), w: 260, id: true, x: 1 }]
+  const CF_OTYPE = { s3: 'S3', vpc: 'VPC', custom: NT_T('사용자 지정 오리진') }
+  const CF_BHV_COLS = [{ h: NT_T('우선순위'), w: 55 }, { h: NT_T('경로 패턴'), w: 110, id: true }, { h: NT_T('오리진'), w: 160, any: 1 }, { h: NT_T('뷰어 프로토콜 정책'), w: 150 }, { h: NT_T('캐시 정책'), w: 260, x: 1 }]
   const CF_VPP = { 'allow-all': 'HTTP and HTTPS', 'https-only': 'HTTPS only', 'redirect-to-https': 'Redirect HTTP to HTTPS' }
-  const WAF_RULE_COLS = [{ h: '이름', w: 260, id: true }, { h: '작업', w: 90 }, { h: '우선순위', w: 70 }]
+  const WAF_RULE_COLS = [{ h: NT_T('이름'), w: 260, id: true }, { h: NT_T('작업'), w: 90 }, { h: NT_T('우선순위'), w: 70 }]
   const WAF_ACT = { allow: 'Allow', block: 'Block', count: 'Count', captcha: 'CAPTCHA', challenge: 'Challenge', none: 'Use rule actions', override: 'Override' }
-  const lbHc = (x) => (x[12] === 'false' ? '꺼짐' : x[4] ? [`${x[4]}${x[6] ? ' ' + x[6] : ''}`, x[9] ? `간격 ${x[9]}초` : '', x[7] && x[8] ? `정상 ${x[7]} · 비정상 ${x[8]}` : '', x[11] ? `성공 코드 ${x[11]}` : ''].filter(Boolean).join(' · ') : NIL)
+  const lbHc = (x) => (x[12] === 'false' ? NT_T('꺼짐') : x[4] ? [`${x[4]}${x[6] ? ' ' + x[6] : ''}`, x[9] ? NT_T('간격 {0}초', [x[9]]) : '', x[7] && x[8] ? NT_T('정상 {0} · 비정상 {1}', [x[7], x[8]]) : '', x[11] ? NT_T('성공 코드 {0}', [x[11]]) : ''].filter(Boolean).join(' · ') : NIL)
   // 목적지 정렬(§17.11 「순서」) — 문자열이 아니라 주소 값 순(10.1.4.0/24 < 10.1.10.0/24) · 같으면 접두사가 짧은 쪽 먼저 · IPv6 뒤 · 접두사 목록(pl-) 마지막
   const dstKey = (d) => {
     const m = /^(\d+)\.(\d+)\.(\d+)\.(\d+)(?:\/(\d+))?$/.exec(String(d || ''))
@@ -806,23 +809,23 @@
   const byDst = (x, y) => (dstKey(x) < dstKey(y) ? -1 : dstKey(x) > dstKey(y) ? 1 : 0)
   // 라우트 목적지 접두사 목록(2.10.0 · 배치 D · §17.33) — `pl-…` 를 사람이 읽는 이름으로(AWS 관리형 = 서비스 이름 · 고객 관리형 = 이름 + CIDR 항목).
   //   재료 = 어댑터가 그 서브넷의 라우트 테이블에서 옮긴 `pls`(엔진 속성 그대로). 🔴 못 읽은 것은 그렇게 말한다 — id 만 남기면 「이름 없는 목록」으로 읽힌다
-  const PL_SVC = { s3: 'S3', dynamodb: 'DynamoDB', 'ec2-instance-connect': 'EC2 Instance Connect', 'vpc-lattice': 'VPC Lattice', 'route53-healthchecks': 'Route 53 상태 확인',
-    'cloudfront.origin-facing': 'CloudFront 오리진 대상' }
+  const PL_SVC = { s3: 'S3', dynamodb: 'DynamoDB', 'ec2-instance-connect': 'EC2 Instance Connect', 'vpc-lattice': 'VPC Lattice', 'route53-healthchecks': NT_T('Route 53 상태 확인'),
+    'cloudfront.origin-facing': NT_T('CloudFront 오리진 대상') }
   const plSvc = (name) => { const m = /^com\.amazonaws\.(?:global|[a-z]{2}(?:-[a-z]+)+-\d+)\.(ipv6\.)?(.+)$/.exec(String(name || '')); if (!m) return String(name || '') || '?'; return (PL_SVC[m[2]] || m[2]) + (m[1] ? ' (IPv6)' : '') }
   const PL_MAX = 4
   const dstWord = (s, d) => {
     if (!/^pl-/.test(String(d || ''))) return d
     const P = s && s.n && s.n.pls; if (!P) return d
     const x = P.lists[d]
-    if (!x) return P.unread ? `${d} (접두사 목록 · 권한이 없어 이름을 읽지 못했습니다)` : `${d} (접두사 목록 · 이 계정에서 볼 수 없는 목록입니다)`
-    if (x.aws) return `${plSvc(x.name)} (AWS 관리형 접두사 목록 · ${d})`
-    const cs = x.cidrs === null ? '권한이 없어 항목을 읽지 못했습니다' : !x.cidrs.length ? '항목 없음'
-      : x.cidrs.length > PL_MAX ? `${x.cidrs.slice(0, PL_MAX).join(', ')} 외 ${x.cidrs.length - PL_MAX}개` : x.cidrs.join(', ')
-    return `${x.name || d} (고객 관리형 접두사 목록 · ${d} · ${cs})`
+    if (!x) return P.unread ? NT_T('{0} (접두사 목록 · 권한이 없어 이름을 읽지 못했습니다)', [d]) : NT_T('{0} (접두사 목록 · 이 계정에서 볼 수 없는 목록입니다)', [d])
+    if (x.aws) return NT_T('{0} (AWS 관리형 접두사 목록 · {1})', [plSvc(x.name), d])
+    const cs = x.cidrs === null ? NT_T('권한이 없어 항목을 읽지 못했습니다') : !x.cidrs.length ? NT_T('항목 없음')
+      : x.cidrs.length > PL_MAX ? NT_T('{0} 외 {1}개', [x.cidrs.slice(0, PL_MAX).join(', '), x.cidrs.length - PL_MAX]) : x.cidrs.join(', ')
+    return NT_T('{0} (고객 관리형 접두사 목록 · {1} · {2})', [x.name || d, d, cs])
   }
   function routesTo (id) { // 이 게이트웨이로 보내는 라우트(역조회)
     const rows = []
-    for (const s of M.subnets.values()) for (const r of s.routes) if (r.t === id) rows.push({ a: dstWord(s, r.d) || '(목적지 미상)', b: subnetName(s.id), tk: [s.id] })
+    for (const s of M.subnets.values()) for (const r of s.routes) if (r.t === id) rows.push({ a: dstWord(s, r.d) || NT_T('(목적지 미상)'), b: subnetName(s.id), tk: [s.id] })
     return rows
   }
   // DX 연결·DX 게이트웨이의 VIF ↔ 게이트웨이 관계는 그 정보창의 「DX 게이트웨이 연결」·「가상 인터페이스」 표가 말한다(검사 167) — 「그림에 없는 연결」에 두 번 적지 않는다
@@ -831,17 +834,17 @@
   const CON_ID_TITLE = new Set(['vpn', 'cgw', 'nat', 'vpce', 'dxcon', 'dxgw'])
   const CON_NM_TITLE = new Set(['lb', 'waf', 'r53'])
   // 관계 종류(엔진 엣지 종류) → 고객 말 — 🔴 옛 「«attachment» →」처럼 내부 낱말을 그대로 내보이지 않는다(비교정리 B R-12)
-  const REL_KO = { attachment: '연결', association: '연결', route: '라우트', origin: '오리진', dnsalias: '별칭', flow: '경로', peering: '피어링', eip_association: '탄력적 IP' }
+  const REL_KO = { attachment: NT_T('연결'), association: NT_T('연결'), route: NT_T('라우트'), origin: NT_T('오리진'), dnsalias: NT_T('별칭'), flow: NT_T('경로'), peering: NT_T('피어링'), eip_association: NT_T('탄력적 IP') }
   function relSec (key, skip) { // 선 없이 이어진 것(정보창에만 있는 관계)
     const rs = (M.rel.get(key) || []).filter((r) => !(skip && skip.has(r.ek))); if (!rs.length) return []
-    return [sec('그림에 없는 연결', rs.map((r) => ({ a: r.ek ? `${REL_KO[r.ek] || '관계'} ${r.dir}`.trim() : r.kind, b: r.name, tk: [r.key], ek: r.ek })), { h: '선을 그리지 않고 여기에만 적습니다' })]
+    return [sec(NT_T('그림에 없는 연결'), rs.map((r) => ({ a: r.ek ? `${REL_KO[r.ek] || NT_T('관계')} ${r.dir}`.trim() : r.kind, b: r.name, tk: [r.key], ek: r.ek })), { h: NT_T('선을 그리지 않고 여기에만 적습니다') })]
   }
   // TGW 어태치먼트 한 줄의 이름·누를 자리(VPC 어태치먼트 = 그 VPC 의 포트) — 「어태치먼트」 칸과 라우트 테이블 칸이 같은 말을 쓴다
   function attLabel (it, n) {
     const p = X.mById.get(n.parent_id); const isV = p && p.type === 'vpc'; const at = n.attrs || {}
     // TGW Connect(§17.38) = 그것이 올라탄 어태치먼트를 말한다(누르면 그 오버레이 선이 있는 포트 · 없으면 이 TGW)
-    if (n.connect) { const c = M.cnx.find((x) => x.id === n.id) || {}; return { kind: `Connect(${n.connect.proto ? String(n.connect.proto).toUpperCase() : '?'})`, id: `${natId(n)} → ${n.connect.transport || '?'} 위`, tk: [c.port || it.id] } }
-    return { kind: isV ? `VPC · ${disp(p)}` : String(at['종류'] || '어태치먼트'), id: natId(n) + (at['대상'] ? ` → ${at['대상']}` : ''),
+    if (n.connect) { const c = M.cnx.find((x) => x.id === n.id) || {}; return { kind: `Connect(${n.connect.proto ? String(n.connect.proto).toUpperCase() : '?'})`, id: NT_T('{0} → {1} 위', [natId(n), n.connect.transport || '?']), tk: [c.port || it.id] } }
+    return { kind: isV ? `VPC · ${disp(p)}` : String(at['종류'] || NT_T('어태치먼트')), id: natId(n) + (at['대상'] ? ` → ${at['대상']}` : ''),
       tk: [isV ? (M.portOf.get(p.id + '|' + it.id) || p.id) : it.id] }
   }
   // 이 자원 계정·리전의 그 종류 수집 칸(원문 coverage) — 「없다」와 「못 읽었다」와 「모으기 전 판」을 가른다
@@ -849,14 +852,14 @@
     const ac = X.mById.get(X.acctOf(n)); const acct = ac && ac.attrs ? ac.attrs.account : null
     return (X.T.coverage || []).find((c) => c.resource_type === rtype && c.account_id === acct && c.region === n.region) || null
   }
-  const UNREAD = '읽지 못했습니다 — 권한 부족(「없음」이 아닙니다)'
+  const UNREAD = NT_T('읽지 못했습니다 — 권한 부족(「없음」이 아닙니다)')
   // 키가 없는 칸 — 그 자원이 「일부 못 읽음」이면 읽지 못한 것(`ur`), 아니면 이 스냅샷이 그 칸을 모으기 전 판이다(`nc`).
   //   🔴 세 어휘(개수 · 수집 안 함 · 읽지 못함)를 섞지 마라 — 「?개」는 어느 쪽인지 말하지 않는다
   const urSec = (label) => ({ label, n: null, nc: false, ur: true, groups: [], empty: UNREAD })
   const missSec = (label, it) => (M.partial.has(it.id) ? urSec(label)
     // 🔴 `ncSec` 을 쓰면 「이 도구는 수집하지 않습니다 — 이 수집본에는 …」로 **두 이유가 모순**된다(사용자 신고 2026-10-20).
     //    머리는 세 어휘(개수·수집 안 함·읽지 못함) 그대로 두고, 몸통은 이유 하나만 말한다.
-    : { label, n: null, nc: true, groups: [], empty: '이 수집본에는 그 기록이 없습니다(수집 전 버전입니다)' })
+    : { label, n: null, nc: true, groups: [], empty: NT_T('이 수집본에는 그 기록이 없습니다(수집 전 버전입니다)') })
   // TGW 라우트 테이블 칸(§17.11 · 콘솔 표현 원칙 · 사용자 결정 2026-10-24) — 라우팅 테이블마다 한 묶음 = 콘솔 상세 화면 그대로:
   //   머리 `ID / 이름` · 세부 정보 한 줄(상태 · 기본 연결 라우팅 테이블 · 기본 전파 라우팅 테이블) · 작은 탭 「연결 · 전파 · 접두사 목록 참조 · 경로」(콘솔 탭 순서)
   //   열 이름 = 한국어 콘솔(연결 탭 실측 2026-10-24 — 연결 ID · 연결 이름 · 리소스 유형 · 리소스 ID · 상태). 경로·전파 탭 열 = 영문 콘솔 열을 같은 낱말로(한국어 미확인)
@@ -864,19 +867,19 @@
   //   엔진이 아직 싣지 않는 열(연결·전파의 상태 · 경로의 상태(블랙홀 아닌 것)) = 대시(–) · 접두사 목록 참조 = 수집 안 함
   const TGW_RES = { vpc: 'VPC', vpn: 'VPN', peering: 'Peering', 'tgw-peering': 'Peering', connect: 'Connect', 'direct-connect-gateway': 'Direct Connect Gateway',
     'dx-gateway': 'Direct Connect Gateway', 'network-function': 'Network Function', 'vpn-concentrator': 'VPN Concentrator' }
-  const TGW_ASSOC_COLS = [{ h: '연결 ID', w: 214, id: true, x: 1 }, { h: '연결 이름', w: 150 }, { h: '리소스 유형', w: 75 }, { h: '리소스 ID', w: 160, id: true }, { h: '상태', w: 85, st: true }]
-  const TGW_PROP_COLS = [{ h: '연결 ID', w: 214, id: true, x: 1 }, { h: '리소스 유형', w: 90 }, { h: '리소스 ID', w: 180, id: true }, { h: '상태', w: 90, st: true }]
-  const TGW_ROUTE_COLS = [{ h: 'CIDR', w: 105, id: true }, { h: '연결 ID', w: 214, id: true, x: 1 }, { h: '리소스 ID', w: 150, id: true },
-    { h: '리소스 유형', w: 65 }, { h: '경로 유형', w: 75 }, { h: '경로 상태', w: 70, st: true }, { h: '접두사 목록 ID', w: 130, id: true, x: 1 }]
-  const TGW_RT_LABEL = 'Transit Gateway 라우팅 테이블'   // 한국어 콘솔 메뉴 이름 그대로(옛 「라우트 테이블」)
+  const TGW_ASSOC_COLS = [{ h: NT_T('연결 ID'), w: 214, id: true, x: 1 }, { h: NT_T('연결 이름'), w: 150 }, { h: NT_T('리소스 유형'), w: 75 }, { h: NT_T('리소스 ID'), w: 160, id: true }, { h: NT_T('상태'), w: 85, st: true }]
+  const TGW_PROP_COLS = [{ h: NT_T('연결 ID'), w: 214, id: true, x: 1 }, { h: NT_T('리소스 유형'), w: 90 }, { h: NT_T('리소스 ID'), w: 180, id: true }, { h: NT_T('상태'), w: 90, st: true }]
+  const TGW_ROUTE_COLS = [{ h: 'CIDR', w: 105, id: true }, { h: NT_T('연결 ID'), w: 214, id: true, x: 1 }, { h: NT_T('리소스 ID'), w: 150, id: true },
+    { h: NT_T('리소스 유형'), w: 65 }, { h: NT_T('경로 유형'), w: 75 }, { h: NT_T('경로 상태'), w: 70, st: true }, { h: NT_T('접두사 목록 ID'), w: 130, id: true, x: 1 }]
+  const TGW_RT_LABEL = NT_T('Transit Gateway 라우팅 테이블')   // 한국어 콘솔 메뉴 이름 그대로(옛 「라우트 테이블」)
   function tgwRtSec (it) {
     const a = it.n.attrs || {}
     const rts = (M.tgwRt.get(it.id) || []).slice().sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0))
     if (!rts.length) {
       if (Array.isArray(a.routes)) return sec(TGW_RT_LABEL, a.routes.map((r) => ({ a: r.d, b: String(r.t) })), { h: a.route_table ? String(a.route_table) : '' })
       const c = covOf(it.n, 'transit_gateway_route_table')
-      return !c ? ncSec(TGW_RT_LABEL, '이 수집본에는 TGW 라우팅 테이블 기록이 없습니다(수집 전 버전입니다)')
-        : c.status !== 'ok' ? urSec(TGW_RT_LABEL) : sec(TGW_RT_LABEL, [], { empty: '없음 — 이 TGW 에 라우팅 테이블이 없습니다' })
+      return !c ? ncSec(TGW_RT_LABEL, NT_T('이 수집본에는 TGW 라우팅 테이블 기록이 없습니다(수집 전 버전입니다)'))
+        : c.status !== 'ok' ? urSec(TGW_RT_LABEL) : sec(TGW_RT_LABEL, [], { empty: NT_T('없음 — 이 TGW 에 라우팅 테이블이 없습니다') })
     }
     const byNatAtt = new Map((M.attOf.get(it.id) || []).map((n) => [natId(n), n]))
     // 어태치먼트 하나 = 콘솔 행의 재료(연결 ID · 연결 이름(Name 태그 — 없으면 대시) · 리소스 유형 · 리소스 ID) + 누를 자리
@@ -893,22 +896,22 @@
     //   그 값으로 채운다(옛 판 = 위 `att` 가 어태치먼트 노드에서 되짚은 값 · 상태 칸 대시). 리소스 유형 낱말 = 콘솔 표기(VPC · VPN · Peering)
     const rowOf = (rows, nat) => (Array.isArray(rows) ? rows.find((x) => x[0] === nat) : null)
     const resType = (v) => TGW_RES[String(v || '').toLowerCase()] || (v ? String(v) : NIL)
-    const PLR_COLS = [{ h: '접두사 목록 ID', w: 150, id: true }, { h: '소유자 ID', w: 120, x: 1 }, { h: '연결 ID', w: 214, id: true, x: 1 },
-      { h: '리소스 ID', w: 170, id: true }, { h: '상태', w: 90, st: true }, { h: '블랙홀', w: 60 }]
+    const PLR_COLS = [{ h: NT_T('접두사 목록 ID'), w: 150, id: true }, { h: NT_T('소유자 ID'), w: 120, x: 1 }, { h: NT_T('연결 ID'), w: 214, id: true, x: 1 },
+      { h: NT_T('리소스 ID'), w: 170, id: true }, { h: NT_T('상태'), w: 90, st: true }, { h: NT_T('블랙홀'), w: 60 }]
     const groups = rts.map((rt) => {
       const r = rt.tgwRt || {}; const ra = rt.attrs || {}
-      const assoc = r.assoc === null ? tbl('연결', TGW_ASSOC_COLS, [], { ur: true, wrap: 3 })
-        : tbl('연결', TGW_ASSOC_COLS, (r.assoc || []).map(att).sort(ord).map((x) => { const e = rowOf(r.assocRows, x.id)
+      const assoc = r.assoc === null ? tbl(NT_T('연결'), TGW_ASSOC_COLS, [], { ur: true, wrap: 3 })
+        : tbl(NT_T('연결'), TGW_ASSOC_COLS, (r.assoc || []).map(att).sort(ord).map((x) => { const e = rowOf(r.assocRows, x.id)
           return { c: [x.id, x.name, e ? resType(e[1]) : x.type, e ? e[2] || NIL : x.res, e ? conState('tgw', e[3]) : NIL], tk: x.tk, ...(x.miss ? { cls: 'wn' } : {}) } }), { wrap: 3 })
-      const prop = r.prop === null ? tbl('전파', TGW_PROP_COLS, [], { ur: true, wrap: 3 })
-        : tbl('전파', TGW_PROP_COLS, (r.prop || []).map(att).sort(ord).map((x) => { const e = rowOf(r.propRows, x.id)
+      const prop = r.prop === null ? tbl(NT_T('전파'), TGW_PROP_COLS, [], { ur: true, wrap: 3 })
+        : tbl(NT_T('전파'), TGW_PROP_COLS, (r.prop || []).map(att).sort(ord).map((x) => { const e = rowOf(r.propRows, x.id)
           return { c: [x.id, e ? resType(e[1]) : x.type, e ? e[2] || NIL : x.res, e ? conState('tgw', e[3]) : NIL], tk: x.tk, ...(x.miss ? { cls: 'wn' } : {}) } }), { wrap: 3 })
       // 접두사 목록 참조 — 엔진 7칸 「<pl-> <소유자> <어태치먼트> <리소스 유형> <리소스 ID> <상태> <블랙홀 yes|no>」 · 못 읽었으면 「읽지 못함」 · 옛 판 = 수집 안 함(세 어휘 §0-5)
-      const plr = r.plr === null ? tbl('접두사 목록 참조', PLR_COLS, [], { ur: true, wrap: 3 }) : r.plr === undefined ? tbl('접두사 목록 참조', PLR_COLS, [], { nc: true })
-        : tbl('접두사 목록 참조', PLR_COLS, r.plr.map((e) => ({ c: [e[0], e[1] ? X.acctMask(e[1]) : NIL, e[2] || NIL, e[4] || NIL, conState('tgw', e[5]), e[6] === 'yes' ? 'Yes' : e[6] === 'no' ? 'No' : NIL],
+      const plr = r.plr === null ? tbl(NT_T('접두사 목록 참조'), PLR_COLS, [], { ur: true, wrap: 3 }) : r.plr === undefined ? tbl(NT_T('접두사 목록 참조'), PLR_COLS, [], { nc: true })
+        : tbl(NT_T('접두사 목록 참조'), PLR_COLS, r.plr.map((e) => ({ c: [e[0], e[1] ? X.acctMask(e[1]) : NIL, e[2] || NIL, e[4] || NIL, conState('tgw', e[5]), e[6] === 'yes' ? 'Yes' : e[6] === 'no' ? 'No' : NIL],
           tk: e[2] ? att(e[2]).tk : [] })).sort((x, y) => (x.c[0] < y.c[0] ? -1 : x.c[0] > y.c[0] ? 1 : 0)), { wrap: 3 })
       let routes
-      if (r.routes === null) routes = tbl('경로', TGW_ROUTE_COLS, [], { ur: true, wrap: 3 })
+      if (r.routes === null) routes = tbl(NT_T('경로'), TGW_ROUTE_COLS, [], { ur: true, wrap: 3 })
       else {
         const rows = []
         for (const x of r.routes || []) {
@@ -917,12 +920,12 @@
           rows.push({ d: x.d, c: [x.d, t.id, e ? e[3] || NIL : t.res, e ? resType(e[2]) : t.type, x.stat ? 'Static' : 'Propagated', e ? conState('tgw', e[5]) : NIL, pl ? x.d : NIL], tk: t.tk })
         }
         // 블랙홀 = 대상 어태치먼트가 없는 경로(엔진 `blackhole_destinations`) — 경로 상태 칸이 말한다(빨강 · 「이 목적지로 가는 트래픽을 폐기합니다」)
-        for (const d of r.bh || []) { const pl = /^pl-/.test(String(d)); rows.push({ d, c: [d, NIL, NIL, NIL, NIL, 'Blackhole', pl ? d : NIL], tk: [], cls: 'wn', why: '이 목적지로 가는 트래픽을 폐기합니다' }) }
+        for (const d of r.bh || []) { const pl = /^pl-/.test(String(d)); rows.push({ d, c: [d, NIL, NIL, NIL, NIL, 'Blackhole', pl ? d : NIL], tk: [], cls: 'wn', why: NT_T('이 목적지로 가는 트래픽을 폐기합니다') }) }
         rows.sort((x, y) => byDst(x.d, y.d) || (x.c[1] < y.c[1] ? -1 : x.c[1] > y.c[1] ? 1 : 0))
-        routes = tbl('경로', TGW_ROUTE_COLS, rows, { wrap: 3 })
+        routes = tbl(NT_T('경로'), TGW_ROUTE_COLS, rows, { wrap: 3 })
       }
-      const dl = [['상태', conState('tgw', r.state)], ['기본 연결 라우팅 테이블', ra['기본 연결 표'] === '예' ? 'Yes' : ra['기본 연결 표'] === '아니요' ? 'No' : NIL],
-        ['기본 전파 라우팅 테이블', ra['기본 전파 표'] === '예' ? 'Yes' : ra['기본 전파 표'] === '아니요' ? 'No' : NIL]]
+      const dl = [[NT_T('상태'), conState('tgw', r.state)], [NT_T('기본 연결 라우팅 테이블'), ra['기본 연결 표'] === '예' ? 'Yes' : ra['기본 연결 표'] === '아니요' ? 'No' : NIL],
+        [NT_T('기본 전파 라우팅 테이블'), ra['기본 전파 표'] === '예' ? 'Yes' : ra['기본 전파 표'] === '아니요' ? 'No' : NIL]]
       const nm = rt.name && rt.name !== natId(rt) ? ` / ${rt.name}` : ''
       return { h: `${natId(rt)}${nm}`, dl, rows: [], tabs: [assoc, prop, plr, routes] }
     })
@@ -934,20 +937,20 @@
   //   🔴 규칙을 못 읽었으면 「(0)」이 아니라 「읽지 못함」 · 모으기 전 판(옛 스냅샷)이면 「수집 안 함」(세 어휘 · §0-5)
   function sgSec (it, idsIn) {
     const ids = idsIn || it.n.sgIds
-    if (!Array.isArray(ids)) return missSec('보안 그룹', it)
+    if (!Array.isArray(ids)) return missSec(NT_T('보안 그룹'), it)
     const L = M.list.get(it.vpc) || []
-    const groups = ids.map((g) => { const r = L.find((x) => x.type === 'security_group' && x.id === g); return r ? withCu(ruleGroup(r, it), 'security_group', r) : withCu({ h: `${g} (이 VPC 목록에 없음)`, rows: [] }, 'security_group', { id: g, region: it.region }) })
-    return { label: '보안 그룹', n: ids.length, nc: false, groups, empty: '(0)' }
+    const groups = ids.map((g) => { const r = L.find((x) => x.type === 'security_group' && x.id === g); return r ? withCu(ruleGroup(r, it), 'security_group', r) : withCu({ h: NT_T('{0} (이 VPC 목록에 없음)', [g]), rows: [] }, 'security_group', { id: g, region: it.region }) })
+    return { label: NT_T('보안 그룹'), n: ids.length, nc: false, groups, empty: '(0)' }
   }
   // 규칙 한 줄 — SG(엔진 「IP 버전 \t 프로토콜 \t 포트 범위 \t 소스 \t 설명」) · NACL(「규칙 번호 \t 프로토콜 \t 포트 \t CIDR \t allow|deny」) → 콘솔 낱말
   //   프로토콜 `-1` = 콘솔 「모두」(포트도 「모두」) · 포트 `22-22` = 「22」 · NACL 규칙 번호 32767(IPv4)·32768(IPv6) = 콘솔 「*」(맨 아래 기본 거부)
-  const PROTO_KO = { '-1': '모두', tcp: 'TCP', udp: 'UDP', icmp: 'ICMP', icmpv6: 'ICMPv6', 6: 'TCP', 17: 'UDP', 1: 'ICMP', 58: 'ICMPv6' }
+  const PROTO_KO = { '-1': NT_T('모두'), tcp: 'TCP', udp: 'UDP', icmp: 'ICMP', icmpv6: 'ICMPv6', 6: 'TCP', 17: 'UDP', 1: 'ICMP', 58: 'ICMPv6' }
   const protoW = (p) => PROTO_KO[String(p).toLowerCase()] || String(p || NIL)
-  const portW = (p, proto) => { if (String(proto) === '-1') return '모두'; const s = String(p || ''); if (!s) return '모두'; const m = /^(-?\d+)-(-?\d+)$/.exec(s); return m && m[1] === m[2] ? m[1] : s }
-  const SG_COLS = (w) => [{ h: 'IP 버전', w: 56 }, { h: '프로토콜', w: 62 }, { h: '포트 범위', w: 80, id: true }, { h: w, w: 160, id: true }, { h: '설명', w: 110 }]
-  const ACL_COLS = (w) => [{ h: '규칙 번호', w: 60 }, { h: '프로토콜', w: 62 }, { h: '포트 범위', w: 80, id: true }, { h: w, w: 170, id: true }, { h: '허용/거부', w: 72, st: true }]
+  const portW = (p, proto) => { if (String(proto) === '-1') return NT_T('모두'); const s = String(p || ''); if (!s) return NT_T('모두'); const m = /^(-?\d+)-(-?\d+)$/.exec(s); return m && m[1] === m[2] ? m[1] : s }
+  const SG_COLS = (w) => [{ h: NT_T('IP 버전'), w: 56 }, { h: NT_T('프로토콜'), w: 62 }, { h: NT_T('포트 범위'), w: 80, id: true }, { h: w, w: 160, id: true }, { h: NT_T('설명'), w: 110 }]
+  const ACL_COLS = (w) => [{ h: NT_T('규칙 번호'), w: 60 }, { h: NT_T('프로토콜'), w: 62 }, { h: NT_T('포트 범위'), w: 80, id: true }, { h: w, w: 170, id: true }, { h: NT_T('허용/거부'), w: 72, st: true }]
   const aclNo = (n) => (+n >= 32767 ? '*' : String(n))
-  const ACL_ACT = { allow: '허용', deny: '거부' }
+  const ACL_ACT = { allow: NT_T('허용'), deny: NT_T('거부') }
   function ruleTbl (label, lines, isAcl, dir) {
     if (lines === undefined) return tbl(label, isAcl ? ACL_COLS(dir) : SG_COLS(dir), [], { nc: true })
     if (lines === null) return tbl(label, isAcl ? ACL_COLS(dir) : SG_COLS(dir), [], { ur: true })
@@ -959,63 +962,63 @@
   }
   function ruleGroup (r, it) {
     const isAcl = r.type === 'network_acl'
-    const tabs = [ruleTbl('인바운드 규칙', r.rin, isAcl, '소스'), ruleTbl('아웃바운드 규칙', r.rout, isAcl, '대상')]
+    const tabs = [ruleTbl(NT_T('인바운드 규칙'), r.rin, isAcl, NT_T('소스')), ruleTbl(NT_T('아웃바운드 규칙'), r.rout, isAcl, NT_T('대상'))]
     // 규칙 키가 아예 없다 = 이 자원을 「일부 못 읽음」으로 받았으면 읽지 못한 것 · 아니면 모으기 전 판
     if (r.rin === undefined && r.rout === undefined && it && M.partial.has(it.id)) for (const t of tabs) { t.nc = false; t.ur = true; t.empty = UNREAD }
-    const dl = [...(r.desc ? [['설명', r.desc]] : []), ...(isAcl && r.dflt ? [['기본', '예']] : [])]
+    const dl = [...(r.desc ? [[NT_T('설명'), r.desc]] : []), ...(isAcl && r.dflt ? [[NT_T('기본'), NT_T('예')]] : [])]
     return { h: `${r.id} / ${r.name}`, dl, rows: [], tabs }
   }
   // 서브넷 「네트워크 ACL」 칸(콘솔 서브넷 상세의 「네트워크 ACL」 탭) — 이 서브넷에 연결된 ACL 하나(+ 인바운드·아웃바운드 규칙 탭).
   //   🔴 옛 「규칙은 수집하지 않습니다 — 개수만 수집합니다」(한 문장 안 모순 · 비교정리 B) 대신 규칙을 보인다 · 연결을 모르는 옛 스냅샷 = 수집 안 함
   function naclSec (s) {
     const L = (M.list.get(s.vpc) || []).filter((x) => x.type === 'network_acl')
-    if (!L.some((x) => Array.isArray(x.subs))) return ncSec('네트워크 ACL', '이 수집본에는 서브넷 연결 기록이 없습니다(수집 전 버전입니다) — «표»의 네트워크 ACL 에서 확인하세요')
+    if (!L.some((x) => Array.isArray(x.subs))) return ncSec(NT_T('네트워크 ACL'), NT_T('이 수집본에는 서브넷 연결 기록이 없습니다(수집 전 버전입니다) — «표»의 네트워크 ACL 에서 확인하세요'))
     const mine = L.filter((x) => (x.subs || []).includes(s.id))
-    return { label: '네트워크 ACL', n: mine.length, nc: false, groups: mine.map((r) => withCu(ruleGroup(r, null), 'network_acl', r)), empty: '(0)' }
+    return { label: NT_T('네트워크 ACL'), n: mine.length, nc: false, groups: mine.map((r) => withCu(ruleGroup(r, null), 'network_acl', r)), empty: '(0)' }
   }
   // LB 대상 그룹 칸(ECS) — 이름만(어댑터가 ARN 을 버린다). 같은 계정·리전 LB 의 대상 그룹 이름과 맞으면 그 LB 를 누를 수 있다
   function tgSec (it, aggKey) {
     const tgs = it.n.targetGroups
-    if (!Array.isArray(tgs)) return missSec('LB 대상 그룹', it)
+    if (!Array.isArray(tgs)) return missSec(NT_T('LB 대상 그룹'), it)
     const key = aggKey || B.cellOf.get(it.id) || it.id
-    return sec('LB 대상 그룹', tgs.map((g) => {
+    return sec(NT_T('LB 대상 그룹'), tgs.map((g) => {
       // 2.7.0(§17.27) — 그 대상 그룹으로 이 서비스에 오는 선이 있으면 그 LB(이름이 같은 다른 LB 와 헷갈리지 않는다)
       const ln = B.lines.find((l) => l.kind === 'lbtarget' && l.b === key && l.lbt.tgs.has(g))
       const lb = (ln && [...M.items.values()].find((x) => (B.cellOf.get(x.id) || x.id) === ln.a)) ||
         [...M.items.values()].find((x) => x.kind === 'lb' && x.acct === it.acct && x.region === it.region && String((x.n.attrs || {})['target group'] ?? '').split(', ').includes(g))
       // 2.8.0 — 대상 정체를 싣는 판인데 이리로 오는 선이 없다 = 이 자원으로 온 등록이 없다(원하는 수 0 인 ASG · §17.27 「ASG」).
       //   🔴 「이 LB 의 대상」이라고만 적으면 선이 빠진 것인지 등록이 없는 것인지 갈리지 않는다
-      return { a: g, b: lb ? (!ln && M.lbtKnown ? `${lb.name} 의 대상 그룹 — 등록된 대상 0개(선 없음)` : `${lb.name} 의 대상`) : '(연결된 LB 가 이 화면에 없습니다)', tk: lb ? [lb.id] : [] }
+      return { a: g, b: lb ? (!ln && M.lbtKnown ? NT_T('{0} 의 대상 그룹 — 등록된 대상 0개(선 없음)', [lb.name]) : NT_T('{0} 의 대상', [lb.name])) : NT_T('(연결된 LB 가 이 화면에 없습니다)'), tk: lb ? [lb.id] : [] }
     }))
   }
   // LB 「대상」 칸(§17.27) — 선마다 한 줄(누르면 그 대상) + 선이 없는 짝(다른 리전·계정 · 이 화면에 없다) + 못 이은 대상의 까닭(주의색)
   function lbTargetsSec (it) {
     const a = it.n.attrs || {}
-    if (a['target group'] === undefined) return missSec('대상', it)
+    if (a['target group'] === undefined) return missSec(NT_T('대상'), it)
     const key = B.cellOf.get(it.id) || it.id
     const ls = B.lines.filter((l) => l.kind === 'lbtarget' && l.a === key)
     const drawn = new Set(ls.flatMap((l) => l.lbe || []))
     const loose = X.T.edges.filter((e) => e.kind === 'lbtarget' && e.source === it.id && !drawn.has(e.id))
     const unres = it.n.lbUnres || []
-    if (!M.lbtKnown && !ls.length && !loose.length && !unres.length) return ncSec('대상', '이 수집본에는 대상 정보가 없습니다(이전 버전에서 수집)')
-    const rows = ls.map((l) => ({ a: l.lbt.name, b: `${[...l.lbt.tgs].sort().join(', ')}${l.lbt.ports ? ' · :' + l.lbt.ports : ''} · 등록 ${l.lbt.cnt}`, tk: [l.b] }))
-    for (const e of loose) rows.push({ a: nodeName(e.target), b: '그림에 없는 연결 — 다른 리전·계정이거나 이 화면에 없습니다', tk: [] })
+    if (!M.lbtKnown && !ls.length && !loose.length && !unres.length) return ncSec(NT_T('대상'), NT_T('이 수집본에는 대상 정보가 없습니다(이전 버전에서 수집)'))
+    const rows = ls.map((l) => ({ a: l.lbt.name, b: NT_T('{0}{1} · 등록 {2}', [[...l.lbt.tgs].sort().join(', '), l.lbt.ports ? ' · :' + l.lbt.ports : '', l.lbt.cnt]), tk: [l.b] }))
+    for (const e of loose) rows.push({ a: nodeName(e.target), b: NT_T('그림에 없는 연결 — 다른 리전·계정이거나 이 화면에 없습니다'), tk: [] })
     for (const u of unres) rows.push({ a: u.id, b: lbtWhy(u.code), cls: 'wn' })
-    return sec('대상', rows)
+    return sec(NT_T('대상'), rows)
   }
   // 대상 쪽 칸(§17.27) — 이 자원(묶음이면 묶음)으로 오는 LB → 대상 선마다 그 대상 그룹. 2.7.0 전 스냅샷 = 수집 안 함.
   //   🔴 이름 = 「이 리소스를 대상으로 쓰는 로드밸런서」 · **0개면 칸이 없다**(사용자 결정 2026-10-24 · 검사 167) — 옛 「LB 대상 그룹 0개」는
   //   ALB 정보창의 「대상 그룹 (1)」 바로 아래에서 「대상 그룹이 빠졌다」로 읽혔고, VPC 엔드포인트에는 콘솔에 없는 칸이었다(비교정리 B·C).
   //   배열을 돌려준다(펼쳐 넣는다 · 없으면 칸 0개)
-  const LB_IN = '이 리소스를 대상으로 쓰는 로드밸런서'
+  const LB_IN = NT_T('이 리소스를 대상으로 쓰는 로드밸런서')
   function lbInSec (it, key) {
     const k = key || B.cellOf.get(it.id) || it.id
     const ls = B.lines.filter((l) => l.kind === 'lbtarget' && l.b === k)
     // ASG 선으로 접힌 인스턴스(2.8.0) — 제 선은 없지만 LB 의 대상이다. 「접혔다」를 글로 말한다(누르면 그 ASG)
     const fl = it.id ? B.lines.filter((l) => l.kind === 'lbtarget' && l.lbt.fold && l.lbt.fold.has(it.id)) : []
     if (!ls.length && !fl.length) return M.lbtKnown ? [] : [ncSec(LB_IN)]
-    return [sec(LB_IN, [...ls.flatMap((l) => [...l.lbt.tgs].sort().map((t) => ({ a: t, b: `${l.lbt.lbName} 의 대상${l.lbt.ports ? ' · :' + l.lbt.ports : ''}`, tk: [l.a] }))),
-      ...fl.flatMap((l) => [...l.lbt.tgs].sort().map((t) => ({ a: t, b: `${l.lbt.lbName} 의 대상 — Auto Scaling 그룹 ${l.lbt.name} 의 선에 포함`, tk: [l.b] })))])]
+    return [sec(LB_IN, [...ls.flatMap((l) => [...l.lbt.tgs].sort().map((t) => ({ a: t, b: NT_T('{0} 의 대상{1}', [l.lbt.lbName, l.lbt.ports ? ' · :' + l.lbt.ports : '']), tk: [l.a] }))),
+      ...fl.flatMap((l) => [...l.lbt.tgs].sort().map((t) => ({ a: t, b: NT_T('{0} 의 대상 — Auto Scaling 그룹 {1} 의 선에 포함', [l.lbt.lbName, l.lbt.name]), tk: [l.b] })))])]
   }
   // GWLB 엔드포인트 「제공자」 칸(§17.28 · 2.8.0) — 이 엔드포인트가 넘기는 곳(선마다 한 줄 · 누르면 제공자) · 못 찾았으면 서비스 이름 + 까닭(주의색)
   //   묶음(`VPC Endpoint ×N`)이면 `agg` = 그 칸 열쇠 · 든 엔드포인트 전부
@@ -1025,99 +1028,99 @@
     const ls = B.lines.filter((l) => l.kind === 'epprov' && l.a === key && [...l.epp.eps].some((id) => mine.has(id)))
     const loose = X.T.edges.filter((e) => e.kind === 'epprov' && mine.has(e.source) && !ls.some((l) => (l.lbe || []).includes(e.id)))
     const rows = [...ls.map((l) => ({ a: l.epp.name, b: l.epp.svcs.map(shortSvc).join(', '), tk: [l.b] })),
-      ...loose.map((e) => ({ a: nodeName(e.target), b: '그림에 없는 연결 — 다른 리전·계정이거나 이 화면에 없습니다', tk: [] })),
+      ...loose.map((e) => ({ a: nodeName(e.target), b: NT_T('그림에 없는 연결 — 다른 리전·계정이거나 이 화면에 없습니다'), tk: [] })),
       // 묶음이면 든 엔드포인트마다(그 엔드포인트의 주인 계정과 함께)
-      ...(members || [it]).flatMap((m) => (m.n.epUnres || []).map((s) => ({ a: shortSvc(s), b: '제공자를 이 수집본에서 찾지 못했습니다 — ' + (m.n.epOwner && /^\d{12}$/.test(m.n.epOwner)
+      ...(members || [it]).flatMap((m) => (m.n.epUnres || []).map((s) => ({ a: shortSvc(s), b: NT_T('제공자를 이 수집본에서 찾지 못했습니다 — ') + (m.n.epOwner && /^\d{12}$/.test(m.n.epOwner)
         // 주인 계정을 안다(소비자 쪽 · P2-1) — 「어느 계정의 서비스인가」는 말한다(마스킹) · 그 계정의 LB 는 수집하지 않아 모른다
-        ? `제공자 계정 ${X.acctText(m.n.epOwner)} — 이 계정을 수집하지 않아 서비스 뒤의 NLB·GWLB 를 알 수 없습니다`
-        : '서비스를 제공하는 계정을 수집하지 않았거나 엔드포인트 서비스를 읽지 못했습니다'), cls: 'wn' }))),
+        ? NT_T('제공자 계정 {0} — 이 계정을 수집하지 않아 서비스 뒤의 NLB·GWLB 를 알 수 없습니다', [X.acctText(m.n.epOwner)])
+        : NT_T('서비스를 제공하는 계정을 수집하지 않았거나 엔드포인트 서비스를 읽지 못했습니다')), cls: 'wn' }))),
       // 묶음이면 든 엔드포인트의 주인 계정(제공자를 찾은 것 포함) — 다른 계정의 서비스로 넘기는 엔드포인트를 글로 본다
-      ...(agg ? [] : it.n.epOwner && /^\d{12}$/.test(it.n.epOwner) && ls.length ? [{ a: '제공자 계정', b: X.acctText(it.n.epOwner) }] : [])]
-    return sec('제공자', rows)
+      ...(agg ? [] : it.n.epOwner && /^\d{12}$/.test(it.n.epOwner) && ls.length ? [{ a: NT_T('제공자 계정'), b: X.acctText(it.n.epOwner) }] : [])]
+    return sec(NT_T('제공자'), rows)
   }
   // LB 「엔드포인트」 칸(§17.28) — 이 LB 를 뒤에 둔 엔드포인트 서비스로 들어오는 엔드포인트(선마다 한 줄)
   function epInSec (it) {
     const key = B.cellOf.get(it.id) || it.id
     const ls = B.lines.filter((l) => l.kind === 'epprov' && l.b === key)
     const names = (it.n.attrs || {})['엔드포인트 서비스']
-    return sec('엔드포인트', ls.map((l) => ({ a: l.epp.from, b: `이 서비스로 전달 — ${l.epp.svcs.map(shortSvc).join(', ')}`, tk: [l.a] })), { h: names ? `엔드포인트 서비스 ${names}` : '' })
+    return sec(NT_T('엔드포인트'), ls.map((l) => ({ a: l.epp.from, b: NT_T('이 서비스로 전달 — {0}', [l.epp.svcs.map(shortSvc).join(', ')]), tk: [l.a] })), { h: names ? NT_T('엔드포인트 서비스 {0}', [names]) : '' })
   }
   function fwEpSec (it) {
     const key = B.cellOf.get(it.id) || it.id
     const ls = B.lines.filter((l) => l.kind === 'epprov' && l.b === key)
-    return sec('엔드포인트', it.n.fwEps.map((eid) => {
+    return sec(NT_T('엔드포인트'), it.n.fwEps.map((eid) => {
       const v = byNatOf(it.n, eid); const l = v && ls.find((x) => x.epp.eps.has(v))
-      return l ? { a: eid, b: `이 방화벽으로 전달 — ${l.epp.from}`, tk: [l.a] } : { a: eid, b: v ? '엔드포인트가 이 화면에 있지만 선을 그리지 못했습니다' : '이 엔드포인트가 이 수집본에 없습니다(엔드포인트를 수집하지 않았거나 다른 계정)', cls: 'wn' }
+      return l ? { a: eid, b: NT_T('이 방화벽으로 전달 — {0}', [l.epp.from]), tk: [l.a] } : { a: eid, b: v ? NT_T('엔드포인트가 이 화면에 있지만 선을 그리지 못했습니다') : NT_T('이 엔드포인트가 이 수집본에 없습니다(엔드포인트를 수집하지 않았거나 다른 계정)'), cls: 'wn' }
     }))
   }
   // 서브넷 그룹 칸(RDS · ElastiCache) — 어댑터 `groupSubnets`(엔진 후보 목록). 키가 없으면 못 읽었거나 모으기 전 판이다
   function groupSec (it) {
     const g = it.n.groupSubnets; const a = it.n.attrs || {}
-    return Array.isArray(g) ? sec('서브넷 그룹', g.map((id) => (M.subnets.has(id) ? { a: M.subnets.get(id).az, b: subnetName(id), tk: [id] } : { a: '', b: `${id} (이 화면에 없음)` })), { h: a['서브넷 그룹'] || '' })
-      : missSec('서브넷 그룹', it)
+    return Array.isArray(g) ? sec(NT_T('서브넷 그룹'), g.map((id) => (M.subnets.has(id) ? { a: M.subnets.get(id).az, b: subnetName(id), tk: [id] } : { a: '', b: NT_T('{0} (이 화면에 없음)', [id]) })), { h: a['서브넷 그룹'] || '' })
+      : missSec(NT_T('서브넷 그룹'), it)
   }
   // 복제 그룹 칸(ElastiCache · §17.32) — 같은 복제 그룹의 다른 캐시 클러스터(누르면 그 카드). 들지 않으면 「없음」 · 멤버를 못 읽었으면 「읽지 못함」
   function cacheRgSec (it) {
     const rg = it.n.cacheRg
-    if (!rg) return sec('복제 그룹', [], { empty: '(없음) — 복제 그룹에 속하지 않습니다' })
-    if (!Array.isArray(rg.members)) return M.partial.has(it.id) ? urSec('복제 그룹') : ncSec('복제 그룹', '이 수집본에는 복제 그룹 멤버 기록이 없습니다')
+    if (!rg) return sec(NT_T('복제 그룹'), [], { empty: NT_T('(없음) — 복제 그룹에 속하지 않습니다') })
+    if (!Array.isArray(rg.members)) return M.partial.has(it.id) ? urSec(NT_T('복제 그룹')) : ncSec(NT_T('복제 그룹'), NT_T('이 수집본에는 복제 그룹 멤버 기록이 없습니다'))
     const self = natId(it.n)
     const rows = rg.members.filter((m) => m !== self).map((m) => {
       const o = [...M.items.values()].find((x) => x.kind === 'ec' && x.acct === it.acct && x.region === it.region && natId(x.n) === m)
-      return o ? { a: '캐시 클러스터', b: o.name, tk: [o.id] } : { a: '캐시 클러스터', b: `${m} (이 화면에 없음)` }
+      return o ? { a: NT_T('캐시 클러스터'), b: o.name, tk: [o.id] } : { a: NT_T('캐시 클러스터'), b: NT_T('{0} (이 화면에 없음)', [m]) }
     })
-    return sec('복제 그룹', rows, { h: rg.id, empty: '(없음) — 이 복제 그룹에 다른 클러스터가 없습니다' })
+    return sec(NT_T('복제 그룹'), rows, { h: rg.id, empty: NT_T('(없음) — 이 복제 그룹에 다른 클러스터가 없습니다') })
   }
   // 멤버 인스턴스 칸(Aurora · DB 클러스터 · §17.32) — 멤버 RDS 카드를 누르게 한다(묶음 칸이면 묶음). 이 화면에 없으면 id 그대로
   function memberSec (it) {
     const ms = it.n.dbMembers
-    if (!Array.isArray(ms)) return missSec('멤버 인스턴스', it)
-    return sec('멤버 인스턴스', ms.map((m) => {
+    if (!Array.isArray(ms)) return missSec(NT_T('멤버 인스턴스'), it)
+    return sec(NT_T('멤버 인스턴스'), ms.map((m) => {
       const o = [...M.items.values()].find((x) => x.kind === 'rds' && x.acct === it.acct && x.region === it.region && natId(x.n) === m)
-      return o ? { a: 'DB 인스턴스', b: o.name, tk: [B.cellOf.get(o.id) || o.id] } : { a: 'DB 인스턴스', b: `${m} (이 화면에 없음)` }
-    }), { empty: '(없음) — 이 클러스터에 인스턴스가 없습니다(엔드포인트로 들어온 요청을 받을 곳이 없습니다)' })
+      return o ? { a: NT_T('DB 인스턴스'), b: o.name, tk: [B.cellOf.get(o.id) || o.id] } : { a: NT_T('DB 인스턴스'), b: NT_T('{0} (이 화면에 없음)', [m]) }
+    }), { empty: NT_T('(없음) — 이 클러스터에 인스턴스가 없습니다(엔드포인트로 들어온 요청을 받을 곳이 없습니다)') })
   }
   // ---- #129(2.11.0 · §17.38~40) 정보창 칸 · 「!」 목록 재료(정보창과 같은 셈) ----
-  const CWAN_KIND = { connect: 'Connect', site_to_site_vpn: 'Site-to-Site VPN', transit_gateway_route_table: 'Transit Gateway 라우팅 테이블', direct_connect_gateway: 'Direct Connect 게이트웨이' }
-  const OV_WHY = { ip_target: 'IP 대상입니다 — 이 도구는 아직 IP 대상의 주인을 찾지 않습니다(선으로 그리지 않습니다)',
-    not_collected: '이 수집본에 없는 리소스입니다(삭제되었거나 수집하지 않은 계정입니다)', unknown_type: '이 도구가 모르는 대상 유형입니다' }
+  const CWAN_KIND = { connect: 'Connect', site_to_site_vpn: 'Site-to-Site VPN', transit_gateway_route_table: NT_T('Transit Gateway 라우팅 테이블'), direct_connect_gateway: NT_T('Direct Connect 게이트웨이') }
+  const OV_WHY = { ip_target: NT_T('IP 대상입니다 — 이 도구는 아직 IP 대상의 주인을 찾지 않습니다(선으로 그리지 않습니다)'),
+    not_collected: NT_T('이 수집본에 없는 리소스입니다(삭제되었거나 수집하지 않은 계정입니다)'), unknown_type: NT_T('이 도구가 모르는 대상 유형입니다') }
   function cwanRows (it) {
     const ls = B.lines.filter((l) => l.kind === 'cwanatt' && l.a === it.id)
-    const rows = ls.map((l) => ({ t: `VPC ${l.cwan.name} — 세그먼트 ${l.cwan.segs.join(', ') || '?'} · 엣지 위치 ${l.cwan.locs.map(gaRegion).join(', ') || '?'}(선으로 표시).`, tk: [l.b] }))
+    const rows = ls.map((l) => ({ t: NT_T('VPC {0} — 세그먼트 {1} · 엣지 위치 {2}(선으로 표시).', [l.cwan.name, l.cwan.segs.join(', ') || '?', l.cwan.locs.map(gaRegion).join(', ') || '?']), tk: [l.b] }))
     // 엔진은 이었는데 이 화면에 선이 없는 VPC(보기 범위 · 그 VPC 상자가 없다) — 조용히 빼지 않는다
-    for (const e of X.T.edges.filter((x) => x.kind === 'cwanatt' && x.source === it.id && !ls.some((l) => (M.ports.get(l.b) || {}).vpc === x.target))) rows.push({ t: `VPC ${nodeName(e.target)} — 지금 화면에 표시되지 않습니다(보기 범위 밖이거나 이 화면에 없는 리소스입니다).`, cls: 'wn' })
+    for (const e of X.T.edges.filter((x) => x.kind === 'cwanatt' && x.source === it.id && !ls.some((l) => (M.ports.get(l.b) || {}).vpc === x.target))) rows.push({ t: NT_T('VPC {0} — 지금 화면에 표시되지 않습니다(보기 범위 밖이거나 이 화면에 없는 리소스입니다).', [nodeName(e.target)]), cls: 'wn' })
     const lost = []
     for (const u of it.n.cwanUnres || []) {
       lost.push(u)
-      if (u.code === 'not_in_scope') rows.push({ t: `VPC ${u.ref} — ${gaRegion(u.region)}에 있는 VPC 입니다. 이번 수집에 이 리전이 들어 있지 않아 화면에 그리지 못했습니다. 수집할 리전에 ${eulReul(REGION_KO[u.region] || u.region)} 추가하면 다음 수집부터 이 VPC 까지 선으로 이어집니다.`, cls: 'wn' })
-      else rows.push({ t: `VPC ${u.ref} — ${OV_WHY[u.code] || '연결하지 못했습니다'}`, cls: 'wn' })
+      if (u.code === 'not_in_scope') rows.push({ t: NT_T('VPC {0} — {1}에 있는 VPC 입니다. 이번 수집에 이 리전이 들어 있지 않아 화면에 그리지 못했습니다. 수집할 리전에 {2} 추가하면 다음 수집부터 이 VPC 까지 선으로 이어집니다.', [u.ref, gaRegion(u.region), eulReul(REGION_KO[u.region] || u.region)]), cls: 'wn' })
+      else rows.push({ t: `VPC ${u.ref} — ${OV_WHY[u.code] || NT_T('연결하지 못했습니다')}`, cls: 'wn' })
     }
-    for (const o of it.n.cwanOther || []) { lost.push(o); rows.push({ t: `${o.id} — ${CWAN_KIND[o.kind] || o.kind} 연결입니다${o.loc ? `(${gaRegion(o.loc)})` : ''}. 이 도구는 아직 이 연결 종류를 선으로 그리지 않습니다.`, cls: 'wn' }) }
+    for (const o of it.n.cwanOther || []) { lost.push(o); rows.push({ t: NT_T('{0} — {1} 연결입니다{2}. 이 도구는 아직 이 연결 종류를 선으로 그리지 않습니다.', [o.id, CWAN_KIND[o.kind] || o.kind, o.loc ? `(${gaRegion(o.loc)})` : '']), cls: 'wn' }) }
     return { rows, lost: lost.length }
   }
   function cwanSec (it) {
-    if (!it.n.cwanRead) return missSec('연결', it)
-    return sec('연결', cwanRows(it).rows, { n: (it.n.attrs || {})['연결 수'] ?? undefined, empty: '(없음) — 이 코어 네트워크에 연결이 없습니다' })
+    if (!it.n.cwanRead) return missSec(NT_T('연결'), it)
+    return sec(NT_T('연결'), cwanRows(it).rows, { n: (it.n.attrs || {})['연결 수'] ?? undefined, empty: NT_T('(없음) — 이 코어 네트워크에 연결이 없습니다') })
   }
   function lsnSecs (it) {
     const ls = B.lines.filter((l) => l.kind === 'lsnatt' && l.b === it.id)
     const vrows = [...ls.map((l) => { const P = M.ports.get(l.a) || {}; const v = M.vpcs.get(P.vpc); return { a: 'VPC', b: v ? v.name : '?', tk: [l.a] } }),
-      ...X.T.edges.filter((e) => e.kind === 'lsnvpc' && e.source === it.id && !ls.some((l) => (M.ports.get(l.a) || {}).vpc === e.target)).map((e) => ({ a: 'VPC', b: `${nodeName(e.target)} — 지금 화면에 표시되지 않습니다(보기 범위 밖이거나 이 화면에 없는 리소스입니다)`, cls: 'wn' })),
-      ...(it.n.lsnUnres || []).map((u) => ({ a: u.ref, b: OV_WHY[u.code] || '연결하지 못했습니다', cls: 'wn' }))]
-    const srows = [...(it.n.lsnSvcs || []).map((id) => (M.hubs.has(id) ? { a: '서비스', b: M.hubs.get(id).name, tk: [id] } : { a: '서비스', b: `${nodeName(id)} (이 화면에 없음)` })),
-      ...(it.n.lsnSvcUnres || []).map((u) => ({ a: u.ref, b: '이 수집본에 없는 서비스입니다(다른 계정이 공유한 서비스일 수 있습니다)', cls: 'wn' }))]
-    return [it.n.lsnRead ? sec('연결된 VPC', vrows, { empty: '(없음) — 이 서비스 네트워크에 연결된 VPC 가 없습니다' }) : missSec('연결된 VPC', it),
-      it.n.lsnSvcRead ? sec('서비스', srows, { empty: '(없음) — 이 서비스 네트워크에 연결된 서비스가 없습니다' }) : missSec('서비스', it)]
+      ...X.T.edges.filter((e) => e.kind === 'lsnvpc' && e.source === it.id && !ls.some((l) => (M.ports.get(l.a) || {}).vpc === e.target)).map((e) => ({ a: 'VPC', b: NT_T('{0} — 지금 화면에 표시되지 않습니다(보기 범위 밖이거나 이 화면에 없는 리소스입니다)', [nodeName(e.target)]), cls: 'wn' })),
+      ...(it.n.lsnUnres || []).map((u) => ({ a: u.ref, b: OV_WHY[u.code] || NT_T('연결하지 못했습니다'), cls: 'wn' }))]
+    const srows = [...(it.n.lsnSvcs || []).map((id) => (M.hubs.has(id) ? { a: NT_T('서비스'), b: M.hubs.get(id).name, tk: [id] } : { a: NT_T('서비스'), b: NT_T('{0} (이 화면에 없음)', [nodeName(id)]) })),
+      ...(it.n.lsnSvcUnres || []).map((u) => ({ a: u.ref, b: NT_T('이 수집본에 없는 서비스입니다(다른 계정이 공유한 서비스일 수 있습니다)'), cls: 'wn' }))]
+    return [it.n.lsnRead ? sec(NT_T('연결된 VPC'), vrows, { empty: NT_T('(없음) — 이 서비스 네트워크에 연결된 VPC 가 없습니다') }) : missSec(NT_T('연결된 VPC'), it),
+      it.n.lsnSvcRead ? sec(NT_T('서비스'), srows, { empty: NT_T('(없음) — 이 서비스 네트워크에 연결된 서비스가 없습니다') }) : missSec(NT_T('서비스'), it)]
   }
   function lsvcSecs (it) {
     const ls = B.lines.filter((l) => l.kind === 'lsvctgt' && l.a === it.id)
-    const TW = { instance: 'EC2 인스턴스', alb: '로드 밸런서', lambda: 'Lambda 함수' }
-    const rows = [...ls.map((l) => ({ a: l.ltg.tgs.join(', ') || '대상 그룹', b: `${TW[l.ltg.type] || '대상'} ${l.ltg.name}${l.ltg.ports ? ' · :' + l.ltg.ports : ''} 로 전달`, tk: [l.b] })),
-      ...X.T.edges.filter((e) => e.kind === 'lsvctgt' && e.source === it.id && !ls.some((l) => l.b === (B.cellOf.get(e.target) || e.target))).map((e) => ({ a: ((e.attrs || {}).target_groups || []).join(', ') || '대상 그룹', b: `${nodeName(e.target)} — 지금 화면에 표시되지 않습니다(보기 범위 밖이거나 이 화면에 없는 리소스입니다)`, cls: 'wn' })),
-      ...(it.n.lsvcUnres || []).map((u) => ({ a: u.ref, b: OV_WHY[u.code] || '연결하지 못했습니다', cls: 'wn' })),
-      ...(it.n.lsvcEmpty || []).map((g) => ({ a: g, b: '이 대상 그룹에 등록된 대상이 없습니다(이 그룹으로 온 요청은 처리되지 않습니다)', cls: 'wn' }))]
-    const nets = (it.n.lsvcNets || []).map((id) => (M.hubs.has(id) ? { a: '서비스 네트워크', b: M.hubs.get(id).name, tk: [id] } : { a: '서비스 네트워크', b: `${nodeName(id)} (이 화면에 없음)` }))
-    return [it.n.lsvcRead ? sec('대상', rows, { empty: '(없음) — 이 서비스에 대상 그룹이 없습니다' }) : missSec('대상', it), sec('서비스 네트워크', nets, { empty: '(없음) — 어느 서비스 네트워크에도 연결되지 않았습니다' })]
+    const TW = { instance: NT_T('EC2 인스턴스'), alb: NT_T('로드 밸런서'), lambda: NT_T('Lambda 함수') }
+    const rows = [...ls.map((l) => ({ a: l.ltg.tgs.join(', ') || NT_T('대상 그룹'), b: NT_T('{0} {1}{2} 로 전달', [TW[l.ltg.type] || NT_T('대상'), l.ltg.name, l.ltg.ports ? ' · :' + l.ltg.ports : '']), tk: [l.b] })),
+      ...X.T.edges.filter((e) => e.kind === 'lsvctgt' && e.source === it.id && !ls.some((l) => l.b === (B.cellOf.get(e.target) || e.target))).map((e) => ({ a: ((e.attrs || {}).target_groups || []).join(', ') || NT_T('대상 그룹'), b: NT_T('{0} — 지금 화면에 표시되지 않습니다(보기 범위 밖이거나 이 화면에 없는 리소스입니다)', [nodeName(e.target)]), cls: 'wn' })),
+      ...(it.n.lsvcUnres || []).map((u) => ({ a: u.ref, b: OV_WHY[u.code] || NT_T('연결하지 못했습니다'), cls: 'wn' })),
+      ...(it.n.lsvcEmpty || []).map((g) => ({ a: g, b: NT_T('이 대상 그룹에 등록된 대상이 없습니다(이 그룹으로 온 요청은 처리되지 않습니다)'), cls: 'wn' }))]
+    const nets = (it.n.lsvcNets || []).map((id) => (M.hubs.has(id) ? { a: NT_T('서비스 네트워크'), b: M.hubs.get(id).name, tk: [id] } : { a: NT_T('서비스 네트워크'), b: NT_T('{0} (이 화면에 없음)', [nodeName(id)]) }))
+    return [it.n.lsvcRead ? sec(NT_T('대상'), rows, { empty: NT_T('(없음) — 이 서비스에 대상 그룹이 없습니다') }) : missSec(NT_T('대상'), it), sec(NT_T('서비스 네트워크'), nets, { empty: NT_T('(없음) — 어느 서비스 네트워크에도 연결되지 않았습니다') })]
   }
   // ======================================================================== 콘솔식 라우팅 쪽 정보창
   //   §17.11 「콘솔 표현 원칙」 · 사용자 결정 2026-10-24(고객은 AWS 콘솔에 익숙하다 — 콘솔의 정보 표현을 따른다) · 검사 166.
@@ -1131,14 +1134,14 @@
     return nmIx.get(k)
   }
   const natNm = (ctx, v) => { const id = natNode(ctx, v); const n = id && X.mById.get(id); return n && named(n) ? n.name : null }
-  const yesNo = (v) => (v === true ? '예' : v === false ? '아니요' : NIL)
+  const yesNo = (v) => (v === true ? NT_T('예') : v === false ? NT_T('아니요') : NIL)
   // 엔진 옵션 값(enable/disable) — TGW·어태치먼트 콘솔은 영어 원문 그대로 첫 글자만 대문자(영문 콘솔 실측 2026-10-24 `05-TGW상세` ·
   //   `04-TGW어태치먼트상세`: 「Enable」·「Disable」 · 암호화 지원만 「Disabled」 = API 값이 `disabled`) · 한국어 콘솔 미확인(§0-6 「한국어 미확인은 영문 콘솔 값」)
   const enDis = (v) => (v === undefined || v === null || v === '' ? NIL : String(v).charAt(0).toUpperCase() + String(v).slice(1))
   // VPC 라우팅 테이블 「라우팅」 표(한국어 콘솔 실측 2026-10-24 `01-라우팅테이블-ko-1-Routes` — 대상 · 대상 · 상태 · 전파됨 · 라우팅 오리진).
   //   같은 낱말 「대상」 둘은 괄호로 가른다(예외 E2). 5열이 한 줄에 안 들어간다(대상 장비 = `ID (이름)`) → 두 줄 행(첫 줄 = 알아보는 열)
-  const RTB_COLS = [{ h: '대상(Destination)', w: 130, id: true }, { h: '대상(Target)', w: 215, id: true }, { h: '상태', w: 65, st: true }, { h: '전파됨', w: 55 }, { h: '라우팅 오리진', w: 130, x: 1 }]
-  const RT_ORIG = { CreateRouteTable: '라우팅 테이블 생성', CreateRoute: '라우팅 생성' }   // 한국어 콘솔 낱말 · 전파(EnableVgwRoutePropagation)는 한국어 미확인 → 원문
+  const RTB_COLS = [{ h: NT_T('대상(Destination)'), w: 130, id: true }, { h: NT_T('대상(Target)'), w: 215, id: true }, { h: NT_T('상태'), w: 65, st: true }, { h: NT_T('전파됨'), w: 55 }, { h: NT_T('라우팅 오리진'), w: 130, x: 1 }]
+  const RT_ORIG = { CreateRouteTable: NT_T('라우팅 테이블 생성'), CreateRoute: NT_T('라우팅 생성') }   // 한국어 콘솔 낱말 · 전파(EnableVgwRoutePropagation)는 한국어 미확인 → 원문
   // 접두사 목록 풀이(§17.33 · 검사 152) — 표의 대상(Destination) 칸은 콘솔처럼 `pl-…` id 만(통합정리 0-3) · 이름(AWS 관리형 = 서비스 · 고객 관리형 = 이름 + CIDR)은
   //   표 아래 풀이 줄로(id → 이름 · 못 읽었으면 그 말). 재료 = 어댑터가 그 서브넷의 라우팅 테이블에서 옮긴 `pls`(`dstWord`)
   const plRows = (s, ds) => [...new Set(ds.filter((d) => /^pl-/.test(String(d || ''))))].sort().map((d) => ({ a: d, b: dstWord(s, d), cls: 'pln' }))
@@ -1149,14 +1152,14 @@
       // 못 이은 대상 ENI(2.8.0 · P2-2 · 엔진 `unresolved_route_targets`) = 그 ENI + 까닭(주의색) — 「이 화면에 없는 대상」 한 말로 뭉개지 않는다
       const u = (rt.unres || []).find((y) => y.t === x.t && (!y.d || y.d === x.d))
       rows.push({ d: x.d, loc: x.t === 'local', c: [x.d || NIL, x.t === 'local' ? 'local' : u ? `${x.t} — ${routeWhy(u.why)}` : idNm(x.t, natNm(ctx, x.t)), x.st ? conState('rtb', x.st) : NIL,
-        rt.old ? NIL : x.orig === 'EnableVgwRoutePropagation' ? '예' : '아니요', x.orig ? RT_ORIG[x.orig] || x.orig : NIL],
-      tk: tid ? [B.cellOf.get(tid) || tid] : [], ...(x.st === 'blackhole' ? { cls: 'bh', why: '이 목적지로 가는 트래픽을 폐기합니다' } : u ? { cls: 'wn' } : {}), ...(pl ? { pl: true } : {}) })
+        rt.old ? NIL : x.orig === 'EnableVgwRoutePropagation' ? NT_T('예') : NT_T('아니요'), x.orig ? RT_ORIG[x.orig] || x.orig : NIL],
+      tk: tid ? [B.cellOf.get(tid) || tid] : [], ...(x.st === 'blackhole' ? { cls: 'bh', why: NT_T('이 목적지로 가는 트래픽을 폐기합니다') } : u ? { cls: 'wn' } : {}), ...(pl ? { pl: true } : {}) })
     }
     // 옛 판(엔진 `routes` 없음)은 못 이은 ENI 를 엣지로 모르므로 여기서 줄을 더한다(옛 서브넷 표와 같은 줄)
     if (rt.old) for (const u of rt.unres || []) if (!rows.some((y) => y.d === u.d && String(y.c[1]).startsWith(u.t + ' '))) rows.push({ d: u.d, loc: false, c: [u.d || NIL, `${u.t} — ${routeWhy(u.why)}`, NIL, NIL, NIL], tk: [], cls: 'wn' })
     // 순서(§17.11 · 통합정리 0-4) = local 먼저 → 목적지 주소 오름차순 → 접두사 목록(pl-) 마지막
     rows.sort((x, y) => (x.loc === y.loc ? 0 : x.loc ? -1 : 1) || byDst(x.d, y.d) || (x.c[1] < y.c[1] ? -1 : x.c[1] > y.c[1] ? 1 : 0))
-    return tbl('라우팅', RTB_COLS, rows, { wrap: 2 })
+    return tbl(NT_T('라우팅'), RTB_COLS, rows, { wrap: 2 })
   }
   // 라우팅 테이블 한 장 = 콘솔 상세 화면(머리 `ID / 이름` · 세부 정보 · 탭 「라우팅 · 서브넷 연결 · 엣지 연결 · 라우팅 전파」 — 태그·관련 리소스는 뺀다)
   function rtbGroup (r, v) {
@@ -1166,43 +1169,43 @@
     const sn = (sid) => { const s = M.subnets.get(sid); return s ? idNm(natId(s.n), s.named ? s.name : null) : String(sid).split('/').pop() }
     const cidrOf = (sid) => { const s = M.subnets.get(sid); return (s && (s.n.attrs || {}).cidr) || NIL }
     const azOf = (sid) => (M.subnets.get(sid) || {}).az || NIL
-    const subRows = rt.assoc.map((sid) => ({ az: azOf(sid), c: [sn(sid), cidrOf(sid), '명시적'], tk: M.subnets.has(sid) ? [sid] : [] }))
-    if (rt.main && v) for (const s of v.subnets) if (!explicit.has(s.id)) subRows.push({ az: s.az, c: [sn(s.id), cidrOf(s.id), '명시적 연결 없음(기본 테이블)'], tk: [s.id] })
+    const subRows = rt.assoc.map((sid) => ({ az: azOf(sid), c: [sn(sid), cidrOf(sid), NT_T('명시적')], tk: M.subnets.has(sid) ? [sid] : [] }))
+    if (rt.main && v) for (const s of v.subnets) if (!explicit.has(s.id)) subRows.push({ az: s.az, c: [sn(s.id), cidrOf(s.id), NT_T('명시적 연결 없음(기본 테이블)')], tk: [s.id] })
     subRows.sort((x, y) => (x.az < y.az ? -1 : x.az > y.az ? 1 : 0) || (x.c[0] < y.c[0] ? -1 : x.c[0] > y.c[0] ? 1 : 0))
-    const SUB_COLS = [{ h: '서브넷 ID', w: 220, id: true }, { h: 'IPv4 CIDR', w: 120, id: true }, { h: '연결', w: 140 }]
-    const EDGE_COLS = [{ h: '게이트웨이 ID', w: 300, id: true }, { h: '유형', w: 160 }]
-    const PROP_COLS = [{ h: '가상 프라이빗 게이트웨이', w: 340, id: true }, { h: '전파', w: 80 }]
-    const gwType = (g) => (/^igw-/.test(g) ? '인터넷 게이트웨이' : /^vgw-/.test(g) ? '가상 프라이빗 게이트웨이' : NIL)
-    const edge = rt.edge === null ? tbl('엣지 연결', EDGE_COLS, [], { nc: true })
-      : tbl('엣지 연결', EDGE_COLS, rt.edge.slice().sort().map((g) => { const id = ctx && natNode(ctx, g); return { c: [idNm(g, ctx && natNm(ctx, g)), gwType(g)], tk: id ? [id] : [] } }))
+    const SUB_COLS = [{ h: NT_T('서브넷 ID'), w: 220, id: true }, { h: 'IPv4 CIDR', w: 120, id: true }, { h: NT_T('연결'), w: 140 }]
+    const EDGE_COLS = [{ h: NT_T('게이트웨이 ID'), w: 300, id: true }, { h: NT_T('유형'), w: 160 }]
+    const PROP_COLS = [{ h: NT_T('가상 프라이빗 게이트웨이'), w: 340, id: true }, { h: NT_T('전파'), w: 80 }]
+    const gwType = (g) => (/^igw-/.test(g) ? NT_T('인터넷 게이트웨이') : /^vgw-/.test(g) ? NT_T('가상 프라이빗 게이트웨이') : NIL)
+    const edge = rt.edge === null ? tbl(NT_T('엣지 연결'), EDGE_COLS, [], { nc: true })
+      : tbl(NT_T('엣지 연결'), EDGE_COLS, rt.edge.slice().sort().map((g) => { const id = ctx && natNode(ctx, g); return { c: [idNm(g, ctx && natNm(ctx, g)), gwType(g)], tk: id ? [id] : [] } }))
     // 라우팅 전파 = 이 VPC 에 붙은 VGW 마다 전파 예/아니요(콘솔 탭과 같다) — 엔진은 전파하는 VGW id 만 준다(`propagating_vgw_ids`)
     const vgws = v ? [...M.hubs.values()].filter((h) => h.kind === 'vgw' && (h.n.vpcIds || []).includes(v.id)) : []
-    const prop = rt.vgw === null ? tbl('라우팅 전파', PROP_COLS, [], { nc: true })
-      : tbl('라우팅 전파', PROP_COLS, [...new Set([...vgws.map((h) => natId(h.n)), ...rt.vgw])].sort().map((g) => { const h = vgws.find((x) => natId(x.n) === g)
-        return { c: [idNm(g, h && h.named ? h.name : null), rt.vgw.includes(g) ? '예' : '아니요'], tk: h ? [h.id] : [] } }))
-    const dl = [['기본', rt.main ? '예' : '아니요'], ['명시적 서브넷 연결', `${rt.assoc.length} 서브넷`], ['엣지 연결', rt.edge && rt.edge.length ? rt.edge.join(', ') : NIL],
-      ...(rt.old ? [['수집본', '옛 판 — VPC 내부(local) 경로·상태·라우팅 오리진은 다음 수집부터 보입니다']] : [])]
+    const prop = rt.vgw === null ? tbl(NT_T('라우팅 전파'), PROP_COLS, [], { nc: true })
+      : tbl(NT_T('라우팅 전파'), PROP_COLS, [...new Set([...vgws.map((h) => natId(h.n)), ...rt.vgw])].sort().map((g) => { const h = vgws.find((x) => natId(x.n) === g)
+        return { c: [idNm(g, h && h.named ? h.name : null), rt.vgw.includes(g) ? NT_T('예') : NT_T('아니요')], tk: h ? [h.id] : [] } }))
+    const dl = [[NT_T('기본'), rt.main ? NT_T('예') : NT_T('아니요')], [NT_T('명시적 서브넷 연결'), NT_T('{0} 서브넷', [rt.assoc.length])], [NT_T('엣지 연결'), rt.edge && rt.edge.length ? rt.edge.join(', ') : NIL],
+      ...(rt.old ? [[NT_T('수집본'), NT_T('옛 판 — VPC 내부(local) 경로·상태·라우팅 오리진은 다음 수집부터 보입니다')]] : [])]
     const ps = v ? v.subnets.find((x) => x.n.rtId === r.id) : null
-    return { h: `${r.id}${r.name && r.name !== r.id ? ` / ${r.name}` : ''}`, dl, rows: plRows(ps, rt.routes.map((x) => x.d)), tabs: [rtbRoutes(r, ctx), tbl('서브넷 연결', SUB_COLS, subRows, { wrap: 2 }), edge, prop] }
+    return { h: `${r.id}${r.name && r.name !== r.id ? ` / ${r.name}` : ''}`, dl, rows: plRows(ps, rt.routes.map((x) => x.d)), tabs: [rtbRoutes(r, ctx), tbl(NT_T('서브넷 연결'), SUB_COLS, subRows, { wrap: 2 }), edge, prop] }
   }
   // VPC 의 라우팅 테이블 칸(콘솔 VPC › 라우팅 테이블 · 통합정리 2-1·2-3) — 테이블마다 한 묶음(기본 테이블 먼저 → 이름 → ID)
   function rtbSec (v, cnt) {
     const rs = (M.list.get(v.id) || []).filter((x) => x.type === 'route_table' && x.rt)
       .sort((x, y) => (x.rt.main === y.rt.main ? 0 : x.rt.main ? -1 : 1) || String(x.name).localeCompare(String(y.name)) || (x.id < y.id ? -1 : 1))
-    if (!rs.length) return sec('라우팅 테이블', [], cnt === undefined ? {} : { n: cnt, empty: '개수만 확인했습니다 — 목록은 수집하지 않습니다' })
-    return { label: '라우팅 테이블', n: rs.length, nc: false, groups: rs.map((r) => withCu(rtbGroup(r, v), 'route_table', r)), empty: '(0)' }
+    if (!rs.length) return sec(NT_T('라우팅 테이블'), [], cnt === undefined ? {} : { n: cnt, empty: NT_T('개수만 확인했습니다 — 목록은 수집하지 않습니다') })
+    return { label: NT_T('라우팅 테이블'), n: rs.length, nc: false, groups: rs.map((r) => withCu(rtbGroup(r, v), 'route_table', r)), empty: '(0)' }
   }
   // 서브넷의 「라우팅 테이블」 칸(콘솔 서브넷 › 라우팅 테이블 탭 · 통합정리 2-2) — 머리 「라우팅 테이블: ID / 이름」 + 그 테이블의 「라우팅 (N)」.
   //   🔴 옛 제목 「라우팅 테이블 2개」는 경로 수였다(R-01) — 칸 수 = 테이블 1 · 경로 수는 표 탭 「라우팅 (N)」이 말한다
   function subRtSec (s) {
     const v = M.vpcs.get(s.vpc); const r = s.n.rtId ? (M.list.get(s.vpc) || []).find((x) => x.type === 'route_table' && x.id === s.n.rtId && x.rt) : null
     if (!r) return null
-    const dl = [['기본', r.rt.main ? '예' : '아니요'], ...(s.n.rtImplicit ? [['연결', '명시적 연결 없음 — VPC 의 기본 라우팅 테이블을 따릅니다']] : []),
-      ...(r.rt.old ? [['수집본', '옛 판 — VPC 내부(local) 경로·상태·라우팅 오리진은 다음 수집부터 보입니다']] : [])]
-    return { label: '라우팅 테이블', n: 1, nc: false, groups: [withCu({ h: `라우팅 테이블: ${r.id}${r.name && r.name !== r.id ? ` / ${r.name}` : ''}`, dl, rows: plRows(s, r.rt.routes.map((x) => x.d)), tabs: [rtbRoutes(r, v ? v.n : s.n)] }, 'route_table', r)], empty: '(0)' }
+    const dl = [[NT_T('기본'), r.rt.main ? NT_T('예') : NT_T('아니요')], ...(s.n.rtImplicit ? [[NT_T('연결'), NT_T('명시적 연결 없음 — VPC 의 기본 라우팅 테이블을 따릅니다')]] : []),
+      ...(r.rt.old ? [[NT_T('수집본'), NT_T('옛 판 — VPC 내부(local) 경로·상태·라우팅 오리진은 다음 수집부터 보입니다')]] : [])]
+    return { label: NT_T('라우팅 테이블'), n: 1, nc: false, groups: [withCu({ h: NT_T('라우팅 테이블: {0}{1}', [r.id, r.name && r.name !== r.id ? ` / ${r.name}` : '']), dl, rows: plRows(s, r.rt.routes.map((x) => x.d)), tabs: [rtbRoutes(r, v ? v.n : s.n)] }, 'route_table', r)], empty: '(0)' }
   }
   // 「이 게이트웨이(피어링)로 라우트를 보내는 서브넷」(예외 E4 — 콘솔에 없는 거꾸로 계산한 칸 · 콘솔과 같은 칸 아래) = 표 「목적지 · 서브넷 ID · 가용 영역」
-  const GWR_COLS = [{ h: '목적지', w: 120, id: true }, { h: '서브넷 ID', w: 270, id: true }, { h: '가용 영역', w: 80 }]
+  const GWR_COLS = [{ h: NT_T('목적지'), w: 120, id: true }, { h: NT_T('서브넷 ID'), w: 270, id: true }, { h: NT_T('가용 영역'), w: 80 }]
   function gwRouteSec (label, id) {
     const rows = []
     const pr = []
@@ -1215,8 +1218,8 @@
   //   Transit gateway ID 열은 뺀다(이 정보창이 그 TGW) · NAT 상태 열도 뺀다(Disabled 만 나온다) · 두 줄 행(첫 줄 = Name · ID · 상태)
   //   🔁 2026-10-26(사용자 결정) — 이 정보창에는 Name · 상태 · 리소스 유형 · 리소스 ID 네 열(한 줄) · 어태치먼트 ID 는 줄을 눌러 여는 어태치먼트 정보창 제목에 ·
   //   연결 라우팅 테이블·연결 상태는 아래 「Transit Gateway 라우팅 테이블」 칸의 「연결」 탭에 있다
-  const ATT_COLS = [{ h: 'Name', w: 155 }, { h: 'Transit Gateway Attachment ID', w: 220, id: true, x: 1 }, { h: '상태', w: 85, st: true },
-    { h: '리소스 유형', w: 75 }, { h: '리소스 ID', w: 155, id: true }, { h: '연결 라우팅 테이블 ID', w: 170, id: true, x: 1 }, { h: '연결 상태', w: 90, st: true, x: 1 }]
+  const ATT_COLS = [{ h: 'Name', w: 155 }, { h: 'Transit Gateway Attachment ID', w: 220, id: true, x: 1 }, { h: NT_T('상태'), w: 85, st: true },
+    { h: NT_T('리소스 유형'), w: 75 }, { h: NT_T('리소스 ID'), w: 155, id: true }, { h: NT_T('연결 라우팅 테이블 ID'), w: 170, id: true, x: 1 }, { h: NT_T('연결 상태'), w: 90, st: true, x: 1 }]
   function tgwAttSec (it) {
     const atts = M.attOf.get(it.id) || []
     const rows = atts.map((n) => {
@@ -1227,20 +1230,20 @@
           c.assocRt || NIL, c.assocState ? conState('tgw', c.assocState) : NIL], tk: t.tk, go: (t.tk || [])[0] }
     })
     rows.sort((x, y) => (x.type < y.type ? -1 : x.type > y.type ? 1 : 0) || (x.name < y.name ? -1 : x.name > y.name ? 1 : 0) || (x.id < y.id ? -1 : x.id > y.id ? 1 : 0))
-    return { label: '어태치먼트', n: rows.length, nc: false, groups: rows.length ? [{ h: '', rows: [], tbl: tbl('어태치먼트', ATT_COLS, rows, { wrap: 3 }) }] : [], empty: '(0)' }
+    return { label: NT_T('어태치먼트'), n: rows.length, nc: false, groups: rows.length ? [{ h: '', rows: [], tbl: tbl(NT_T('어태치먼트'), ATT_COLS, rows, { wrap: 3 }) }] : [], empty: '(0)' }
   }
   // TGW 「세부 정보」(콘솔 순서 · 통합정리 2-4) — 엔진 옵션 키가 없으면(옛 판·못 읽음) 그 줄이 없다
   function tgwRows (it) {
     const c = it.n.con || {}; const a = it.n.attrs || {}
     // 「상태」 줄은 모든 정보창이 같은 고객 말(`stateKo` · copy-a ⑩ · 검사 129) — 콘솔식 표 안의 상태 칸만 콘솔 낱말(`conState`)
-    const rows = [['Transit Gateway ID', natId(it.n)], ['상태', it.state ? stateKo(it.state) : NIL], ['Amazon ASN', a['Amazon 측 ASN'] ?? NIL]]
-    const opt = [['DNS 지원', c.dns], ['기본 연결 라우팅 테이블', c.defAssoc], ['연결 라우팅 테이블 ID', c.assocRt, true], ['공유 어태치먼트 자동 수락', c.autoAccept],
-      ['기본 전파 라우팅 테이블', c.defProp], ['전파 라우팅 테이블 ID', c.propRt, true], ['VPN ECMP 지원', c.vpnEcmp], ['보안 그룹 참조 지원', c.sgRef], ['멀티캐스트 지원', c.multicast],
-      ['암호화 지원', c.encryption]]
+    const rows = [['Transit Gateway ID', natId(it.n)], [NT_T('상태'), it.state ? stateKo(it.state) : NIL], ['Amazon ASN', a['Amazon 측 ASN'] ?? NIL]]
+    const opt = [[NT_T('DNS 지원'), c.dns], [NT_T('기본 연결 라우팅 테이블'), c.defAssoc], [NT_T('연결 라우팅 테이블 ID'), c.assocRt, true], [NT_T('공유 어태치먼트 자동 수락'), c.autoAccept],
+      [NT_T('기본 전파 라우팅 테이블'), c.defProp], [NT_T('전파 라우팅 테이블 ID'), c.propRt, true], [NT_T('VPN ECMP 지원'), c.vpnEcmp], [NT_T('보안 그룹 참조 지원'), c.sgRef], [NT_T('멀티캐스트 지원'), c.multicast],
+      [NT_T('암호화 지원'), c.encryption]]
     for (const [k, v, raw] of opt) if (v !== undefined) rows.push([k, raw ? String(v) : enDis(v)])
-    if (Array.isArray(c.cidrs)) rows.push(['Transit Gateway CIDR 블록', c.cidrs.length ? c.cidrs.join(', ') : NIL])
-    if (c.desc) rows.push(['설명', String(c.desc)])
-    rows.push(['소유자 ID', acctName(it.acct)])
+    if (Array.isArray(c.cidrs)) rows.push([NT_T('Transit Gateway CIDR 블록'), c.cidrs.length ? c.cidrs.join(', ') : NIL])
+    if (c.desc) rows.push([NT_T('설명'), String(c.desc)])
+    rows.push([NT_T('소유자 ID'), acctName(it.acct)])
     return rows
   }
   function itemSecs (it) {
@@ -1259,17 +1262,17 @@
       // 콘솔 「리스너 및 규칙」 표(2.13.0 · 검사 167) — 프로토콜:포트 · 기본 작업 · 규칙 · 보안 정책 · 기본 SSL/TLS 인증서 · 포트 순.
       //   옛 스냅샷(재료 없음) = 옛 줄(포트만) 그대로
       const lsn = Array.isArray(c.listener_details)
-        ? tsec(tbl('리스너 및 규칙', LB_LSN_COLS, c.listener_details.map(TSV).sort((x, y) => (+x[1] - +y[1]) || (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0))
+        ? tsec(tbl(NT_T('리스너 및 규칙'), LB_LSN_COLS, c.listener_details.map(TSV).sort((x, y) => (+x[1] - +y[1]) || (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0))
           .map((x) => ({ c: [x[0] || x[1] ? `${x[0] || '?'}:${x[1] || '?'}` : NIL, lbAct(x[2]), dash(x[3]), dash(x[4]), dash(String(x[5] || '').split(',').filter(Boolean)[0])] })), { wrap: 3 }))
-        : ports ? sec('리스너 및 규칙', String(ports).split(/[,\s]+/).filter(Boolean).map((p) => ({ a: p, b: '' })), { n: a.listeners })
-          : a.listeners !== undefined ? sec('리스너 및 규칙', [], { n: a.listeners, empty: `포트·규칙은 ${NC}` }) : missSec('리스너 및 규칙', it)
+        : ports ? sec(NT_T('리스너 및 규칙'), String(ports).split(/[,\s]+/).filter(Boolean).map((p) => ({ a: p, b: '' })), { n: a.listeners })
+          : a.listeners !== undefined ? sec(NT_T('리스너 및 규칙'), [], { n: a.listeners, empty: NT_T('포트·규칙은 {0}', [NC]) }) : missSec(NT_T('리스너 및 규칙'), it)
       // 콘솔 「대상 그룹」 — 이름 · 대상 유형 · 프로토콜:포트 · 상태 검사 · 등록된 대상(구조 수) · 이름 순. 대상 상태(정상·비정상)는 관측 몫이다(모니터링 켜짐 = 「대상」 줄)
-      const tgNote = X.obs && X.obs.on() ? '' : '대상 상태(정상·비정상)는 모니터링을 켜면 표시됩니다'
+      const tgNote = X.obs && X.obs.on() ? '' : NT_T('대상 상태(정상·비정상)는 모니터링을 켜면 표시됩니다')
       const tgs = Array.isArray(c.target_group_details)
-        ? tsec(tbl('대상 그룹', LB_TG_COLS, c.target_group_details.map(TSV).sort((x, y) => (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0))
+        ? tsec(tbl(NT_T('대상 그룹'), LB_TG_COLS, c.target_group_details.map(TSV).sort((x, y) => (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0))
           .map((x) => ({ c: [x[0], TG_TYPE[x[3]] || dash(x[3]), x[1] ? `${x[1]}${x[2] ? ':' + x[2] : ''}` : NIL, lbHc(x), tgRegWord(it, x[0]) || NIL] })), { wrap: 3 }), { h: tgNote })
-        : a['target group'] !== undefined ? sec('대상 그룹', a['target group'] ? String(a['target group']).split(', ').map((g) => ({ a: g, b: tgRegWord(it, g) })) : [], { h: tgNote })
-          : missSec('대상 그룹', it)
+        : a['target group'] !== undefined ? sec(NT_T('대상 그룹'), a['target group'] ? String(a['target group']).split(', ').map((g) => ({ a: g, b: tgRegWord(it, g) })) : [], { h: tgNote })
+          : missSec(NT_T('대상 그룹'), it)
       return [lsn, tgs, lbTargetsSec(it), sgSec(it), ...lbInSec(it),
       // GWLB·NLB 를 뒤에 둔 엔드포인트 서비스(2.8.0 · §17.28) — 이리로 넘기는 엔드포인트. 엔진이 묻지 않는 종류(ALB)·옛 스냅샷은 칸이 없다
       ...((it.n.attrs || {})['엔드포인트 서비스'] !== undefined ? [epInSec(it)] : [])]
@@ -1277,16 +1280,16 @@
     // NAT(콘솔 「보조 IPv4 주소」 탭 · 2.13.0) — 기본(primary)이 아닌 주소만(기본 주소는 세부 정보 줄) · 재료가 없는 옛 스냅샷 = 칸 없음
     if (k === 'nat') {
       const ad = (conOf(it) || {}).addresses
-      const sub = Array.isArray(ad) ? [tsec(tbl('보조 IPv4 주소', NAT_SEC_COLS, ad.map(TSV).filter((x) => x[4] !== 'true').map((x) => ({ c: [dash(x[1]), dash(x[2]), dash(x[0])] }))))] : []
-      return [...sub, gwRouteSec('이 게이트웨이로 보내는 라우트', it.id)]   // 예외 E4 — IGW 와 같은 표(마무리 통합)
+      const sub = Array.isArray(ad) ? [tsec(tbl(NT_T('보조 IPv4 주소'), NAT_SEC_COLS, ad.map(TSV).filter((x) => x[4] !== 'true').map((x) => ({ c: [dash(x[1]), dash(x[2]), dash(x[0])] }))))] : []
+      return [...sub, gwRouteSec(NT_T('이 게이트웨이로 보내는 라우트'), it.id)]   // 예외 E4 — IGW 와 같은 표(마무리 통합)
     }
-    if (k === 'igw') return [gwRouteSec('이 게이트웨이로 보내는 라우트', it.id)]   // 예외 E4(콘솔에 없는 칸 · 표) — 검사 166
+    if (k === 'igw') return [gwRouteSec(NT_T('이 게이트웨이로 보내는 라우트'), it.id)]   // 예외 E4(콘솔에 없는 칸 · 표) — 검사 166
     const snRows = () => it.subnets.map((s) => ({ a: M.subnets.get(s).az, b: subnetName(s), tk: [s] }))
     // 🔴 EC2 의 LB 대상 그룹 소속은 엔진이 모으지 않는다(대상 쪽 API 가 따로다) — ECS 는 서비스가 자기 대상 그룹을 말한다
     // 🔁 2.7.0(§17.27) — 이 인스턴스로 오는 LB → 대상 선이 말한다(그 전 스냅샷 = 수집 안 함)
     if (k === 'ec2') return [sgSec(it), ...lbInSec(it, it.aggKey), ...tagSec(it.n)]
     // 리전 줄에 선 것(§17.12 ①)은 「서브넷 (없음)」 대신 왜 서브넷이 없는지를 말한다
-    const snSec = () => sec('서브넷', snRows(), it.regional ? { empty: NOSUB_WHY[it.n.type] } : {})
+    const snSec = () => sec(NT_T('서브넷'), snRows(), it.regional ? { empty: NOSUB_WHY[it.n.type] } : {})
     if (k === 'ecs') return [sgSec(it), tgSec(it, it.aggKey), snSec()]
     if (k === 'rds') return [sgSec(it), groupSec(it), ...lbInSec(it, it.aggKey)]
     if (k === 'sm') return it.n.type === 'sagemaker_notebook_instance' ? [sgSec(it), ...lbInSec(it)] : [sgSec(it), snSec(), ...lbInSec(it)]
@@ -1294,33 +1297,33 @@
     if (k === 'rdsc') return [sgSec(it), groupSec(it), memberSec(it), ...lbInSec(it)]
     if (k === 'os' || k === 'msk') return [sgSec(it), snSec(), ...lbInSec(it)]
     if (k === 'eic') return [sgSec(it), ...lbInSec(it)]
-    if (k === 'eks') return [sgSec(it), sec('클러스터 서브넷', snRows()), ...lbInSec(it)]
+    if (k === 'eks') return [sgSec(it), sec(NT_T('클러스터 서브넷'), snRows()), ...lbInSec(it)]
     // VPC 엔드포인트(콘솔 「서브넷」·「보안 그룹」 탭 · 2.13.0) — 인터페이스·GWLB 엔드포인트만(게이트웨이 엔드포인트는 서브넷·SG 가 없다 = 엔진이 키를 안 만든다).
     //   ENI·IP 를 못 읽었으면 엔진이 키를 지우고 자원을 partial 로 둔다 → 「읽지 못함」(「(0)」이 아니다)
     if (k === 'vpce') {
       const c = conOf(it) || {}; const iface = it.n.attrs && it.n.attrs.type !== 'Gateway'
-      const sn = Array.isArray(c.subnet_addresses) ? [tsec(tbl('서브넷', VPCE_SN_COLS, c.subnet_addresses.map(TSV).sort((x, y) => (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0))
+      const sn = Array.isArray(c.subnet_addresses) ? [tsec(tbl(NT_T('서브넷'), VPCE_SN_COLS, c.subnet_addresses.map(TSV).sort((x, y) => (x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : 0))
         .map((x) => ({ c: [M.subnets.has(subnetIdOf(it, x[0])) && M.subnets.get(subnetIdOf(it, x[0])).named ? `${x[0]} (${M.subnets.get(subnetIdOf(it, x[0])).name})` : x[0], dash(x[1]), dash(x[2]), dash(x[3])], tk: M.subnets.has(subnetIdOf(it, x[0])) ? [subnetIdOf(it, x[0])] : [] })), { wrap: 2 }))]
-        : iface && conOf(it) && M.partial.has(it.id) ? [urSec('서브넷')] : []
+        : iface && conOf(it) && M.partial.has(it.id) ? [urSec(NT_T('서브넷'))] : []
       const sg = Array.isArray(c.security_groups) ? [sgSec(it, c.security_groups.map((g) => TSV(g)[0]))] : []
       return [...(it.n && Array.isArray(it.n.epUnres) ? [epSec(it)] : []), ...sn, ...sg, ...lbInSec(it, it.aggKey)]
     }
     if (k === 'brk') return [...lbInSec(it)]
     // VPC Lambda(2.8.0 · P2-6) = 「보안 그룹」·「서브넷」 칸도 · 리전 줄 Lambda 는 2.7.0 그대로(LB 대상 그룹만)
-    if (k === 'lambda') return it.vpc ? [sgSec(it), sec('서브넷', snRows()), ...lbInSec(it)] : [...lbInSec(it)]
+    if (k === 'lambda') return it.vpc ? [sgSec(it), sec(NT_T('서브넷'), snRows()), ...lbInSec(it)] : [...lbInSec(it)]
     // ASG(2.8.0) — 「LB 대상 그룹」 칸 = 이 그룹이 든 대상 그룹(이리로 접힌 선이 있으면 그 LB · 등록이 없으면 그렇게 말한다)
-    if (k === 'asg') return [sec('서브넷', snRows()), tgSec(it, it.aggKey)]
+    if (k === 'asg') return [sec(NT_T('서브넷'), snRows()), tgSec(it, it.aggKey)]
     // 방화벽(2.8.0 · §17.28) — 「엔드포인트」 칸 = 제 엔드포인트마다 그 칸 · 이리로 오는 넘김 선(못 그렸으면 그 까닭)
-    if (k === 'nfw') return [sec('서브넷', snRows()), ...(Array.isArray(it.n.fwEps) ? [fwEpSec(it)] : [])]
+    if (k === 'nfw') return [sec(NT_T('서브넷'), snRows()), ...(Array.isArray(it.n.fwEps) ? [fwEpSec(it)] : [])]
     // DX 연결(콘솔 「가상 인터페이스」 탭 · 검사 167) — VIF 마다 한 줄(누르면 그 VIF 정보창 · 캔버스 아이콘은 없다) + 이 연결의 VIF 가 붙은 DX 게이트웨이.
     //   🔴 옛 「그림에 없는 연결 «attachment» → DX Gateway ×5」(내부 낱말 · 묶음 아이콘을 가리킴 · 비교정리 B) 대신 이 표가 그 관계를 말한다(누르면 그 게이트웨이)
     if (k === 'dxcon') {
       const vifs = (M.vifOf.get(it.id) || []).slice().sort((x, y) => (natId(x) < natId(y) ? -1 : 1))
-      const vt = vifs.length || !a['virtual interface'] ? tsec(tbl('가상 인터페이스', VIF_COLS, vifs.map(vifRow)), { h: VIF_BGP_NOTE() })
-        : sec('가상 인터페이스', [{ a: '', b: String(a['virtual interface']) }])
+      const vt = vifs.length || !a['virtual interface'] ? tsec(tbl(NT_T('가상 인터페이스'), VIF_COLS, vifs.map(vifRow)), { h: VIF_BGP_NOTE() })
+        : sec(NT_T('가상 인터페이스'), [{ a: '', b: String(a['virtual interface']) }])
       const gw = new Map()
       for (const n of vifs) for (const e of X.T.edges.filter((x) => x.kind === 'attachment' && x.source === n.id)) { const g = X.mById.get(e.target); if (g && g.type === 'direct_connect_gateway') push(gw, g.id, natId(n)) }
-      const gt = tsec(tbl('DX 게이트웨이 연결', [{ h: 'DX 게이트웨이 ID', w: 290, id: true }, { h: '거쳐 가는 가상 인터페이스', w: 200, id: true }],
+      const gt = tsec(tbl(NT_T('DX 게이트웨이 연결'), [{ h: NT_T('DX 게이트웨이 ID'), w: 290, id: true }, { h: NT_T('거쳐 가는 가상 인터페이스'), w: 200, id: true }],
         [...gw.entries()].sort((x, y) => (x[0] < y[0] ? -1 : 1)).map(([g, vs]) => { const gn = X.mById.get(g); const ck = B.cellOf.get(g) || g
           return { c: [`${natId(gn)}${gn.name && gn.name !== natId(gn) ? ` (${gn.name})` : ''}`, vs.join(', ')], tk: [ck], go: B.det.has(g) || B.mem.has(g) ? g : undefined } })))
       return [vt, gt]
@@ -1337,11 +1340,11 @@
       const ga = (conOf(it) || {}).gateway_associations
       const gwName = (gid) => { const t = [...M.hubs.values()].find((h) => natId(h.n) === gid); return t ? { w: `${gid} (${t.name})`, tk: [t.id] } : { w: gid, tk: [] } }
       const gaSec = Array.isArray(ga)
-        ? tsec(tbl('게이트웨이 연결', DXGA_COLS, ga.map(TSV).map((x) => ({ x, g: gwName(x[1]) })).sort((p, q) => (p.x[2] < q.x[2] ? -1 : p.x[2] > q.x[2] ? 1 : 0) || (p.g.w < q.g.w ? -1 : 1))
+        ? tsec(tbl(NT_T('게이트웨이 연결'), DXGA_COLS, ga.map(TSV).map((x) => ({ x, g: gwName(x[1]) })).sort((p, q) => (p.x[2] < q.x[2] ? -1 : p.x[2] > q.x[2] ? 1 : 0) || (p.g.w < q.g.w ? -1 : 1))
           .map(({ x, g }) => ({ c: [g.w, dash(x[3]), x[4] && /^\d{12}$/.test(x[4]) ? X.acctMask(x[4]) : dash(x[4]), conState('tgw', x[5]), dash(String(x[6] || '').split(',').filter(Boolean).join(', ')), DXGA_TYPE[x[2]] || dash(x[2])], tk: g.tk })), { wrap: 3 }))
-        : sec('게이트웨이 연결', [...cs.map((p) => ({ a: 'TGW', b: hubName(p.tgw), tk: [p.tgw] })), ...(vg || []).map((g) => { const h = vgwOf(g); return h ? { a: 'VGW', b: h.name, tk: [h.id] } : { a: 'VGW', b: `${g} (이 화면에 없음)` } })],
-          { empty: Array.isArray(vg) ? '(없음)' : '(없음) — VGW 연결은 이 수집본에 기록이 없습니다' })
-      return [gaSec, tsec(tbl('가상 인터페이스', VIF_COLS, vifs.slice().sort((x, y) => (natId(x) < natId(y) ? -1 : 1)).map(vifRow)), { h: VIF_BGP_NOTE() })]
+        : sec(NT_T('게이트웨이 연결'), [...cs.map((p) => ({ a: 'TGW', b: hubName(p.tgw), tk: [p.tgw] })), ...(vg || []).map((g) => { const h = vgwOf(g); return h ? { a: 'VGW', b: h.name, tk: [h.id] } : { a: 'VGW', b: NT_T('{0} (이 화면에 없음)', [g]) } })],
+          { empty: Array.isArray(vg) ? NT_T('(없음)') : NT_T('(없음) — VGW 연결은 이 수집본에 기록이 없습니다') })
+      return [gaSec, tsec(tbl(NT_T('가상 인터페이스'), VIF_COLS, vifs.slice().sort((x, y) => (natId(x) < natId(y) ? -1 : 1)).map(vifRow)), { h: VIF_BGP_NOTE() })]
     }
     if (k === 'vgw') {
       // 콘솔 VGW 상세(통합정리 2-11) — 붙은 VPC 는 「세부 정보」의 VPC 줄(옛 「연결된 VPC」 칸) · 칸 = 예외 E6(VPN 연결 · DX 게이트웨이) + E4(보내는 라우트) · 모두 표
@@ -1350,10 +1353,10 @@
         .sort((x, y) => (x.c[0] < y.c[0] ? -1 : 1))
       const dx = [...M.globs.values()].filter((g) => g.kind === 'dxgw' && !g.ghost && (g.n.vgwIds || []).includes(natId(it.n)))
         .map((g) => ({ c: [idNm(natId(g.n), g.named ? g.name : null), g.state ? stateKo(g.state) : NIL], tk: [g.id] })).sort((x, y) => (x.c[0] < y.c[0] ? -1 : 1))
-      return [one([{ h: 'VPN ID', w: 380, id: true }, { h: '상태', w: 90, st: true }], 'VPN 연결', vpn),
-        one([{ h: 'DX 게이트웨이 ID', w: 390, id: true }, { h: '상태', w: 90, st: true }], 'DX 게이트웨이', dx), gwRouteSec('이 게이트웨이로 보내는 라우트', it.id)]
+      return [one([{ h: 'VPN ID', w: 380, id: true }, { h: NT_T('상태'), w: 90, st: true }], NT_T('VPN 연결'), vpn),
+        one([{ h: NT_T('DX 게이트웨이 ID'), w: 390, id: true }, { h: NT_T('상태'), w: 90, st: true }], NT_T('DX 게이트웨이'), dx), gwRouteSec(NT_T('이 게이트웨이로 보내는 라우트'), it.id)]
     }
-    if (k === 'cgw') return [sec('VPN 연결', vpnOf(it.id))]
+    if (k === 'cgw') return [sec(NT_T('VPN 연결'), vpnOf(it.id))]
     // CloudFront(§17.31) — 「원본」 칸 = 원본 엣지마다 한 줄(오리진 유형 → 자원 · 누르면 그 자원 · S3 버킷도) · 원본 엣지가 없으면 칸 없음
     if (k === 'cf') {
       const og = X.T.edges.filter((e) => e.kind === 'origin' && e.source === it.id)
@@ -1373,91 +1376,91 @@
         const restE = og.filter((x) => !usedE.has(x.id) && (x.attrs || {}).via === 'vpc_origin').sort((p, q) => (p.target < q.target ? -1 : 1))
         const restO = ors.filter((o) => !o.e && o.x[2] === 'vpc')
         if (restE.length && restE.length === restO.length) restO.forEach((o, i) => { o.e = restE[i] })
-        const ot = tbl('오리진', CF_ORG_COLS, ors.map(({ x, e }) => { const ty = x[2] || (e ? VIA_T[(e.attrs || {}).via] : '')
+        const ot = tbl(NT_T('오리진'), CF_ORG_COLS, ors.map(({ x, e }) => { const ty = x[2] || (e ? VIA_T[(e.attrs || {}).via] : '')
           return { c: [dash(x[0]), dash(x[1]), dash(x[3]), CF_OTYPE[ty] || dash(ty), x[4] ? `${x[4]}${x[5] ? ` (${x[5]})` : ''}` : NIL], tk: e ? [B.cellOf.get(e.target) || e.target] : [] } }), { wrap: 2 })
-        const bt = Array.isArray(c.behaviors) ? tbl('동작', CF_BHV_COLS, c.behaviors.map(TSV).sort((x, y) => +x[0] - +y[0])
-          .map((x) => ({ c: [dash(x[0]), x[1] ? x[1] : '기본값 (*)', dash(x[2]), CF_VPP[x[3]] || dash(x[3]), x[5] ? x[5] : dash(x[4])] })), { wrap: 3 }) : null
-        return [tsec(ot), ...(bt ? [tsec(bt)] : M.partial.has(it.id) ? [urSec('동작')] : [])]
+        const bt = Array.isArray(c.behaviors) ? tbl(NT_T('동작'), CF_BHV_COLS, c.behaviors.map(TSV).sort((x, y) => +x[0] - +y[0])
+          .map((x) => ({ c: [dash(x[0]), x[1] ? x[1] : NT_T('기본값 (*)'), dash(x[2]), CF_VPP[x[3]] || dash(x[3]), x[5] ? x[5] : dash(x[4])] })), { wrap: 3 }) : null
+        return [tsec(ot), ...(bt ? [tsec(bt)] : M.partial.has(it.id) ? [urSec(NT_T('동작'))] : [])]
       }
-      return og.length ? [sec('오리진', og.map((e) => { const w = cfVia((e.attrs || {}).via, (e.attrs || {}).alias); const t = X.mById.get(e.target)
-        return { a: w || ((t && t.type) === 'ec2_instance' ? 'EC2' : '로드밸런서'), b: nodeName(e.target), tk: [B.cellOf.get(e.target) || e.target] } }))] : []
+      return og.length ? [sec(NT_T('오리진'), og.map((e) => { const w = cfVia((e.attrs || {}).via, (e.attrs || {}).alias); const t = X.mById.get(e.target)
+        return { a: w || ((t && t.type) === 'ec2_instance' ? 'EC2' : NT_T('로드밸런서')), b: nodeName(e.target), tk: [B.cellOf.get(e.target) || e.target] } }))] : []
     }
     // S3 버킷(§17.31) — 이 버킷을 원본으로 쓰는 배포(같은 전역 줄 · 선이 아니다)
-    if (k === 's3') return [sec('이 버킷을 사용하는 배포', X.T.edges.filter((e) => e.kind === 'origin' && e.target === it.id).map((e) => ({ a: 'CloudFront', b: nodeName(e.source), tk: [e.source] })))]
+    if (k === 's3') return [sec(NT_T('이 버킷을 사용하는 배포'), X.T.edges.filter((e) => e.kind === 'origin' && e.target === it.id).map((e) => ({ a: 'CloudFront', b: nodeName(e.source), tk: [e.source] })))]
     if (k === 'r53') {
       // 별칭(§17.30) — 별칭 엣지마다 한 줄(레코드 이름 → 대상 · 누르면 대상) · 못 이은 별칭 = 주의색(수집하지 않은 LB·CloudFront)
       const al = X.T.edges.filter((e) => e.kind === 'dnsalias' && e.source === it.id)
       const unres = Array.isArray(it.n.zoneUnres) ? [...it.n.zoneUnres].sort() : []
       const rows = [...al.map((e) => ({ a: ((e.attrs || {}).record_names || []).join(', ') || '?', b: nodeName(e.target), tk: [B.cellOf.get(e.target) || e.target] })),
-        ...unres.map((d) => ({ a: d, b: '이 수집본에 없는 로드밸런서·CloudFront — 수집 범위 밖이거나 수집하지 않았습니다', cls: 'wn' }))]
-      const vs = Array.isArray(it.n.zoneVpcs) ? it.n.zoneVpcs.map((id) => { const v = [...M.vpcs.values()].find((x) => natId(x.n) === id); return v ? { a: 'VPC', b: v.name, tk: [v.id] } : { a: 'VPC', b: `${id} (이 화면에 없음)` } }) : null
-      return [sec('별칭', rows), ...(a['유형'] === '프라이빗' ? [vs ? sec('연결된 VPC', vs) : missSec('연결된 VPC', it)] : [])]
+        ...unres.map((d) => ({ a: d, b: NT_T('이 수집본에 없는 로드밸런서·CloudFront — 수집 범위 밖이거나 수집하지 않았습니다'), cls: 'wn' }))]
+      const vs = Array.isArray(it.n.zoneVpcs) ? it.n.zoneVpcs.map((id) => { const v = [...M.vpcs.values()].find((x) => natId(x.n) === id); return v ? { a: 'VPC', b: v.name, tk: [v.id] } : { a: 'VPC', b: NT_T('{0} (이 화면에 없음)', [id]) } }) : null
+      return [sec(NT_T('별칭'), rows), ...(a['유형'] === '프라이빗' ? [vs ? sec(NT_T('연결된 VPC'), vs) : missSec(NT_T('연결된 VPC'), it)] : [])]
     }
     // 배치 D(2.10.0 · §17.35~37) — 선마다 한 줄(누르면 그 끝) + 못 이은 것(까닭 · 주의색)
     if (k === 'apigw') {
       const ls = B.lines.filter((l) => l.kind === 'vpclink' && l.a === it.id)
       const loose = X.T.edges.filter((e) => e.kind === 'vpclink' && e.source === it.id && !ls.some((l) => l.b === (B.cellOf.get(e.target) || e.target)))
-      const rows = [...ls.map((l) => ({ a: (l.vlk.names.length ? l.vlk.names : l.vlk.ids).join(', '), b: `${l.vlk.lbName} 로 전달`, tk: [l.b] })),
-        ...loose.map((e) => ({ a: ((e.attrs || {}).vpc_link_names || []).join(', ') || ((e.attrs || {}).vpc_link_ids || []).join(', '), b: `${nodeName(e.target)} — 그림에 없는 연결(다른 리전이거나 이 화면에 없습니다)`, tk: [] })),
+      const rows = [...ls.map((l) => ({ a: (l.vlk.names.length ? l.vlk.names : l.vlk.ids).join(', '), b: NT_T('{0} 로 전달', [l.vlk.lbName]), tk: [l.b] })),
+        ...loose.map((e) => ({ a: ((e.attrs || {}).vpc_link_names || []).join(', ') || ((e.attrs || {}).vpc_link_ids || []).join(', '), b: NT_T('{0} — 그림에 없는 연결(다른 리전이거나 이 화면에 없습니다)', [nodeName(e.target)]), tk: [] })),
         ...(it.n.apiUnres || []).map((u) => ({ a: u.ref, b: bdWhy(u), cls: 'wn' }))]
-      return [it.n.apiRead ? sec('VPC 링크', rows) : missSec('VPC 링크', it)]
+      return [it.n.apiRead ? sec(NT_T('VPC 링크'), rows) : missSec(NT_T('VPC 링크'), it)]
     }
     // WAF 웹 ACL(2.12.0 · §17.41) — 「보호 대상」 칸 = 선마다 한 줄(누르면 그 대상) + 이 화면에 없는 대상 + 이 수집본에 없는 대상(까닭 · 주의색)
     if (k === 'waf') {
       const ls = B.lines.filter((l) => l.kind === 'wafp' && l.a === it.id)
-      const what = (id) => ({ cloudfront: 'CloudFront 배포', load_balancer: '로드밸런서', api_gateway: 'API Gateway' })[(X.mById.get(id) || {}).type] || '리소스'
+      const what = (id) => ({ cloudfront: NT_T('CloudFront 배포'), load_balancer: NT_T('로드밸런서'), api_gateway: 'API Gateway' })[(X.mById.get(id) || {}).type] || NT_T('리소스')
       const loose = X.T.edges.filter((e) => e.kind === 'wafp' && e.source === it.id && !ls.some((l) => l.b === (B.cellOf.get(e.target) || e.target)))
-      const stOf = (id) => { const e = X.T.edges.find((x) => x.kind === 'wafp' && x.source === it.id && x.target === id); const s = e && (e.attrs || {}).stages; return Array.isArray(s) && s.length ? ` · 스테이지 ${s.join(', ')}` : '' }
+      const stOf = (id) => { const e = X.T.edges.find((x) => x.kind === 'wafp' && x.source === it.id && x.target === id); const s = e && (e.attrs || {}).stages; return Array.isArray(s) && s.length ? NT_T(' · 스테이지 {0}', [s.join(', ')]) : '' }
       const rows = [...ls.map((l) => ({ a: what(l.b), b: `${nodeName(l.b)}${stOf(l.b)}`, tk: [l.b] })),
-        ...loose.map((e) => ({ a: what(e.target), b: `${nodeName(e.target)}${stOf(e.target)} — 그림에 없는 연결(다른 리전이거나 이 화면에 없습니다)`, tk: [] })),
+        ...loose.map((e) => ({ a: what(e.target), b: NT_T('{0}{1} — 그림에 없는 연결(다른 리전이거나 이 화면에 없습니다)', [nodeName(e.target), stOf(e.target)]), tk: [] })),
         ...(it.n.wafUnres || []).map((u) => ({ a: u.ref, b: bdWhy(u), cls: 'wn' }))]
       // 콘솔 「규칙」 탭(2.13.0 · 검사 167) — 이름 · 작업 · 우선순위 · 우선순위 순(콘솔 Rules 표 · 「사용자 지정 응답」은 엔진이 싣지 않는다 → 열을 두지 않는다)
       const rl = (conOf(it) || {}).rules
-      const rt = Array.isArray(rl) ? [tsec(tbl('규칙', WAF_RULE_COLS, rl.map(TSV).sort((x, y) => +x[0] - +y[0]).map((x) => ({ c: [dash(x[1]), WAF_ACT[String(x[2]).toLowerCase()] || dash(x[2]), dash(x[0])] }))))]
-        : it.n.wafRead === undefined && M.partial.has(it.id) ? [urSec('규칙')] : []
+      const rt = Array.isArray(rl) ? [tsec(tbl(NT_T('규칙'), WAF_RULE_COLS, rl.map(TSV).sort((x, y) => +x[0] - +y[0]).map((x) => ({ c: [dash(x[1]), WAF_ACT[String(x[2]).toLowerCase()] || dash(x[2]), dash(x[0])] }))))]
+        : it.n.wafRead === undefined && M.partial.has(it.id) ? [urSec(NT_T('규칙'))] : []
       return [...rt, rows.length ? sec(WAF_RES, rows) : M.partial.has(it.id) ? urSec(WAF_RES) : sec(WAF_RES, [], { empty: WAF_NONE })]
     }
     if (k === 'rdsp') {
       const ls = B.lines.filter((l) => l.kind === 'dbproxy' && l.a === (B.cellOf.get(it.id) || it.id))
-      const rows = [...ls.map((l) => ({ a: l.prx.kind === 'cluster' ? 'DB 클러스터' : 'DB 인스턴스', b: `${l.prx.name}${l.prx.ports ? ' · :' + l.prx.ports : ''}`, tk: [l.b] })),
-        ...(it.n.proxyMembers || []).map((m) => ({ a: '클러스터 멤버', b: m })),
+      const rows = [...ls.map((l) => ({ a: l.prx.kind === 'cluster' ? NT_T('DB 클러스터') : NT_T('DB 인스턴스'), b: `${l.prx.name}${l.prx.ports ? ' · :' + l.prx.ports : ''}`, tk: [l.b] })),
+        ...(it.n.proxyMembers || []).map((m) => ({ a: NT_T('클러스터 멤버'), b: m })),
         ...(it.n.proxyUnres || []).map((u) => ({ a: u.ref, b: bdWhy(u), cls: 'wn' }))]
-      return [sgSec(it), snSec(), it.n.proxyRead ? sec('대상', rows) : missSec('대상', it)]
+      return [sgSec(it), snSec(), it.n.proxyRead ? sec(NT_T('대상'), rows) : missSec(NT_T('대상'), it)]
     }
     // Global Accelerator(§17.37 · 🔁 2026-10-21 사용자 요청 「쉬운 말로」) — 엔드포인트 그룹(리전)마다 한 줄 · 맨 위 한 줄 요약.
     //   줄은 리전 이름으로 시작한다(지도의 리전 이름 표 `REGION_KO` 그대로) · 그린 곳 = 보통 줄 · 못 그린 곳(이번 수집에 없는 리전 · 대상 못 찾음 · 대상 없음) = 주의색
     if (k === 'ga') {
-      if (!it.n.gaRead) return [missSec('엔드포인트', it)]
+      if (!it.n.gaRead) return [missSec(NT_T('엔드포인트'), it)]
       const ls = B.lines.filter((l) => l.kind === 'gaep' && l.a === it.id)
       const tg = it.n.gaTargets || []; const un = it.n.gaUnres || []; const em = it.n.gaEmpty || []
       const regs = [...new Set([...tg.map((t) => t.region), ...em])].sort()
       const rows = []; let drawnR = 0; let emptyR = 0
       for (const r of regs) {
         const R = gaRegion(r)
-        const drawn = ls.filter((l) => l.gae.region === r).map((l) => ({ t: `${l.gae.what} ${l.gae.name}${l.gae.eip ? `(탄력적 IP ${l.gae.eip})` : ''}`, k: l.b })).sort((x, y) => (x.t < y.t ? -1 : x.t > y.t ? 1 : 0))
+        const drawn = ls.filter((l) => l.gae.region === r).map((l) => ({ t: `${l.gae.what} ${l.gae.name}${l.gae.eip ? NT_T('(탄력적 IP {0})', [l.gae.eip]) : ''}`, k: l.b })).sort((x, y) => (x.t < y.t ? -1 : x.t > y.t ? 1 : 0))
         const out = un.filter((u) => u.code === 'not_in_scope' && u.region === r)
         const miss = un.filter((u) => u.code !== 'not_in_scope' && (u.region ? u.region === r : tg.some((t) => t.ref === u.ref && t.region === r)))
         if (drawn.length) {
           drawnR++
-          rows.push({ t: drawn.length === 1 ? `${R} — ${drawn[0].t} 로 트래픽을 보냅니다(선으로 표시).` : `${R} — 대상 ${drawn.length}개(${drawn.map((x) => x.t).join(' · ')})로 트래픽을 보냅니다(선으로 표시).`, tk: drawn.map((x) => x.k) })
+          rows.push({ t: drawn.length === 1 ? NT_T('{0} — {1} 로 트래픽을 보냅니다(선으로 표시).', [R, drawn[0].t]) : NT_T('{0} — 대상 {1}개({2})로 트래픽을 보냅니다(선으로 표시).', [R, drawn.length, drawn.map((x) => x.t).join(' · ')]), tk: drawn.map((x) => x.k) })
         }
         if (out.length) {
           const kinds = {}; for (const u of out) { const t = tg.find((x) => x.ref === u.ref && x.region === r); const w = t && GA_KIND[t.kind]; if (w) kinds[w] = (kinds[w] || 0) + 1 }
-          const kw = Object.entries(kinds).sort((x, y) => (x[0] < y[0] ? -1 : 1)).map(([w, n]) => `${w} ${n}개`).join(' · ')
-          rows.push({ t: `${R} — 이 리전에 대상 ${out.length}개${kw ? `(${kw})` : ''}가 있지만, 이번 수집에 이 리전이 들어 있지 않아 화면에 그리지 못했습니다. 수집할 리전에 ${eulReul(REGION_KO[r] || r)} 추가하면 다음 수집부터 선으로 이어집니다.`, cls: 'wn' })
+          const kw = Object.entries(kinds).sort((x, y) => (x[0] < y[0] ? -1 : 1)).map(([w, n]) => NT_T('{0} {1}개', [w, n])).join(' · ')
+          rows.push({ t: NT_T('{0} — 이 리전에 대상 {1}개{2}가 있지만, 이번 수집에 이 리전이 들어 있지 않아 화면에 그리지 못했습니다. 수집할 리전에 {3} 추가하면 다음 수집부터 선으로 이어집니다.', [R, out.length, kw ? `(${kw})` : '', eulReul(REGION_KO[r] || r)]), cls: 'wn' })
         }
-        if (miss.length) rows.push({ t: `${R} — 대상 ${miss.length}개를 찾지 못했습니다(삭제되었거나 아직 그리지 않는 종류입니다).`, cls: 'wn' })
+        if (miss.length) rows.push({ t: NT_T('{0} — 대상 {1}개를 찾지 못했습니다(삭제되었거나 아직 그리지 않는 종류입니다).', [R, miss.length]), cls: 'wn' })
         // 엔진은 이었지만 이 화면에 선이 없는 대상(보기 범위로 숨겼다 · 대상 칸이 이 화면에 없다) — 조용히 빼지 않는다
         const loose = X.T.edges.filter((e) => e.kind === 'gaep' && e.source === it.id && (e.attrs || {}).endpoint_region === r && !ls.some((l) => l.b === (B.cellOf.get(e.target) || e.target)))
-        if (loose.length) rows.push({ t: `${R} — 대상 ${loose.length}개는 지금 화면에 표시되지 않습니다(보기 범위 밖이거나 이 화면에 없는 리소스입니다).`, cls: 'wn' })
+        if (loose.length) rows.push({ t: NT_T('{0} — 대상 {1}개는 지금 화면에 표시되지 않습니다(보기 범위 밖이거나 이 화면에 없는 리소스입니다).', [R, loose.length]), cls: 'wn' })
         const isEmpty = em.includes(r) && !drawn.length && !out.length && !miss.length
         if (isEmpty) emptyR++
-        if (isEmpty) rows.push({ t: `${R} — 이 리전으로 보낼 대상이 등록되어 있지 않습니다. 이 리전으로 들어온 트래픽은 처리되지 않습니다.`, cls: 'wn' })
+        if (isEmpty) rows.push({ t: NT_T('{0} — 이 리전으로 보낼 대상이 등록되어 있지 않습니다. 이 리전으로 들어온 트래픽은 처리되지 않습니다.', [R]), cls: 'wn' })
       }
       // 요약(🔁 사용자 결정 2026-10-21 QA C) — 대상 없는 그룹은 「그리지 못한 곳」이 아니다(고객이 일부러 비워 둔다) · 0 인 항목은 빼되 「화면에 그린 곳」은 늘
       const lostR = regs.length - drawnR - emptyR
-      rows.unshift({ t: `이 Global Accelerator는 ${regs.length}개 리전으로 트래픽을 나눕니다 — ` + [`화면에 그린 곳 ${drawnR}`, lostR ? `그리지 못한 곳 ${lostR}` : '', emptyR ? `대상 없음 ${emptyR}` : ''].filter(Boolean).join(' · ') })
-      return [sec('엔드포인트', rows, { n: tg.length })]   // 머리 숫자 = 등록된 엔드포인트 수(요약·리전 줄 수가 아니다)
+      rows.unshift({ t: NT_T('이 Global Accelerator는 {0}개 리전으로 트래픽을 나눕니다 — ', [regs.length]) + [NT_T('화면에 그린 곳 {0}', [drawnR]), lostR ? NT_T('그리지 못한 곳 {0}', [lostR]) : '', emptyR ? NT_T('대상 없음 {0}', [emptyR]) : ''].filter(Boolean).join(' · ') })
+      return [sec(NT_T('엔드포인트'), rows, { n: tg.length })]   // 머리 숫자 = 등록된 엔드포인트 수(요약·리전 줄 수가 아니다)
     }
     // #129(2.11.0 · §17.39) — Cloud WAN 「연결」 = 선마다 한 줄(누르면 그 VPC 포트) + 그리지 못한 것(주의색 · 까닭을 고객 말로)
     if (k === 'cwan') return [cwanSec(it)]
@@ -1467,11 +1470,11 @@
     if (k === 'vpn') {
       const tun = tunnelSec(it)
       const c = it.n.vpn || {}; const ls = M.vpnl.filter((l) => l.a === it.id).map((l) => M.hubs.get(l.b)).filter(Boolean)
-      const raw = (kd, id, label) => (id && !ls.some((h) => h.kind === kd) ? [{ a: label, b: `${id} (이 화면에 없음)` }] : [])
-      return [tun, sec('고객 게이트웨이', [...ls.filter((h) => h.kind === 'cgw').map((h) => ({ a: 'CGW', b: h.name, tk: [h.id] })), ...raw('cgw', c.cgw, 'CGW')]),
-        sec('대상 게이트웨이', [...ls.filter((h) => h.kind !== 'cgw').map((h) => ({ a: h.kind === 'tgw' ? 'TGW' : 'VGW', b: h.name, tk: [h.id] })), ...raw('vgw', c.vgw, 'VGW'), ...raw('tgw', c.tgw, 'TGW')]),
+      const raw = (kd, id, label) => (id && !ls.some((h) => h.kind === kd) ? [{ a: label, b: NT_T('{0} (이 화면에 없음)', [id]) }] : [])
+      return [tun, sec(NT_T('고객 게이트웨이'), [...ls.filter((h) => h.kind === 'cgw').map((h) => ({ a: 'CGW', b: h.name, tk: [h.id] })), ...raw('cgw', c.cgw, 'CGW')]),
+        sec(NT_T('대상 게이트웨이'), [...ls.filter((h) => h.kind !== 'cgw').map((h) => ({ a: h.kind === 'tgw' ? 'TGW' : 'VGW', b: h.name, tk: [h.id] })), ...raw('vgw', c.vgw, 'VGW'), ...raw('tgw', c.tgw, 'TGW')]),
         // 정적 라우트 = 라우팅이 정적일 때만(콘솔 — 동적(BGP)이면 탭이 비어 있다 · 비교정리 B M-12)
-        ...(c.routes && !c.routes.length && (conOf(it) || {}).static_routes_only === false ? [] : [Array.isArray(c.routes) ? sec('정적 라우트', c.routes.slice().sort(byDst).map((d) => ({ a: d, b: '' }))) : missSec('정적 라우트', it)])]
+        ...(c.routes && !c.routes.length && (conOf(it) || {}).static_routes_only === false ? [] : [Array.isArray(c.routes) ? sec(NT_T('정적 라우트'), c.routes.slice().sort(byDst).map((d) => ({ a: d, b: '' }))) : missSec(NT_T('정적 라우트'), it)])]
     }
     return []
   }
@@ -1483,8 +1486,8 @@
   const vifState = (n) => {
     const st = [(n.attrs || {}).state].filter(Boolean).map(stateKo).join(' · ')
     const o = X.obs && X.obs.of ? X.obs.of(n.id) : null
-    if (o === null) return { b: [st, X.obs && X.obs.on() ? '표시할 상태 정보가 없습니다' : 'BGP 상태는 모니터링을 켜면 표시됩니다(구성 정보 수집 시에는 BGP 세션을 확인하지 않습니다)'].filter(Boolean).join(' · ') }
-    if (!o) return { b: [st, '관측 행 없음'].filter(Boolean).join(' · ') }
+    if (o === null) return { b: [st, X.obs && X.obs.on() ? NT_T('표시할 상태 정보가 없습니다') : NT_T('BGP 상태는 모니터링을 켜면 표시됩니다(구성 정보 수집 시에는 BGP 세션을 확인하지 않습니다)')].filter(Boolean).join(' · ') }
+    if (!o) return { b: [st, NT_T('관측 행 없음')].filter(Boolean).join(' · ') }
     const g = X.obs.bgp ? X.obs.bgp(o) : null
     if (g) return { b: g.t, cls: o.status === 'down' ? 'bh' : g.cls || (o.partial ? 'wn' : '') }
     return { b: X.obs.word(o.status, o) + (o.why ? ' — ' + o.why : ''), cls: o.status === 'down' ? 'bh' : o.deleting === true ? '' : o.status === 'none' || o.partial ? 'wn' : '' }
@@ -1493,49 +1496,49 @@
   //   상태 = 🔴 **모니터링을 꺼도 보인다**: 꺼짐 = 배포 빌드가 구조 수집 직후 1층 observe 로 구운 「수집 시각 기준」(`window.NT_SNAPOBS` · ADR 0006 O13) ·
   //   켜짐 = 실시간 관측 행의 `tunnels`(5분 > 매시 — 덮는다). 구운 것이 없으면(로컬 파일·옛 빌드) 상태 칸은 대시 + 안내 · 굽다 실패(ok:false) = 「확인하지 못했습니다」(「터널 없음」이 아니다 · 불변식 ④)
   //   번호 = 바깥 IP 순(엔진이 그 순서로 싣는다 · 콘솔 「터널 1·2」와 같은 순서인지는 실측 필요 — 비교정리 B)
-  const TUN_COLS = [{ h: '터널 번호', w: 60 }, { h: '외부 IP 주소', w: 125, id: true }, { h: '내부 IPv4 CIDR', w: 160, id: true, x: 1 }, { h: '상태', w: 75, st: true }, { h: '마지막 상태 변경', w: 190 }, { h: '세부 정보', w: 260, x: 1 }]
+  const TUN_COLS = [{ h: NT_T('터널 번호'), w: 60 }, { h: NT_T('외부 IP 주소'), w: 125, id: true }, { h: NT_T('내부 IPv4 CIDR'), w: 160, id: true, x: 1 }, { h: NT_T('상태'), w: 75, st: true }, { h: NT_T('마지막 상태 변경'), w: 190 }, { h: NT_T('세부 정보'), w: 260, x: 1 }]
   const kstHm = (iso, full) => { const t = Date.parse(iso || ''); if (!Number.isFinite(t)) return null; const s = new Date(t + 9 * 3600e3).toISOString(); return full ? s.slice(0, 16).replace('T', ' ') + ' KST' : s.slice(11, 16) }
   function tunnelSec (it) {
     const c = conOf(it) || {}; const ins = Array.isArray(c.tunnel_inside_cidrs) ? c.tunnel_inside_cidrs.map(TSV) : null
     const outs = ins ? ins.map((x) => x[0]) : Array.isArray(c.tunnel_outside_ips) ? [...c.tunnel_outside_ips] : null
-    if (!outs) return M.partial.has(it.id) ? urSec('터널 세부 정보') : ncSec('터널 세부 정보', '이 수집본에는 터널 기록이 없습니다(수집 전 버전입니다)')
+    if (!outs) return M.partial.has(it.id) ? urSec(NT_T('터널 세부 정보')) : ncSec(NT_T('터널 세부 정보'), NT_T('이 수집본에는 터널 기록이 없습니다(수집 전 버전입니다)'))
     const on = X.obs && X.obs.on(); const o = on && X.obs.of ? X.obs.of(it.id) : null
     const so = typeof window !== 'undefined' ? window.NT_SNAPOBS : undefined
     let st = null; let note = ''; let cls = ''
-    if (on) { if (o && Array.isArray(o.tunnels)) { st = o.tunnels; const at = X.obs.at ? X.obs.at() : null; note = at ? `${at} 관측` : '' } else { note = '이 VPN 의 터널 상태 관측이 없습니다'; cls = 'wn' } }
-    else if (so && so.ok === true) { st = (so.tunnels || {})[it.id] || []; const hm = kstHm(so.at); note = `수집 시각 기준${hm ? ' ' + hm : ''} — 실시간 상태는 모니터링을 켜면 5분마다 갱신됩니다` }
-    else if (so && so.ok === false) { note = `터널 상태를 확인하지 못했습니다${so.why ? ' — ' + so.why : ''}`; cls = 'wn' }
-    else note = '터널 상태는 모니터링을 켜면 표시됩니다'
+    if (on) { if (o && Array.isArray(o.tunnels)) { st = o.tunnels; const at = X.obs.at ? X.obs.at() : null; note = at ? NT_T('{0} 관측', [at]) : '' } else { note = NT_T('이 VPN 의 터널 상태 관측이 없습니다'); cls = 'wn' } }
+    else if (so && so.ok === true) { st = (so.tunnels || {})[it.id] || []; const hm = kstHm(so.at); note = NT_T('수집 시각 기준{0} — 실시간 상태는 모니터링을 켜면 5분마다 갱신됩니다', [hm ? ' ' + hm : '']) }
+    else if (so && so.ok === false) { note = NT_T('터널 상태를 확인하지 못했습니다{0}', [so.why ? ' — ' + so.why : '']); cls = 'wn' }
+    else note = NT_T('터널 상태는 모니터링을 켜면 표시됩니다')
     const byIp = new Map((st || []).map((t) => [t.outside_ip, t]))
     const rows = outs.map((ip, i) => { const t = byIp.get(ip); const sv = t ? conState('tunnel', t.status) : NIL
       return { c: [String(i + 1), dash(ip), ins ? dash(ins[i][1]) : NIL, sv, t ? (kstHm(t.last_status_change, true) || NIL) : NIL, t ? dash(t.status_message) : NIL], ...(t && /down/i.test(t.status) ? { cls: 'bh' } : {}) } })
-    const s = tsec(tbl('터널 세부 정보', TUN_COLS, rows, { wrap: 3 }), { h: note })
+    const s = tsec(tbl(NT_T('터널 세부 정보'), TUN_COLS, rows, { wrap: 3 }), { h: note })
     if (cls && s.groups[0]) s.groups[0].hcls = cls
     return s
   }
   // VIF 정보창(콘솔 Direct Connect 「가상 인터페이스」 상세 · 비교정리 B 2-14) — 세부 정보(콘솔 General 순서) + 「피어링」(BGP 피어 · 두 줄 행) + 「광고 접두사」.
   //   피어 IP = 엔진이 2.13.0 부터 싣는다(사용자 결정 2026-10-24 「콘솔이 보여 주는 값이면 보여 준다」) · 🔴 인증 키(`authKey`)·라우터 설정은 엔진이 여전히 싣지 않는다
-  const VIF_TYPE = { private: '프라이빗', public: '퍼블릭', transit: '전송' }
-  const VIF_PEER_COLS = [{ h: 'BGP ASN', w: 70 }, { h: '주소 체계', w: 80, x: 1 }, { h: '내 라우터 피어 IP', w: 140, id: true }, { h: 'Amazon 라우터 피어 IP', w: 140, id: true }, { h: '피어 ID', w: 160, id: true, x: 1 }, { h: 'BGP 상태', w: 110, st: true }]
+  const VIF_TYPE = { private: NT_T('프라이빗'), public: NT_T('퍼블릭'), transit: NT_T('전송') }
+  const VIF_PEER_COLS = [{ h: 'BGP ASN', w: 70 }, { h: NT_T('주소 체계'), w: 80, x: 1 }, { h: NT_T('내 라우터 피어 IP'), w: 140, id: true }, { h: NT_T('Amazon 라우터 피어 IP'), w: 140, id: true }, { h: NT_T('피어 ID'), w: 160, id: true, x: 1 }, { h: NT_T('BGP 상태'), w: 110, st: true }]
   function detVif (n) {
     const c = n.con || {}; const con = X.mById.get(M.hidden.get(n.id)) || null
     const gw = c.direct_connect_gateway_id ? [...M.globs.values(), ...M.hubs.values()].find((h) => h.n && natId(h.n) === c.direct_connect_gateway_id) : null
     const on = X.obs && X.obs.on(); const v = on ? vifState(n) : null
-    const rows = [['종류', '가상 인터페이스'], ['가상 인터페이스 ID', natId(n)], ...(c.virtual_interface_name ? [['이름', c.virtual_interface_name]] : []),
-      ...((n.attrs || {}).state ? [['상태', stateKo(n.attrs.state)]] : []), ...(c.vlan !== undefined ? [['VLAN', String(c.vlan)]] : []),
-      ...(c.virtual_interface_type ? [['유형', VIF_TYPE[c.virtual_interface_type] || c.virtual_interface_type]] : []), ...(c.region ? [['리전', REGION_KO[c.region] ? `${REGION_KO[c.region]} · ${c.region}` : c.region]] : []),
-      ...(c.amazon_side_asn !== undefined ? [['Amazon 측 ASN', String(c.amazon_side_asn)]] : []),
-      ...(c.connection_id ? [['연결 ID', con ? `${c.connection_id} (${disp(con)})` : c.connection_id, null, con && B.det.has(con.id) ? con.id : undefined]] : []),
-      ...(c.direct_connect_gateway_id ? [['Direct Connect 게이트웨이', gw ? `${c.direct_connect_gateway_id} (${gw.name})` : c.direct_connect_gateway_id, null, gw && B.det.has(gw.id) ? gw.id : undefined]] : []),
-      ...(c.virtual_gateway_id ? [['가상 프라이빗 게이트웨이', c.virtual_gateway_id]] : []), ...(c.mtu !== undefined ? [['MTU', String(c.mtu)]] : []),
-      ...(c.jumbo_frame_capable !== undefined ? [['점보 프레임', c.jumbo_frame_capable ? '예' : '아니요']] : []), ...denyRow(n)]
+    const rows = [[NT_T('종류'), NT_T('가상 인터페이스')], [NT_T('가상 인터페이스 ID'), natId(n)], ...(c.virtual_interface_name ? [[NT_T('이름'), c.virtual_interface_name]] : []),
+      ...((n.attrs || {}).state ? [[NT_T('상태'), stateKo(n.attrs.state)]] : []), ...(c.vlan !== undefined ? [['VLAN', String(c.vlan)]] : []),
+      ...(c.virtual_interface_type ? [[NT_T('유형'), VIF_TYPE[c.virtual_interface_type] || c.virtual_interface_type]] : []), ...(c.region ? [[NT_T('리전'), REGION_KO[c.region] ? `${REGION_KO[c.region]} · ${c.region}` : c.region]] : []),
+      ...(c.amazon_side_asn !== undefined ? [[NT_T('Amazon 측 ASN'), String(c.amazon_side_asn)]] : []),
+      ...(c.connection_id ? [[NT_T('연결 ID'), con ? `${c.connection_id} (${disp(con)})` : c.connection_id, null, con && B.det.has(con.id) ? con.id : undefined]] : []),
+      ...(c.direct_connect_gateway_id ? [[NT_T('Direct Connect 게이트웨이'), gw ? `${c.direct_connect_gateway_id} (${gw.name})` : c.direct_connect_gateway_id, null, gw && B.det.has(gw.id) ? gw.id : undefined]] : []),
+      ...(c.virtual_gateway_id ? [[NT_T('가상 프라이빗 게이트웨이'), c.virtual_gateway_id]] : []), ...(c.mtu !== undefined ? [['MTU', String(c.mtu)]] : []),
+      ...(c.jumbo_frame_capable !== undefined ? [[NT_T('점보 프레임'), c.jumbo_frame_capable ? NT_T('예') : NT_T('아니요')]] : []), ...denyRow(n)]
     const peers = Array.isArray(c.bgp_peer_details)
-      ? tsec(tbl('피어링', VIF_PEER_COLS, c.bgp_peer_details.map(TSV).map((x) => ({ c: [dash(x[1]), dash(x[0]), dash(x[3]), dash(x[2]), dash(x[4]), on ? (v ? v.b : NIL) : NIL], ...(on && v && v.cls ? { cls: v.cls } : {}) })), { wrap: 4 }), { h: VIF_BGP_NOTE() })
-      : M.partial.has(n.id) ? urSec('피어링') : ncSec('피어링', '이 수집본에는 BGP 피어 기록이 없습니다(수집 전 버전입니다)')
-    const pf = Array.isArray(c.route_filter_prefixes) ? tsec(tbl('광고 접두사', [{ h: '접두사', w: 200, id: true }], c.route_filter_prefixes.slice().sort(byDst).map((d) => ({ c: [d] })))) : null
+      ? tsec(tbl(NT_T('피어링'), VIF_PEER_COLS, c.bgp_peer_details.map(TSV).map((x) => ({ c: [dash(x[1]), dash(x[0]), dash(x[3]), dash(x[2]), dash(x[4]), on ? (v ? v.b : NIL) : NIL], ...(on && v && v.cls ? { cls: v.cls } : {}) })), { wrap: 4 }), { h: VIF_BGP_NOTE() })
+      : M.partial.has(n.id) ? urSec(NT_T('피어링')) : ncSec(NT_T('피어링'), NT_T('이 수집본에는 BGP 피어 기록이 없습니다(수집 전 버전입니다)'))
+    const pf = Array.isArray(c.route_filter_prefixes) ? tsec(tbl(NT_T('광고 접두사'), [{ h: NT_T('접두사'), w: 200, id: true }], c.route_filter_prefixes.slice().sort(byDst).map((d) => ({ c: [d] })))) : null
     const vn = c.virtual_interface_name || (n.name && n.name !== natId(n) ? n.name : '')
-    if (vn && !rows.some((r) => r[0] === '이름')) rows.splice(2, 0, ['이름', vn])
-    return { title: `${natId(n)}${vn ? ` / ${vn}` : ''}`, sub: '가상 인터페이스(VIF) — 캔버스에서는 Direct Connect 연결 안에 있습니다', rows, secs: [peers, ...(pf ? [pf] : [])] }
+    if (vn && !rows.some((r) => r[0] === NT_T('이름'))) rows.splice(2, 0, [NT_T('이름'), vn])
+    return { title: `${natId(n)}${vn ? ` / ${vn}` : ''}`, sub: NT_T('가상 인터페이스(VIF) — 캔버스에서는 Direct Connect 연결 안에 있습니다'), rows, secs: [peers, ...(pf ? [pf] : [])] }
   }
   // LB 「대상」 줄(§17.11 LB 행 · QA B B-14) — 칸을 펼치지 않아도 대상 등록·헬스가 보이게 위 줄들 사이에 둔다.
   //   켜짐 = 그 LB 관측 행의 `targets`(+ 문서 시각).
@@ -1543,9 +1546,9 @@
   //   꺼짐 = 구조의 **등록 대상 수**(`n.reg` · 사용자 결정 2026-10-16 — 꺼도 수를 본다 · ALB·NLB·GWLB). 헬스는 구조에 없다
   //   🔴 켜짐에서는 관측 수가 이긴다(5분 > 매시) — 구조 수를 같이 적지 않는다(§17.11)
   // 그룹 하나의 등록 수(「대상 그룹(+대상 상태)」 칸의 오른쪽 글) — 기록 없는 옛 스냅샷 = 빈칸
-  const tgRegWord = (it, g) => { const r = it.n.reg; const v = r && r.tg ? r.tg[g] : undefined; return v === undefined ? '' : v === 'unread' ? '대상 수 못 읽음' : `대상 ${v}개` }
+  const tgRegWord = (it, g) => { const r = it.n.reg; const v = r && r.tg ? r.tg[g] : undefined; return v === undefined ? '' : v === 'unread' ? NT_T('대상 수 못 읽음') : NT_T('대상 {0}개', [v]) }
   // 관측 `targets` 의 다섯 갈래(1.15.0 · #137 · 엔진 `services/base.py` `TARGET_HEALTH_DETAIL`) → 화면 말(docs/qa/copy-a.md ⑭) · 이 순서로 적는다
-  const LB_PARTS = [['health_check_off', '헬스 체크 꺼짐'], ['initial', '등록 중'], ['draining', '빼는 중'], ['unused', '사용되지 않음'], ['other_unavailable', '상태 확인 불가']]
+  const LB_PARTS = [['health_check_off', NT_T('헬스 체크 꺼짐')], ['initial', NT_T('등록 중')], ['draining', NT_T('빼는 중')], ['unused', NT_T('사용되지 않음')], ['other_unavailable', NT_T('상태 확인 불가')]]
   // 「대상」 줄의 수 절 — LB 정보창 「대상」 줄과 **LB → 대상 선 정보창 「대상」 줄**(flow.js `obs.lineRows` · §17.27)이 이 한 함수로 짓는다.
   //   🔴 선 줄에 따로 글을 짓지 마라(사용자 결정 2026-10-22 — 헬스 체크를 끈 Lambda 선이 판정 「정상」 옆에 「1개 중 0개 정상」을 적어 고객이 헷갈렸다).
   //   정상도 비정상도 아닌 대상(AWS `initial`·`draining`·`unused`·`unavailable` — 헬스 체크를 끈 Lambda 대상이 `unavailable` 이다).
@@ -1555,34 +1558,34 @@
   function targetsWord (t) {
     const parts = LB_PARTS.every(([k]) => Number.isInteger(t[k]))
     const rest = t.total - t.healthy - t.unhealthy - (parts ? LB_PARTS.reduce((s, [k]) => s + t[k], 0) : 0)
-    const base = `대상 ${t.total}개 · 정상 ${t.healthy}개 · 비정상 ${t.unhealthy}개`
-    if (parts) return [base + LB_PARTS.filter(([k]) => t[k] > 0).map(([k, w]) => ` · ${w} ${t[k]}개`).join('') + (rest > 0 ? ` · 그 밖 ${rest}개` : ''), rest]
-    return [base + (rest > 0 ? ` · 그 밖 ${rest}개(헬스 체크 꺼짐·등록 중·빼는 중 중 하나)` : ''), rest]
+    const base = NT_T('대상 {0}개 · 정상 {1}개 · 비정상 {2}개', [t.total, t.healthy, t.unhealthy])
+    if (parts) return [base + LB_PARTS.filter(([k]) => t[k] > 0).map(([k, w]) => NT_T(' · {0} {1}개', [w, t[k]])).join('') + (rest > 0 ? NT_T(' · 그 밖 {0}개', [rest]) : ''), rest]
+    return [base + (rest > 0 ? NT_T(' · 그 밖 {0}개(헬스 체크 꺼짐·등록 중·빼는 중 중 하나)', [rest]) : ''), rest]
   }
   function lbTargetRow (it) {
     const a = it.n.attrs || {}; const tg = a['target group']
     const nTg = tg === undefined ? null : tg ? String(tg).split(', ').length : 0
-    const NOTG = '대상 그룹 없음 — 이 로드 밸런서로 들어온 요청을 받을 대상이 없습니다'
+    const NOTG = NT_T('대상 그룹 없음 — 이 로드 밸런서로 들어온 요청을 받을 대상이 없습니다')
     const o = X.obs && X.obs.of ? X.obs.of(it.id) : null
-    if (o === null && X.obs && X.obs.on()) return ['대상', '표시할 상태 정보가 없습니다 — 상단 배너를 확인하세요', 'wn']
+    if (o === null && X.obs && X.obs.on()) return [NT_T('대상'), NT_T('표시할 상태 정보가 없습니다 — 상단 배너를 확인하세요'), 'wn']
     if (o === null) {
-      if (nTg === null) return ['대상', M.partial.has(it.id) ? '대상 그룹을 읽지 못했습니다' : '이 수집본에는 대상 그룹 기록이 없습니다', 'wn']
-      if (!nTg) return ['대상', NOTG, 'wn']
+      if (nTg === null) return [NT_T('대상'), M.partial.has(it.id) ? NT_T('대상 그룹을 읽지 못했습니다') : NT_T('이 수집본에는 대상 그룹 기록이 없습니다'), 'wn']
+      if (!nTg) return [NT_T('대상'), NOTG, 'wn']
       const reg = it.n.reg; const sAt = X.structAt ? X.structAt() : null
-      if (!reg) return ['대상', `대상 그룹 ${nTg}개 — 이 수집본에는 대상 수 기록이 없습니다 · 모니터링을 켜면 표시됩니다`]
-      if (reg.n === 'unread') return ['대상', `대상 그룹 ${nTg}개 — 대상 수를 읽지 못해 표시하지 않습니다`, 'wn']
-      if (!reg.n) return ['대상', `대상 0개 — 대상 그룹 ${nTg}개에 등록된 대상이 없습니다` + (sAt ? ` · ${sAt} 구조 수집` : ''), 'wn']
-      return ['대상', `대상 ${reg.n}개 (대상 그룹 ${nTg}개)` + (sAt ? ` · ${sAt} 구조 수집` : '') + ' — 정상·비정상은 모니터링을 켜면 표시됩니다']
+      if (!reg) return [NT_T('대상'), NT_T('대상 그룹 {0}개 — 이 수집본에는 대상 수 기록이 없습니다 · 모니터링을 켜면 표시됩니다', [nTg])]
+      if (reg.n === 'unread') return [NT_T('대상'), NT_T('대상 그룹 {0}개 — 대상 수를 읽지 못해 표시하지 않습니다', [nTg]), 'wn']
+      if (!reg.n) return [NT_T('대상'), NT_T('대상 0개 — 대상 그룹 {0}개에 등록된 대상이 없습니다', [nTg]) + (sAt ? NT_T(' · {0} 구조 수집', [sAt]) : ''), 'wn']
+      return [NT_T('대상'), NT_T('대상 {0}개 (대상 그룹 {1}개)', [reg.n, nTg]) + (sAt ? NT_T(' · {0} 구조 수집', [sAt]) : '') + NT_T(' — 정상·비정상은 모니터링을 켜면 표시됩니다')]
     }
-    if (!o) return ['대상', '이 로드 밸런서의 상태 정보가 없습니다', 'wn']
+    if (!o) return [NT_T('대상'), NT_T('이 로드 밸런서의 상태 정보가 없습니다'), 'wn']
     const t = o.targets
-    if (!t) return ['대상', '대상 상태를 읽지 못해 대상 수를 표시하지 않습니다', 'wn']
-    const at = X.obs.at ? X.obs.at() : null; const when = at ? ` · ${at} 관측` : ''
-    if (!t.total) return nTg === 0 ? ['대상', NOTG, 'wn'] : ['대상', `대상 0개 — ${nTg ? `대상 그룹 ${nTg}개에` : '대상 그룹에'} 등록된 대상이 없습니다${when}`, 'wn']
+    if (!t) return [NT_T('대상'), NT_T('대상 상태를 읽지 못해 대상 수를 표시하지 않습니다'), 'wn']
+    const at = X.obs.at ? X.obs.at() : null; const when = at ? NT_T(' · {0} 관측', [at]) : ''
+    if (!t.total) return nTg === 0 ? [NT_T('대상'), NOTG, 'wn'] : [NT_T('대상'), NT_T('대상 0개 — {0} 등록된 대상이 없습니다{1}', [nTg ? NT_T('대상 그룹 {0}개에', [nTg]) : NT_T('대상 그룹에'), when]), 'wn']
     // 수 절 = `targetsWord`(선 정보창과 한 벌) · 🔴 색은 정상·비정상만 본다 — 헬스 체크 꺼짐을 주의색으로 칠하면 Lambda 대상 LB 가 늘 경고가 된다
     const [word, rest] = targetsWord(t)   // `rest` = 그 밖 수 — 색에 넣지 않는다(검사 129 「그 밖을 비정상색」 브레이크가 이 자리를 깬다)
     const tone = t.unhealthy && !t.healthy ? 'bh' : t.unhealthy ? 'wn' : ''
-    return ['대상', word + when, tone]
+    return [NT_T('대상'), word + when, tone]
   }
   // VPN 연결 줄(VGW·CGW 정보창) — 그 게이트웨이에 닿는 VPN 연결 선
   const vpnOf = (id) => M.vpnl.filter((l) => l.b === id).map((l) => ({ a: 'VPN', b: hubName(l.a), tk: [l.a] }))
@@ -1592,106 +1595,106 @@
     const c = conOf(it); if (!c) return
     const put = (label, v, after) => { if (v === undefined || v === null || v === '') return; const i = rows.findIndex((r) => r[0] === after); const r = [label, String(v)]; if (i < 0) rows.push(r); else rows.splice(i + 1, 0, r) }
     const drop = (label) => { const i = rows.findIndex((r) => r[0] === label); if (i >= 0) rows.splice(i, 1) }
-    const yn = (v) => (v === true || v === 'true' ? '예' : v === false || v === 'false' ? '아니요' : v)
+    const yn = (v) => (v === true || v === 'true' ? NT_T('예') : v === false || v === 'false' ? NT_T('아니요') : v)
     if (it.kind === 'lb') {
-      drop('구성된 AZ')
+      drop(NT_T('구성된 AZ'))
       // 표가 말하는 줄은 뺀다(「리스너 및 규칙」·「대상 그룹」 칸 — 같은 사실 두 번 · 비교정리 B)
-      if (Array.isArray(c.listener_details)) drop('리스너 포트')
-      if (Array.isArray(c.target_group_details)) drop('대상 그룹')
-      put('DNS 이름', c.dns_name, '상태')
+      if (Array.isArray(c.listener_details)) drop(NT_T('리스너 포트'))
+      if (Array.isArray(c.target_group_details)) drop(NT_T('대상 그룹'))
+      put(NT_T('DNS 이름'), c.dns_name, NT_T('상태'))
       const sn = it.subnets.map((s) => subnetName(s))
-      put('가용 영역', sn.length ? sn.join('\n') : Array.isArray(c.availability_zones) ? c.availability_zones.join(', ') : null, 'DNS 이름')
+      put(NT_T('가용 영역'), sn.length ? sn.join('\n') : Array.isArray(c.availability_zones) ? c.availability_zones.join(', ') : null, NT_T('DNS 이름'))
     }
     if (it.kind === 'nat' && Array.isArray(c.addresses)) {
       drop('EIP')
       const p = c.addresses.map(TSV).find((x) => x[4] === 'true') || c.addresses.map(TSV)[0]
-      if (p) { put('기본 퍼블릭 IPv4 주소', p[0] ? `${p[0]}${p[3] ? ` (할당 ID ${p[3]})` : ''}` : null, '상태'); put('기본 프라이빗 IPv4 주소', p[1], '기본 퍼블릭 IPv4 주소'); put('기본 네트워크 인터페이스 ID', p[2], '기본 프라이빗 IPv4 주소') }
+      if (p) { put(NT_T('기본 퍼블릭 IPv4 주소'), p[0] ? `${p[0]}${p[3] ? NT_T(' (할당 ID {0})', [p[3]]) : ''}` : null, NT_T('상태')); put(NT_T('기본 프라이빗 IPv4 주소'), p[1], NT_T('기본 퍼블릭 IPv4 주소')); put(NT_T('기본 네트워크 인터페이스 ID'), p[2], NT_T('기본 프라이빗 IPv4 주소')) }
       // 연결 유형 = 한국어 콘솔도 영어 그대로(Public · Private — C-ko-nat) · 어댑터 줄은 이미 「연결 유형」 이름표다
-      const ci = rows.findIndex((r) => r[0] === '연결 유형' || r[0] === '연결'); if (ci >= 0 && (it.n.attrs || {})['연결']) rows[ci] = ['연결 유형', conState('nat', it.n.attrs['연결'])]
+      const ci = rows.findIndex((r) => r[0] === NT_T('연결 유형') || r[0] === NT_T('연결')); if (ci >= 0 && (it.n.attrs || {})['연결']) rows[ci] = [NT_T('연결 유형'), conState('nat', it.n.attrs['연결'])]
     }
     if (it.kind === 'vpn') {
-      put('로컬 IPv4 네트워크 CIDR', c.local_ipv4_network_cidr); put('원격 IPv4 네트워크 CIDR', c.remote_ipv4_network_cidr)
+      put(NT_T('로컬 IPv4 네트워크 CIDR'), c.local_ipv4_network_cidr); put(NT_T('원격 IPv4 네트워크 CIDR'), c.remote_ipv4_network_cidr)
       // 값 낱말 = 한국어 콘솔 VPN 「세부 정보」 그대로(§17.11 「콘솔 표현 원칙」 · B-09-VPN-ko — 「비활성화됨」 · 「퍼블릭 IPv4」 · 「표준」) · 콘솔에 없는 원문은 그대로
-      const VPN_WORD = { PublicIpv4: '퍼블릭 IPv4', PrivateIpv4: '프라이빗 IPv4', Ipv6: 'IPv6', standard: '표준', large: '대형' }
-      put('가속 활성화됨', c.enable_acceleration === true ? '활성화됨' : c.enable_acceleration === false ? '비활성화됨' : null); put('외부 IP 주소 유형', c.outside_ip_address_type ? VPN_WORD[c.outside_ip_address_type] || c.outside_ip_address_type : null)
-      put('게이트웨이 연결 상태', c.gateway_association_state ? conState('tgw', c.gateway_association_state) : null); put('터널 대역폭', c.tunnel_bandwidth ? VPN_WORD[c.tunnel_bandwidth] || c.tunnel_bandwidth : null)
-      if (Array.isArray(c.tunnel_inside_cidrs)) drop('외부 터널 IP')   // 「터널 세부 정보」 표가 말한다
+      const VPN_WORD = { PublicIpv4: NT_T('퍼블릭 IPv4'), PrivateIpv4: NT_T('프라이빗 IPv4'), Ipv6: 'IPv6', standard: NT_T('표준'), large: NT_T('대형') }
+      put(NT_T('가속 활성화됨'), c.enable_acceleration === true ? NT_T('활성화됨') : c.enable_acceleration === false ? NT_T('비활성화됨') : null); put(NT_T('외부 IP 주소 유형'), c.outside_ip_address_type ? VPN_WORD[c.outside_ip_address_type] || c.outside_ip_address_type : null)
+      put(NT_T('게이트웨이 연결 상태'), c.gateway_association_state ? conState('tgw', c.gateway_association_state) : null); put(NT_T('터널 대역폭'), c.tunnel_bandwidth ? VPN_WORD[c.tunnel_bandwidth] || c.tunnel_bandwidth : null)
+      if (Array.isArray(c.tunnel_inside_cidrs)) drop(NT_T('외부 터널 IP'))   // 「터널 세부 정보」 표가 말한다
     }
     if (it.kind === 'dxcon') {
-      put('AWS 논리적 디바이스', c.aws_logical_device_id || c.aws_device); put('점보 프레임', yn(c.jumbo_frame_capable)); put('MACsec', yn(c.macsec_capable))
+      put(NT_T('AWS 논리적 디바이스'), c.aws_logical_device_id || c.aws_device); put(NT_T('점보 프레임'), yn(c.jumbo_frame_capable)); put('MACsec', yn(c.macsec_capable))
     }
     if (it.kind === 'cf') {
-      if (c.comment) put('설명', c.comment, 'ID')
-      if (Array.isArray(c.origins)) drop('원본')   // 「오리진」 칸 하나로(비교정리 C M-11)
-      put('HTTP 버전', c.http_version ? String(c.http_version).toUpperCase().replace('HTTP', 'HTTP/').replace('//', '/') : null); put('IPv6', yn(c.is_ipv6_enabled))
+      if (c.comment) put(NT_T('설명'), c.comment, 'ID')
+      if (Array.isArray(c.origins)) drop(NT_T('원본'))   // 「오리진」 칸 하나로(비교정리 C M-11)
+      put(NT_T('HTTP 버전'), c.http_version ? String(c.http_version).toUpperCase().replace('HTTP', 'HTTP/').replace('//', '/') : null); put('IPv6', yn(c.is_ipv6_enabled))
     }
-    if (it.kind === 'waf' && Array.isArray(c.rules)) drop('규칙')   // 「규칙」 표가 말한다(이름 · 작업 · 우선순위)
-    if (it.kind === 'vpce' && c.service_name) { const i = rows.findIndex((r) => r[0] === '서비스'); if (i >= 0) rows[i] = ['서비스 이름', c.service_name]; else put('서비스 이름', c.service_name, 'ID') }
+    if (it.kind === 'waf' && Array.isArray(c.rules)) drop(NT_T('규칙'))   // 「규칙」 표가 말한다(이름 · 작업 · 우선순위)
+    if (it.kind === 'vpce' && c.service_name) { const i = rows.findIndex((r) => r[0] === NT_T('서비스')); if (i >= 0) rows[i] = [NT_T('서비스 이름'), c.service_name]; else put(NT_T('서비스 이름'), c.service_name, 'ID') }
   }
   function detItem (it) {
     if (it.outside) { // §17.1 — 피어링 연결의 엔진 속성이 말하는 상대 쪽. 계정은 가린다(전체 ID 는 화면에 싣지 않는다)
       const sd = it.side
-      return { title: 'VPC', sub: typeKo(it), rows: [['종류', typeKo(it)], ['VPC ID', sd.vpc], ['계정', sd.acct ? X.acctText(sd.acct) : '모름'], ['리전', sd.region ? (REGION_KO[sd.region] ? `${REGION_KO[sd.region]} · ${sd.region}` : sd.region) : '모름'],
-        ['비고', '수집 범위 밖 — 피어링 연결로만 확인했습니다']], secs: [] }
+      return { title: 'VPC', sub: typeKo(it), rows: [[NT_T('종류'), typeKo(it)], ['VPC ID', sd.vpc], [NT_T('계정'), sd.acct ? X.acctText(sd.acct) : NT_T('모름')], [NT_T('리전'), sd.region ? (REGION_KO[sd.region] ? `${REGION_KO[sd.region]} · ${sd.region}` : sd.region) : NT_T('모름')],
+        [NT_T('비고'), NT_T('수집 범위 밖 — 피어링 연결로만 확인했습니다')]], secs: [] }
     }
     if (it.xscope) { // §17.22 — 자리는 범위 안 쪽 리전 상자지만 칸은 그 TGW 의 실제 계정·리전을 말한다
       const r = (() => { let c = it.n; let g = 0; while (c && g++ < 40) { if (c.type === 'region') return c; c = c.parent_id ? X.mById.get(c.parent_id) : null } return null })()
-      const rows = [['종류', typeKo(it)], ['계정', acctName(it.xacct)], ['리전', r ? regName(r.id) : '모름'],
-        ['수집 여부', '예 — 수집했지만 보기 범위에서 제외했습니다'], ['되돌리기', '상단바에서 «계정: 전체»를 누르세요']]
+      const rows = [[NT_T('종류'), typeKo(it)], [NT_T('계정'), acctName(it.xacct)], [NT_T('리전'), r ? regName(r.id) : NT_T('모름')],
+        [NT_T('수집 여부'), NT_T('예 — 수집했지만 보기 범위에서 제외했습니다')], [NT_T('되돌리기'), NT_T('상단바에서 «계정: 전체»를 누르세요')]]
       return { title: svcOf(it), sub: typeKo(it), rows, secs: relSec(it.id) }
     }
     // 콘솔 「세부 정보」(§17.11 「콘솔 표현 원칙」 · 검사 166) — TGW · VGW · IGW 는 콘솔 칸 이름·순서 그대로 · 제목 `ID / 이름`(통합정리 0-3)
     const conT = !it.ghost && (it.kind === 'tgw' || it.kind === 'vgw' || it.kind === 'igw' || it.kind === 'cgw' || it.kind === 'r53')
     if (conT) {
-      const reg = ['리전', it.region ? regName(it.region) : '전역(리전 없음)']
+      const reg = [NT_T('리전'), it.region ? regName(it.region) : NT_T('전역(리전 없음)')]
       const vpcCell = (ids) => ids.map((id) => { const v = M.vpcs.get(id); return v ? idNm(natId(v.n), v.named ? v.name : null) : String(id).split('/').pop() }).join(', ') || NIL
       const at = it.n.attrs || {}; const cc = conOf(it) || {}
       // CGW = 콘솔 고객 게이트웨이 「세부 정보」 순서 · Route 53 = 콘솔 「호스팅 영역 세부 정보」(제목 = 영역 이름 — 콘솔 머리)
-      const rows = it.kind === 'cgw' ? [['고객 게이트웨이 ID', natId(it.n)], ['상태', it.state ? stateKo(it.state) : NIL], ['유형', cc.type || at['종류'] || NIL],
-          ['IP 주소', cc.ip_address || at['IP 주소'] || NIL], ['BGP ASN', cc.bgp_asn ?? at['BGP ASN'] ?? NIL], ['인증서 ARN', cc.uses_certificate === true ? '사용' : NIL],
-          ['디바이스', cc.device_name || at['디바이스 이름'] || NIL], reg, ['소유자 ID', acctName(it.acct)]]
-        : it.kind === 'r53' ? [['호스팅 영역 이름', at['영역'] || it.name || NIL], ['호스팅 영역 ID', natId(it.n)], ['유형', at['유형'] || NIL], ['레코드 수', at['레코드 수'] ?? NIL],
-            ...(Array.isArray(it.n.zoneVpcs) && it.n.zoneVpcs.length ? [['연결된 VPC', vpcCell(it.n.zoneVpcs)]] : []), ['소유자 ID', acctName(it.acct)]]
+      const rows = it.kind === 'cgw' ? [[NT_T('고객 게이트웨이 ID'), natId(it.n)], [NT_T('상태'), it.state ? stateKo(it.state) : NIL], [NT_T('유형'), cc.type || at['종류'] || NIL],
+          [NT_T('IP 주소'), cc.ip_address || at['IP 주소'] || NIL], ['BGP ASN', cc.bgp_asn ?? at['BGP ASN'] ?? NIL], [NT_T('인증서 ARN'), cc.uses_certificate === true ? NT_T('사용') : NIL],
+          [NT_T('디바이스'), cc.device_name || at['디바이스 이름'] || NIL], reg, [NT_T('소유자 ID'), acctName(it.acct)]]
+        : it.kind === 'r53' ? [[NT_T('호스팅 영역 이름'), at['영역'] || it.name || NIL], [NT_T('호스팅 영역 ID'), natId(it.n)], [NT_T('유형'), at['유형'] || NIL], [NT_T('레코드 수'), at['레코드 수'] ?? NIL],
+            ...(Array.isArray(it.n.zoneVpcs) && it.n.zoneVpcs.length ? [[NT_T('연결된 VPC'), vpcCell(it.n.zoneVpcs)]] : []), [NT_T('소유자 ID'), acctName(it.acct)]]
         : it.kind === 'tgw' ? [...tgwRows(it), reg]
-        : it.kind === 'vgw' ? [['가상 프라이빗 게이트웨이 ID', natId(it.n)], ['상태', it.state ? stateKo(it.state) : NIL], ['유형', (it.n.attrs || {})['종류'] || NIL],
-            ['VPC', vpcCell(it.n.vpcIds || [])], ['Amazon ASN', (it.n.attrs || {})['Amazon 측 ASN'] ?? NIL], reg, ['소유자 ID', acctName(it.acct)]]
-          : [['인터넷 게이트웨이 ID', natId(it.n)], ['상태', it.state ? stateKo(it.state) : NIL], ['VPC ID', it.vpc ? vpcCell([it.vpc]) : (it.n.con && it.n.con.vpcNat) || '미부착'], reg, ['소유자 ID', acctName(it.acct)]]
+        : it.kind === 'vgw' ? [[NT_T('가상 프라이빗 게이트웨이 ID'), natId(it.n)], [NT_T('상태'), it.state ? stateKo(it.state) : NIL], [NT_T('유형'), (it.n.attrs || {})['종류'] || NIL],
+            ['VPC', vpcCell(it.n.vpcIds || [])], ['Amazon ASN', (it.n.attrs || {})['Amazon 측 ASN'] ?? NIL], reg, [NT_T('소유자 ID'), acctName(it.acct)]]
+          : [[NT_T('인터넷 게이트웨이 ID'), natId(it.n)], [NT_T('상태'), it.state ? stateKo(it.state) : NIL], ['VPC ID', it.vpc ? vpcCell([it.vpc]) : (it.n.con && it.n.con.vpcNat) || NT_T('미부착')], reg, [NT_T('소유자 ID'), acctName(it.acct)]]
       rows.push(...denyRow(it.n))
       const nm = named(it.n) ? it.name : null
       return { title: it.kind === 'r53' ? (it.name || natId(it.n)) : nm ? `${natId(it.n)} / ${nm}` : natId(it.n), sub: typeKo(it), rows, secs: [...itemSecs(it), ...relSec(it.id)] }
     }
-    const rows = [['종류', typeKo(it)], ['계정', acctName(it.acct)], ['리전', it.region ? regName(it.region) : '전역(리전 없음)']]
+    const rows = [[NT_T('종류'), typeKo(it)], [NT_T('계정'), acctName(it.acct)], [NT_T('리전'), it.region ? regName(it.region) : NT_T('전역(리전 없음)')]]
     const v = M.vpcs.get(it.vpc); if (v) rows.push(['VPC', v.name])
     if (!it.ghost) rows.push(['ID', natId(it.n)])
-    if (it.state) rows.push(['상태', stateKo(it.state)])
-    if (it.ghost) rows.push(['비고', it.stub ? '수집 대상 계정·리전이 아닙니다 — 피어링 연결로만 확인했습니다' : '이 계정의 DX 게이트웨이를 읽지 못했습니다 — TGW 어태치먼트로만 확인했습니다'])
+    if (it.state) rows.push([NT_T('상태'), stateKo(it.state)])
+    if (it.ghost) rows.push([NT_T('비고'), it.stub ? NT_T('수집 대상 계정·리전이 아닙니다 — 피어링 연결로만 확인했습니다') : NT_T('이 계정의 DX 게이트웨이를 읽지 못했습니다 — TGW 어태치먼트로만 확인했습니다')])
     if (!it.ghost) rows.push(...attrRows(it.n))
     // 「웹 ACL」 줄(§17.41) — 엔진이 WAF 노드를 준 스냅샷(2.12.0)이면 이름을 누르면 그 WAF 정보창으로(넷째 칸 = 열 열쇠) · 옛 스냅샷은 글자 그대로.
     //   API Gateway 는 속성 줄이 없다 → 보호 선이 있으면 그 이름 · WAF 를 읽었는데 없으면 「없음」 · 못 읽었으면 「읽지 못했습니다」(「없음」과 가른다 · 불변식 ④)
     if (!it.ghost && (it.kind === 'cf' || it.kind === 'lb' || it.kind === 'apigw')) {
       const w = wafOf(it.id); const wn = w && (M.globs.get(w) || M.hubs.get(w))
-      const r = rows.find((x) => x[0] === '웹 ACL')
+      const r = rows.find((x) => x[0] === NT_T('웹 ACL'))
       if (r && wn) r[3] = w
       else if (!r && it.kind === 'apigw') {
         const c = covOf(it.n, 'waf_web_acl')
-        if (wn) rows.push(['웹 ACL', wn.name, null, w])
-        else if (c && c.status === 'ok') rows.push(['웹 ACL', '없음'])
-        else if (c && c.status === 'denied') rows.push(['웹 ACL', UNREAD, 'wn'])
+        if (wn) rows.push([NT_T('웹 ACL'), wn.name, null, w])
+        else if (c && c.status === 'ok') rows.push([NT_T('웹 ACL'), NT_T('없음')])
+        else if (c && c.status === 'denied') rows.push([NT_T('웹 ACL'), UNREAD, 'wn'])
       }
     }
     if (!it.ghost) conRows(it, rows)
     if (it.kind === 'lb' && !it.ghost) rows.push(lbTargetRow(it))
     // 탄력적 IP(2.10.0 · §17.34) — 이 자원의 퍼블릭 IP 가 탄력적 IP 면 그 할당을 말한다(선이 아니라 이 줄 · EIP 는 아이콘이 아니다)
     //   NAT 는 콘솔 「기본 퍼블릭 IPv4 주소」 한 줄이 그 할당까지 말한다(`conRows`) — 🔴 옛 「EIP」·「탄력적 IP」 두 줄 중복(비교정리 C M-10)
-    if (Array.isArray(it.n.eips) && it.n.eips.length && !(it.kind === 'nat' && rows.some((r) => r[0] === '기본 퍼블릭 IPv4 주소'))) rows.push(['탄력적 IP', it.n.eips.map((e) => `${e.ip} — 탄력적 IP입니다(할당 ID ${e.alloc}${e.svc ? ` · AWS 가 ${String(e.svc).toUpperCase()} 에 관리하는 주소` : ''}${e.name ? ` · ${e.name}` : ''})`).join('\n')])
+    if (Array.isArray(it.n.eips) && it.n.eips.length && !(it.kind === 'nat' && rows.some((r) => r[0] === NT_T('기본 퍼블릭 IPv4 주소')))) rows.push([NT_T('탄력적 IP'), it.n.eips.map((e) => NT_T('{0} — 탄력적 IP입니다(할당 ID {1}{2}{3})', [e.ip, e.alloc, e.svc ? NT_T(' · AWS 가 {0} 에 관리하는 주소', [String(e.svc).toUpperCase()]) : '', e.name ? ` · ${e.name}` : ''])).join('\n')])
     rows.push(...denyRow(it.n))
     // 리전 줄에 선 것(§17.12 ①) — 왜 VPC·서브넷 안이 아닌지를 접힌 칸이 아니라 첫 줄들에서 말한다
-    if (it.regional) rows.push(['표시 위치', `리전 줄 — ${NOSUB_WHY[it.n.type]}`])
-    if (it.kind === 'lambda' && !it.vpc) rows.push(['표시 위치', it.n.fnRead ? '리전 줄 — VPC 에 연결되지 않은 함수입니다' : '리전 줄 — VPC 연결 여부를 알 수 없습니다(로드밸런서 대상에서만 확인한 함수입니다)'])
+    if (it.regional) rows.push([NT_T('표시 위치'), NT_T('리전 줄 — {0}', [NOSUB_WHY[it.n.type]])])
+    if (it.kind === 'lambda' && !it.vpc) rows.push([NT_T('표시 위치'), it.n.fnRead ? NT_T('리전 줄 — VPC 에 연결되지 않은 함수입니다') : NT_T('리전 줄 — VPC 연결 여부를 알 수 없습니다(로드밸런서 대상에서만 확인한 함수입니다)')])
     // LB = 콘솔 「가용 영역」 한 줄이 서브넷·AZ 를 같이 말한다(`conRows` — 🔴 옛 「구성된 AZ」·「서브넷 N개」·「서브넷의 AZ」 세 줄 · 비교정리 B R-05)
-    const lbAz = it.kind === 'lb' && rows.some((r) => r[0] === '가용 영역')
-    if (it.subnets.length && !lbAz) rows.push([it.subnets.length > 1 ? `서브넷 ${it.subnets.length}개` : '서브넷', it.subnets.map(subnetName).join('\n')])
-    if (it.subnets.length > 1 && !lbAz) rows.push(['서브넷의 AZ', [...new Set(it.subnets.map((s) => M.subnets.get(s).az))].sort().join(', ')])
+    const lbAz = it.kind === 'lb' && rows.some((r) => r[0] === NT_T('가용 영역'))
+    if (it.subnets.length && !lbAz) rows.push([it.subnets.length > 1 ? NT_T('서브넷 {0}개', [it.subnets.length]) : NT_T('서브넷'), it.subnets.map(subnetName).join('\n')])
+    if (it.subnets.length > 1 && !lbAz) rows.push([NT_T('서브넷의 AZ'), [...new Set(it.subnets.map((s) => M.subnets.get(s).az))].sort().join(', ')])
     // CloudFront = 콘솔이 배포를 구분하는 「설명」으로 부른다(🔴 비교정리 C R-13 — 도메인만으로는 어느 배포인지 모른다)
     const cfc = it.kind === 'cf' ? (conOf(it) || {}).comment : null
     // 제목 = 그 콘솔 상세 화면의 머리(§17.11 「콘솔 표현 원칙」 · 검사 122) — EC2 계열은 `ID / 이름` · LB·WAF·Route 53 은 이름 · CloudFront 는 `ID / 설명`
@@ -1702,74 +1705,74 @@
   function detVpc (v) {
     const pub = v.subnets.filter((s) => s.tier === 'public').length
     const L = M.list.get(v.id) || []; const a = v.n.attrs || {}; const c = v.n.con || {}
-    const ls = (t, label, cnt) => { const rs = L.filter((r) => r.type === t).map((r) => ({ a: String(r.name || r.id), b: String(r.detail || '') })); return rs.length || cnt === undefined ? sec(label, rs) : sec(label, [], { n: cnt, empty: '개수만 확인했습니다 — 목록은 수집하지 않습니다' }) }
+    const ls = (t, label, cnt) => { const rs = L.filter((r) => r.type === t).map((r) => ({ a: String(r.name || r.id), b: String(r.detail || '') })); return rs.length || cnt === undefined ? sec(label, rs) : sec(label, [], { n: cnt, empty: NT_T('개수만 확인했습니다 — 목록은 수집하지 않습니다') }) }
     // 콘솔 「세부 정보」(통합정리 2-1 · 검사 166) — DNS·테넌시·DHCP·IPv6 는 키가 있을 때만(못 읽음 = 「읽지 못함」 · 옛 판 = 줄 없음) · 기본 라우팅 테이블 = 목록의 main
-    const dnsRow = (lab, val) => (val !== undefined ? [[lab, val === true ? '활성화됨' : val === false ? '비활성화됨' : String(val)]]
+    const dnsRow = (lab, val) => (val !== undefined ? [[lab, val === true ? NT_T('활성화됨') : val === false ? NT_T('비활성화됨') : String(val)]]
       : M.partial.has(v.id) && (X.T.partial || []).some((p) => p && p.target === v.id && p.api === 'ec2:DescribeVpcAttribute') ? [[lab, UNREAD, 'wn']] : [])
     const mainRt = L.find((r) => r.type === 'route_table' && r.rt && r.rt.main)
-    const conRows = [...dnsRow('DNS 호스트 이름', c.dnsHostnames), ...dnsRow('DNS 확인', c.dnsSupport),
-      ...(c.tenancy !== undefined ? [['테넌시', String(c.tenancy)]] : []),
-      ...(c.dhcpId !== undefined ? [['DHCP 옵션 세트', c.dhcpId + (Array.isArray(c.dhcp) && c.dhcp.length ? `\n${c.dhcp.join('\n')}` : '')]] : []),
-      ...(mainRt ? [['기본 라우팅 테이블', idNm(mainRt.id, mainRt.name)]] : []),
+    const conRows = [...dnsRow(NT_T('DNS 호스트 이름'), c.dnsHostnames), ...dnsRow(NT_T('DNS 확인'), c.dnsSupport),
+      ...(c.tenancy !== undefined ? [[NT_T('테넌시'), String(c.tenancy)]] : []),
+      ...(c.dhcpId !== undefined ? [[NT_T('DHCP 옵션 세트'), c.dhcpId + (Array.isArray(c.dhcp) && c.dhcp.length ? `\n${c.dhcp.join('\n')}` : '')]] : []),
+      ...(mainRt ? [[NT_T('기본 라우팅 테이블'), idNm(mainRt.id, mainRt.name)]] : []),
       ...(Array.isArray(c.ipv6) ? [['IPv6 CIDR', c.ipv6.length ? c.ipv6.join(', ') : NIL]] : [])]
     return { title: v.named ? `${natId(v.n)} / ${v.name}` : natId(v.n), sub: `VPC · ${acctName(v.acct)} · ${v.code}`,
       // 🔴 아이콘 자원은 카드가 「상태」를 직접 적는데 VPC·서브넷만 빠져 있었다(QA 기능개발 7 · §17.11 개정).
       //    `소유 계정`(RAM 공유 VPC 의 범위 밖 소유자)·`미해결 대상`(불변식 ④ 축)은 `attrRows` 가 준다.
-      rows: [['VPC ID', natId(v.n)], ...(a.state ? [['상태', stateKo(a.state)]] : []), ...conRows, ['기본 VPC', a['default VPC'] || '?'], ['IPv4 CIDR', v.cidr || '?'],
-        ['소유자 ID', acctName(v.acct)], ...vsRows(v.n),
-        ['AZ', [...new Set(v.subnets.map((s) => s.az))].sort().join(', ') || '없음'],
-        ['서브넷', `${v.subnets.length}개 (퍼블릭 ${pub} · 프라이빗 ${v.subnets.length - pub})`],
-        ['TGW 어태치먼트', v.ports.filter((t) => { const P = M.ports.get(M.portOf.get(v.id + '|' + t)) || {}; return !P.vgw && !P.cwan && !P.lsn }).map(hubName).join(', ') || '없음'],
+      rows: [['VPC ID', natId(v.n)], ...(a.state ? [[NT_T('상태'), stateKo(a.state)]] : []), ...conRows, [NT_T('기본 VPC'), a['default VPC'] || '?'], ['IPv4 CIDR', v.cidr || '?'],
+        [NT_T('소유자 ID'), acctName(v.acct)], ...vsRows(v.n),
+        ['AZ', [...new Set(v.subnets.map((s) => s.az))].sort().join(', ') || NT_T('없음')],
+        [NT_T('서브넷'), NT_T('{0}개 (퍼블릭 {1} · 프라이빗 {2})', [v.subnets.length, pub, v.subnets.length - pub])],
+        [NT_T('TGW 어태치먼트'), v.ports.filter((t) => { const P = M.ports.get(M.portOf.get(v.id + '|' + t)) || {}; return !P.vgw && !P.cwan && !P.lsn }).map(hubName).join(', ') || NT_T('없음')],
         // #129(2.11.0 · §17.39~40) — 그 포트가 있을 때만 줄이 있다
         ...(v.ports.some((t) => (M.ports.get(M.portOf.get(v.id + '|' + t)) || {}).cwan) ? [['Cloud WAN', v.ports.filter((t) => (M.ports.get(M.portOf.get(v.id + '|' + t)) || {}).cwan).map(hubName).join(', ')]] : []),
-        ...(v.ports.some((t) => (M.ports.get(M.portOf.get(v.id + '|' + t)) || {}).lsn) ? [['VPC Lattice 서비스 네트워크', v.ports.filter((t) => (M.ports.get(M.portOf.get(v.id + '|' + t)) || {}).lsn).map(hubName).join(', ')]] : []),
+        ...(v.ports.some((t) => (M.ports.get(M.portOf.get(v.id + '|' + t)) || {}).lsn) ? [[NT_T('VPC Lattice 서비스 네트워크'), v.ports.filter((t) => (M.ports.get(M.portOf.get(v.id + '|' + t)) || {}).lsn).map(hubName).join(', ')]] : []),
         ...(v.ports.some((t) => (M.ports.get(M.portOf.get(v.id + '|' + t)) || {}).vgw) ? [['VGW', v.ports.filter((t) => (M.ports.get(M.portOf.get(v.id + '|' + t)) || {}).vgw).map(hubName).join(', ')]] : []), ...denyRow(v.n),
         // 프라이빗 호스팅 영역(2.8.0 · §17.30) — 이 VPC 에서 이름이 풀리는 영역(영역 쪽 `zoneVpcs`) · 없으면 줄이 없다
-        ...(() => { const zs = [...M.globs.values()].filter((g) => g.kind === 'r53' && (g.n.zoneVpcs || []).includes(natId(v.n))).map((g) => g.name); return zs.length ? [['프라이빗 호스팅 영역', zs.join(', ')]] : [] })(),
+        ...(() => { const zs = [...M.globs.values()].filter((g) => g.kind === 'r53' && (g.n.zoneVpcs || []).includes(natId(v.n))).map((g) => g.name); return zs.length ? [[NT_T('프라이빗 호스팅 영역'), zs.join(', ')]] : [] })(),
         ...vpcPartRow(v)],
-      secs: [vpcNetSec(v), vpcSubSec(v), rtbSec(v, a['route table']), ls('network_acl', '네트워크 ACL', a['network ACL']), ls('security_group', '보안 그룹', a['security group']), ...tagSec(v.n)] }
+      secs: [vpcNetSec(v), vpcSubSec(v), rtbSec(v, a['route table']), ls('network_acl', NT_T('네트워크 ACL'), a['network ACL']), ls('security_group', NT_T('보안 그룹'), a['security group']), ...tagSec(v.n)] }
   }
   // VPC 「서브넷 (N)」(통합정리 2-1 — 콘솔 Resource map 의 서브넷 목록) = 서브넷 ID (이름) · 가용 영역 · IPv4 CIDR · 순서 = AZ → CIDR
   function vpcSubSec (v) {
     const rows = v.subnets.map((s) => ({ az: s.az, cd: (s.n.attrs || {}).cidr || '', c: [idNm(natId(s.n), s.named ? s.name : null), s.az, (s.n.attrs || {}).cidr || NIL], tk: [s.id] }))
       .sort((x, y) => (x.az < y.az ? -1 : x.az > y.az ? 1 : 0) || byDst(x.cd, y.cd))
-    const t = tbl('서브넷', [{ h: '서브넷 ID', w: 260, id: true }, { h: '가용 영역', w: 90 }, { h: 'IPv4 CIDR', w: 120, id: true }], rows)
-    return { label: '서브넷', n: rows.length, nc: false, groups: rows.length ? [{ h: '', rows: [], tbl: t }] : [], empty: '(0)' }
+    const t = tbl(NT_T('서브넷'), [{ h: NT_T('서브넷 ID'), w: 260, id: true }, { h: NT_T('가용 영역'), w: 90 }, { h: 'IPv4 CIDR', w: 120, id: true }], rows)
+    return { label: NT_T('서브넷'), n: rows.length, nc: false, groups: rows.length ? [{ h: '', rows: [], tbl: t }] : [], empty: '(0)' }
   }
   // VPC 「네트워크 연결 (N)」(통합정리 2-1 — 콘솔 Resource map 「Network Connections」) = 이 VPC 의 바깥 길(IGW · NAT · 게이트웨이 엔드포인트 · 포트 · 피어링)
   function vpcNetSec (v) {
     const rows = []
     const add = (kind, id, nm, st, tk) => rows.push({ c: [kind, idNm(id, nm), st ? stateKo(st) : NIL], tk })
     for (const it of v.items) {
-      if (it.kind === 'igw') add('인터넷 게이트웨이', natId(it.n), it.named ? it.name : null, it.state, [it.id])
-      else if (it.kind === 'nat') add('NAT 게이트웨이', natId(it.n), it.named ? it.name : null, it.state, [it.id])
-      else if (it.kind === 'vpce' && it.epType === 'Gateway') add('게이트웨이 엔드포인트', natId(it.n), it.svc, it.state, [B.cellOf.get(it.id) || it.id])
+      if (it.kind === 'igw') add(NT_T('인터넷 게이트웨이'), natId(it.n), it.named ? it.name : null, it.state, [it.id])
+      else if (it.kind === 'nat') add(NT_T('NAT 게이트웨이'), natId(it.n), it.named ? it.name : null, it.state, [it.id])
+      else if (it.kind === 'vpce' && it.epType === 'Gateway') add(NT_T('게이트웨이 엔드포인트'), natId(it.n), it.svc, it.state, [B.cellOf.get(it.id) || it.id])
     }
     for (const t of v.ports) {
       const pk = M.portOf.get(v.id + '|' + t); const P = M.ports.get(pk) || {}; const h = M.hubs.get(t) || M.globs.get(t)
-      const kind = P.vgw ? '가상 프라이빗 게이트웨이' : P.cwan ? 'Cloud WAN 연결' : P.lsn ? 'VPC Lattice 서비스 네트워크' : 'Transit Gateway 어태치먼트'
+      const kind = P.vgw ? NT_T('가상 프라이빗 게이트웨이') : P.cwan ? NT_T('Cloud WAN 연결') : P.lsn ? NT_T('VPC Lattice 서비스 네트워크') : NT_T('Transit Gateway 어태치먼트')
       const id = P.vgw || P.cwan || P.lsn ? (h ? natId(h.n) : String(t).split('/').pop()) : natId(P.n)
       const nm = P.vgw || P.cwan || P.lsn ? (h && h.named ? h.name : null) : named(P.n || {}) ? P.n.name : null
       add(kind, id, nm, P.vgw ? 'attached' : (P.n && P.n.attrs || {}).state, [pk || t])
     }
-    for (const P of M.pp.values()) if (P.vpc === v.id) add('VPC 피어링', natId(P.n), named(P.n) ? P.n.name : null, (P.n.attrs || {}).state, [P.key])
+    for (const P of M.pp.values()) if (P.vpc === v.id) add(NT_T('VPC 피어링'), natId(P.n), named(P.n) ? P.n.name : null, (P.n.attrs || {}).state, [P.key])
     rows.sort((x, y) => (x.c[0] < y.c[0] ? -1 : x.c[0] > y.c[0] ? 1 : 0) || (x.c[1] < y.c[1] ? -1 : x.c[1] > y.c[1] ? 1 : 0))
-    const t = tbl('네트워크 연결', [{ h: '유형', w: 150 }, { h: 'ID', w: 260, id: true }, { h: '상태', w: 70, st: true }], rows, { wrap: 2 })
-    return { label: '네트워크 연결', n: rows.length, nc: false, groups: rows.length ? [{ h: '', rows: [], tbl: t }] : [], empty: '(0)' }
+    const t = tbl(NT_T('네트워크 연결'), [{ h: NT_T('유형'), w: 150 }, { h: 'ID', w: 260, id: true }, { h: NT_T('상태'), w: 70, st: true }], rows, { wrap: 2 })
+    return { label: NT_T('네트워크 연결'), n: rows.length, nc: false, groups: rows.length ? [{ h: '', rows: [], tbl: t }] : [], empty: '(0)' }
   }
   function detSub (s) {
     const a = s.n.attrs || {}
     const rows = [['CIDR', a.cidr || '?'], ['AZ', s.az], ...(a['AZ ID'] ? [['AZ ID', a['AZ ID']]] : []), ['ID', natId(s.n)],
-      ...(a.state ? [['상태', stateKo(a.state)]] : []), ...vsRows(s.n),
-      ['나가는 경로', [...s.exits].map(nodeName).join(', ') || '없음'],
-      ['퍼블릭 IPv4 자동 할당', a['public IP 자동할당'] ?? a['public IP'] ?? '?'],
-      ['이 서브넷의 리소스', s.items.map((x) => `${typeKo(x)} ${x.name}`).join('\n') || '없음']]
+      ...(a.state ? [[NT_T('상태'), stateKo(a.state)]] : []), ...vsRows(s.n),
+      [NT_T('나가는 경로'), [...s.exits].map(nodeName).join(', ') || NT_T('없음')],
+      [NT_T('퍼블릭 IPv4 자동 할당'), a['public IP 자동할당'] ?? a['public IP'] ?? '?'],
+      [NT_T('이 서브넷의 리소스'), s.items.map((x) => `${typeKo(x)} ${x.name}`).join('\n') || NT_T('없음')]]
     // 못 이은 ENI 라우트(2.8.0 · P2-2 · 엔진 `unresolved_route_targets`) = 그 ENI + 까닭(주의색) — 「이 화면에 없는 대상」 한 말로 뭉개지 않는다
-    const rr = s.routes.map((r) => ({ a: dstWord(s, r.d) || '(목적지 미상)', b: r.t ? nodeName(r.t) : r.why ? `${r.raw} — ${routeWhy(r.why)}` : `${r.raw} (이 화면에 없는 대상)`, tk: r.t ? [r.t] : [], cls: r.bh ? 'bh' : r.why ? 'wn' : '' }))
+    const rr = s.routes.map((r) => ({ a: dstWord(s, r.d) || NT_T('(목적지 미상)'), b: r.t ? nodeName(r.t) : r.why ? `${r.raw} — ${routeWhy(r.why)}` : NT_T('{0} (이 화면에 없는 대상)', [r.raw]), tk: r.t ? [r.t] : [], cls: r.bh ? 'bh' : r.why ? 'wn' : '' }))
     // 「라우팅 테이블」 칸 = 콘솔 서브넷 › 라우팅 테이블 탭(검사 166) · 그 테이블 기록이 없는 수집본(목록 없음)만 옛 줄
     const rtS = subRtSec(s)
-    return { title: s.named ? `${natId(s.n)} / ${s.name}` : natId(s.n), sub: `서브넷 · ${s.tier === 'public' ? '퍼블릭' : '프라이빗'}`, rows,
-      secs: [rtS || sec('라우팅 테이블', rr, { h: a.route_table ? String(a.route_table) : '' }), naclSec(s), ...tagSec(s.n)] }
+    return { title: s.named ? `${natId(s.n)} / ${s.name}` : natId(s.n), sub: NT_T('서브넷 · {0}', [s.tier === 'public' ? NT_T('퍼블릭') : NT_T('프라이빗')]), rows,
+      secs: [rtS || sec(NT_T('라우팅 테이블'), rr, { h: a.route_table ? String(a.route_table) : '' }), naclSec(s), ...tagSec(s.n)] }
   }
   function detPp (P) {
     const v = M.vpcs.get(P.vpc); const a = P.n.attrs || {}; const c = P.n.con
@@ -1777,78 +1780,78 @@
     //   🔴 옛 「이 VPC · 상대」는 누가 요청했는지를 지웠다 — 요청자/수락자를 뒤바꿔 적으면 수락 대기 피어링을 어느 계정에서 수락해야 하는지 오판한다
     const mine = v ? natId(v.n) : null
     const vpcOf = (id) => { const x = [...M.vpcs.values()].find((y) => natId(y.n) === id); return x && x.named ? x.name : null }
-    const side = (lab, s) => (!s ? [] : [[`${lab} 소유자 ID`, s.acct ? X.acctText(s.acct) : NIL], [`${lab} VPC`, idNm(s.vpc, vpcOf(s.vpc)) + (s.vpc && s.vpc === mine ? ' (이 VPC)' : '')],
-      [`${lab} CIDR`, [...(s.cidrs || []), ...(s.ipv6 || [])].join(', ') || NIL], [`${lab} 리전`, s.region ? (REGION_KO[s.region] ? `${REGION_KO[s.region]} · ${s.region}` : s.region) : NIL]])
-    const rows = c ? [['피어링 연결 ID', natId(P.n)], ['상태', a.state ? stateKo(a.state) : NIL], ...side('요청자', c.req), ...side('수락자', c.acc), ...(c.exp ? [['만료 시간', String(c.exp)]] : [])]
-      : [['ID', natId(P.n)], ['이 VPC', v ? v.name : '?'], ['상대', ppPeer(P)], ...(a.state ? [['상태', stateKo(a.state)]] : [])]
+    const side = (lab, s) => (!s ? [] : [[NT_T('{0} 소유자 ID', [lab]), s.acct ? X.acctText(s.acct) : NIL], [`${lab} VPC`, idNm(s.vpc, vpcOf(s.vpc)) + (s.vpc && s.vpc === mine ? NT_T(' (이 VPC)') : '')],
+      [`${lab} CIDR`, [...(s.cidrs || []), ...(s.ipv6 || [])].join(', ') || NIL], [NT_T('{0} 리전', [lab]), s.region ? (REGION_KO[s.region] ? `${REGION_KO[s.region]} · ${s.region}` : s.region) : NIL]])
+    const rows = c ? [[NT_T('피어링 연결 ID'), natId(P.n)], [NT_T('상태'), a.state ? stateKo(a.state) : NIL], ...side(NT_T('요청자'), c.req), ...side(NT_T('수락자'), c.acc), ...(c.exp ? [[NT_T('만료 시간'), String(c.exp)]] : [])]
+      : [['ID', natId(P.n)], [NT_T('이 VPC'), v ? v.name : '?'], [NT_T('상대'), ppPeer(P)], ...(a.state ? [[NT_T('상태'), stateKo(a.state)]] : [])]
     const pid = natId(P.n)
     // 라우팅 테이블 칸(콘솔 「Route tables」 탭) = 이 피어링으로 경로를 둔 테이블(양쪽 VPC 중 이 화면에 있는 것 전부) — 라우팅 테이블 ID (이름) · VPC · 기본 · 연결 대상
     const rtRows = []
     for (const [vid, L] of M.list) for (const r of L) {
       if (r.type !== 'route_table' || !r.rt || !r.rt.routes.some((x) => x.t === pid)) continue
       const vv = M.vpcs.get(vid); const n = r.rt.assoc.length
-      rtRows.push({ c: [idNm(r.id, r.name), vv ? idNm(natId(vv.n), vv.named ? vv.name : null) : NIL, r.rt.main ? '예' : '아니요', n === 1 ? natId((M.subnets.get(r.rt.assoc[0]) || {}).n || { id: r.rt.assoc[0] }) : `${n} 서브넷`], tk: vv ? [vv.id] : [] })
+      rtRows.push({ c: [idNm(r.id, r.name), vv ? idNm(natId(vv.n), vv.named ? vv.name : null) : NIL, r.rt.main ? NT_T('예') : NT_T('아니요'), n === 1 ? natId((M.subnets.get(r.rt.assoc[0]) || {}).n || { id: r.rt.assoc[0] }) : NT_T('{0} 서브넷', [n])], tk: vv ? [vv.id] : [] })
     }
     rtRows.sort((x, y) => (x.c[1] < y.c[1] ? -1 : x.c[1] > y.c[1] ? 1 : 0) || (x.c[0] < y.c[0] ? -1 : 1))
     const one = (label, cols, rs, o = {}) => ({ label, n: o.nc ? null : rs.length, nc: !!o.nc, groups: rs.length ? [{ h: '', rows: [], tbl: tbl(label, cols, rs, o) }] : [], empty: o.nc ? NC : '(0)' })
-    const secs = [one('라우팅 테이블', [{ h: '라우팅 테이블 ID', w: 250, id: true }, { h: 'VPC ID', w: 230, id: true }, { h: '기본', w: 60 }, { h: '연결 대상', w: 220, id: true }], rtRows, { wrap: 2 })]
+    const secs = [one(NT_T('라우팅 테이블'), [{ h: NT_T('라우팅 테이블 ID'), w: 250, id: true }, { h: 'VPC ID', w: 230, id: true }, { h: NT_T('기본'), w: 60 }, { h: NT_T('연결 대상'), w: 220, id: true }], rtRows, { wrap: 2 })]
     // DNS 칸(콘솔 「DNS」 탭) — 원격 VPC 에서 DNS 확인 허용 · 키가 없으면(못 읽음·옛 판) 칸 자체가 수집 안 함
     if (c) {
-      const dn = [['요청자 VPC', c.req], ['수락자 VPC', c.acc]].filter(([, s]) => s && typeof s.dns === 'boolean').map(([l, s]) => ({ c: [`${l} — ${idNm(s.vpc, vpcOf(s.vpc))}`, yesNo(s.dns)] }))
-      secs.push(dn.length ? one('DNS', [{ h: 'VPC', w: 380, id: true }, { h: '원격 VPC 에서 DNS 확인 허용', w: 170 }], dn, { wrap: 1 }) : one('DNS', [], [], { nc: true }))
+      const dn = [[NT_T('요청자 VPC'), c.req], [NT_T('수락자 VPC'), c.acc]].filter(([, s]) => s && typeof s.dns === 'boolean').map(([l, s]) => ({ c: [`${l} — ${idNm(s.vpc, vpcOf(s.vpc))}`, yesNo(s.dns)] }))
+      secs.push(dn.length ? one('DNS', [{ h: 'VPC', w: 380, id: true }, { h: NT_T('원격 VPC 에서 DNS 확인 허용'), w: 170 }], dn, { wrap: 1 }) : one('DNS', [], [], { nc: true }))
     }
     // 예외 E4 — 이 피어링으로 실제로 나가는 서브넷(콘솔에 없는 거꾸로 계산 · 라우팅 테이블 칸 아래)
-    secs.push(gwRouteSec('이 피어링으로 라우트를 보내는 서브넷', P.pcx))
+    secs.push(gwRouteSec(NT_T('이 피어링으로 라우트를 보내는 서브넷'), P.pcx))
     const nm = named(P.n) ? P.n.name : null
-    return { title: c ? (nm ? `${pid} / ${nm}` : pid) : 'VPC 피어링', sub: 'VPC 아래쪽 변의 작은 원 — 이 VPC 의 서브넷이 이 피어링으로 나가는 지점입니다. 점선이 여기서 시작합니다.', rows, secs }
+    return { title: c ? (nm ? `${pid} / ${nm}` : pid) : NT_T('VPC 피어링'), sub: NT_T('VPC 아래쪽 변의 작은 원 — 이 VPC 의 서브넷이 이 피어링으로 나가는 지점입니다. 점선이 여기서 시작합니다.'), rows, secs }
   }
   function detPort (p, how) {
     const v = M.vpcs.get(p.vpc); const a = p.n.attrs || {}
     // VGW 포트 = 합성 칸(엔진 노드 없음 — VGW 의 붙은 VPC 속성) · 붙은 서브넷이라는 개념이 없다(VGW 는 VPC 에 붙는다)
-    if (p.vgw) return { title: 'VGW 연결', sub: how.replace('TGW', 'VGW'), rows: [['VGW', hubName(p.tgw)], ['VPC', v ? v.name : '?'], ['ID', natId(M.hubs.get(p.tgw).n)], ['상태', stateKo('attached')]], secs: [] }
+    if (p.vgw) return { title: NT_T('VGW 연결'), sub: how.replace('TGW', 'VGW'), rows: [['VGW', hubName(p.tgw)], ['VPC', v ? v.name : '?'], ['ID', natId(M.hubs.get(p.tgw).n)], [NT_T('상태'), stateKo('attached')]], secs: [] }
     // Cloud WAN(§17.39) · VPC Lattice(§17.40) 포트 = 합성 칸(엔진 노드 없음 — 연결 선의 속성) · Cloud WAN 은 그 코어 네트워크로 가는 라우트를 든다
     if (p.cwan) {
       const ea = p.ea || {}; const subs = v ? v.subnets.filter((s) => s.exits.has(p.tgw)).map((s) => s.id).sort((x, y) => subnetName(x).localeCompare(subnetName(y)) || (x < y ? -1 : 1)) : []
-      return { title: 'Cloud WAN 연결', sub: how, rows: [['코어 네트워크', hubName(p.tgw)], ['VPC', v ? v.name : '?'], ['세그먼트', (ea.segments || []).join(', ') || '?'],
-        ['엣지 위치', (ea.edge_locations || []).map(gaRegion).join(', ') || '?'], ['연결 ID', (ea.attachment_ids || []).join(', ') || '?'], ...(ea.state ? [['상태', stateKo(ea.state)]] : [])],
-      secs: [sec('이 코어 네트워크로 라우트를 보내는 서브넷', subs.map((sid) => ({ a: M.subnets.get(sid).routes.filter((r) => r.t === p.tgw).map((r) => r.d || '(목적지 미상)').join(' · ') || '라우트', b: subnetName(sid), tk: [sid] })))] }
+      return { title: NT_T('Cloud WAN 연결'), sub: how, rows: [[NT_T('코어 네트워크'), hubName(p.tgw)], ['VPC', v ? v.name : '?'], [NT_T('세그먼트'), (ea.segments || []).join(', ') || '?'],
+        [NT_T('엣지 위치'), (ea.edge_locations || []).map(gaRegion).join(', ') || '?'], [NT_T('연결 ID'), (ea.attachment_ids || []).join(', ') || '?'], ...(ea.state ? [[NT_T('상태'), stateKo(ea.state)]] : [])],
+      secs: [sec(NT_T('이 코어 네트워크로 라우트를 보내는 서브넷'), subs.map((sid) => ({ a: M.subnets.get(sid).routes.filter((r) => r.t === p.tgw).map((r) => r.d || NT_T('(목적지 미상)')).join(' · ') || NT_T('라우트'), b: subnetName(sid), tk: [sid] })))] }
     }
-    if (p.lsn) return { title: 'VPC Lattice 연결', sub: how, rows: [['서비스 네트워크', hubName(p.tgw)], ['VPC', v ? v.name : '?'], ...((p.ea || {}).state ? [['상태', stateKo(p.ea.state)]] : [])], secs: [] }
+    if (p.lsn) return { title: NT_T('VPC Lattice 연결'), sub: how, rows: [[NT_T('서비스 네트워크'), hubName(p.tgw)], ['VPC', v ? v.name : '?'], ...((p.ea || {}).state ? [[NT_T('상태'), stateKo(p.ea.state)]] : [])], secs: [] }
     // TGW Connect 는 같은 짝 어태치먼트가 아니다 — 이 어태치먼트 **위**로 지나가는 GRE 오버레이다(아래 줄 · 점선)
     const dup = [...M.hidden.entries()].filter(([id, r]) => r === p.id && !M.cnx.some((c) => c.id === id)).map(([id]) => X.mById.get(id)).filter(Boolean)
     const rides = M.cnx.filter((c) => c.port === p.id)
     // 엔진은 어태치먼트의 서브넷을 모으지 않는다(`DescribeTransitGatewayAttachments` 에 없다) — VPC id 를 이 줄에 적던 어댑터를 고쳤다
-    const subs = [a.subnets, ...dup.map((n) => (n.attrs || {}).subnets)].filter((x) => x != null && x !== '').map((x) => (typeof x === 'number' ? `${x}개` : x)).join('\n')
-    const extra = [...(dup.length ? [['같은 짝의 어태치먼트', dup.map(natId).join(', ')]] : []),
-      ...(rides.length ? [['TGW Connect', rides.map((c) => `${disp(c.n)} — 이 어태치먼트 위로 GRE 터널이 지나갑니다(점선)`).join('\n')]] : [])]
+    const subs = [a.subnets, ...dup.map((n) => (n.attrs || {}).subnets)].filter((x) => x != null && x !== '').map((x) => (typeof x === 'number' ? NT_T('{0}개', [x]) : x)).join('\n')
+    const extra = [...(dup.length ? [[NT_T('같은 짝의 어태치먼트'), dup.map(natId).join(', ')]] : []),
+      ...(rides.length ? [['TGW Connect', rides.map((c) => NT_T('{0} — 이 어태치먼트 위로 GRE 터널이 지나갑니다(점선)', [disp(c.n)])).join('\n')]] : [])]
     const c = p.n.con
     // 콘솔 Transit Gateway Attachment 상세(통합정리 2-6 · 검사 166) — 「세부 정보」 콘솔 순서 + 「서브넷 (N)」 칸.
     //   🔴 옛 「연결된 서브넷 — 수집 안 함」(R-03) — 엔진이 이제 VPC 어태치먼트의 서브넷을 모은다(`DescribeTransitGatewayVpcAttachments`).
     //   못 읽었으면 「읽지 못함」(거부) · 옛 판(키 없음)만 아래 옛 줄로 남긴다
     if (c && (Array.isArray(c.subnets) || c.subnetsDenied || c.assocRt || c.assocState)) {
       const tg = M.hubs.get(p.tgw)
-      const rows = [['Transit Gateway Attachment ID', natId(p.n)], ['상태', a.state ? stateKo(a.state) : NIL], ['리소스 유형', TGW_RES[String(c.resType || 'vpc').toLowerCase()] || 'VPC'],
-        ['연결 상태', c.assocState ? conState('tgw', c.assocState) : NIL], ['Transit Gateway ID', tg ? idNm(natId(tg.n), tg.named ? tg.name : null) : (c.tgwId || NIL)],
-        ['리소스 소유자 ID', c.owner ? X.acctText(c.owner) : NIL], ['리소스 ID', idNm(c.resId || (v ? natId(v.n) : NIL), v && v.named ? v.name : null)],
-        ['연결 라우팅 테이블 ID', c.assocRt || NIL], ...[['DNS 지원', c.dns], ['보안 그룹 참조 지원', c.sgRef], ['IPv6 지원', c.ipv6], ['어플라이언스 모드 지원', c.appliance]]
+      const rows = [['Transit Gateway Attachment ID', natId(p.n)], [NT_T('상태'), a.state ? stateKo(a.state) : NIL], [NT_T('리소스 유형'), TGW_RES[String(c.resType || 'vpc').toLowerCase()] || 'VPC'],
+        [NT_T('연결 상태'), c.assocState ? conState('tgw', c.assocState) : NIL], ['Transit Gateway ID', tg ? idNm(natId(tg.n), tg.named ? tg.name : null) : (c.tgwId || NIL)],
+        [NT_T('리소스 소유자 ID'), c.owner ? X.acctText(c.owner) : NIL], [NT_T('리소스 ID'), idNm(c.resId || (v ? natId(v.n) : NIL), v && v.named ? v.name : null)],
+        [NT_T('연결 라우팅 테이블 ID'), c.assocRt || NIL], ...[[NT_T('DNS 지원'), c.dns], [NT_T('보안 그룹 참조 지원'), c.sgRef], [NT_T('IPv6 지원'), c.ipv6], [NT_T('어플라이언스 모드 지원'), c.appliance]]
           .filter(([, x]) => x !== undefined).map(([k, x]) => [k, enDis(x)]), ...extra]
-      const SN_COLS = [{ h: '서브넷 ID', w: 320, id: true }, { h: '가용 영역', w: 120 }]
+      const SN_COLS = [{ h: NT_T('서브넷 ID'), w: 320, id: true }, { h: NT_T('가용 영역'), w: 120 }]
       const sn = Array.isArray(c.subnets) ? c.subnets.map((s, i) => { const sid = (c.subnetNodes || [])[i]; const S = sid && M.subnets.get(sid)
         return { az: S ? S.az : '', c: [idNm(s, S && S.named ? S.name : null), S ? S.az : NIL], tk: S ? [sid] : [] } }).sort((x, y) => (x.az < y.az ? -1 : x.az > y.az ? 1 : 0) || (x.c[0] < y.c[0] ? -1 : 1)) : []
-      const snSec = c.subnetsDenied ? { label: '서브넷', n: null, nc: false, ur: true, groups: [], empty: UNREAD }
-        : Array.isArray(c.subnets) ? { label: '서브넷', n: sn.length, nc: false, groups: sn.length ? [{ h: '', rows: [], tbl: tbl('서브넷', SN_COLS, sn) }] : [], empty: '(0)' }
-          : missSec('서브넷', { id: p.n.id })
+      const snSec = c.subnetsDenied ? { label: NT_T('서브넷'), n: null, nc: false, ur: true, groups: [], empty: UNREAD }
+        : Array.isArray(c.subnets) ? { label: NT_T('서브넷'), n: sn.length, nc: false, groups: sn.length ? [{ h: '', rows: [], tbl: tbl(NT_T('서브넷'), SN_COLS, sn) }] : [], empty: '(0)' }
+          : missSec(NT_T('서브넷'), { id: p.n.id })
       const nm = named(p.n) ? p.n.name : null
       return { title: nm ? `${natId(p.n)} / ${nm}` : natId(p.n), sub: how, rows, secs: [snSec] }
     }
-    return { title: 'TGW 어태치먼트', sub: how, rows: [['TGW', hubName(p.tgw)], ['VPC', v ? v.name : '?'], ['ID', natId(p.n)], ...(a.state ? [['상태', stateKo(a.state)]] : []),
-      ['연결된 서브넷', subs || '수집 안 함'], ...extra], secs: [] }
+    return { title: NT_T('TGW 어태치먼트'), sub: how, rows: [['TGW', hubName(p.tgw)], ['VPC', v ? v.name : '?'], ['ID', natId(p.n)], ...(a.state ? [[NT_T('상태'), stateKo(a.state)]] : []),
+      [NT_T('연결된 서브넷'), subs || NT_T('수집 안 함')], ...extra], secs: [] }
   }
 
   // ======================================================================== 배치
   const cellMake = (it, mode = 'below') => {
     const W = mode === 'right' ? 104 : it.kind === 'igw' ? 96 : CW - 6
-    const l1 = svcOf(it); const l2 = it.ghost ? (it.outside ? it.other : it.xscope ? '범위 밖' : it.stub ? '다른 계정' : '읽지 못함') : hasNm(it) ? paren(it.name, W) : ''
+    const l1 = svcOf(it); const l2 = it.ghost ? (it.outside ? it.other : it.xscope ? NT_T('범위 밖') : it.stub ? NT_T('다른 계정') : NT_T('읽지 못함')) : hasNm(it) ? paren(it.name, W) : ''
     B.det.set(it.id, () => detItem(it))
     // nm·nmW = 형제 줄임(`fitIcons`)의 입력 — l2 는 형제를 다 모은 뒤 그 자리에서 다시 쓴다(위 `paren` 은 형제 없이 쓰일 때의 값)
     const nm = !it.ghost && hasNm(it) ? it.name : null
@@ -1864,8 +1867,8 @@
     for (const x of g) memReg(key, x)
     const run = g.filter((x) => x.state === 'running').length
     const l1 = `${SVC[k0]} ×${g.length}`
-    B.det.set(key, () => ({ title: l1, sub: `${TYPE_KO[k0]} 묶음 — 같은 서브넷·같은 종류가 ${AGG_T}개를 넘어 하나로 묶였습니다`,
-      rows: [['서브넷', subnetName(g[0].subnets[0])], ...(k0 === 'ec2' && g.some((x) => x.state) ? [['실행 / 그 외', `${run} / ${g.length - run}`]] : [])],
+    B.det.set(key, () => ({ title: l1, sub: NT_T('{0} 묶음 — 같은 서브넷·같은 종류가 {1}개를 넘어 하나로 묶였습니다', [TYPE_KO[k0], AGG_T]),
+      rows: [[NT_T('서브넷'), subnetName(g[0].subnets[0])], ...(k0 === 'ec2' && g.some((x) => x.state) ? [[NT_T('실행 / 그 외'), `${run} / ${g.length - run}`]] : [])],
       members: g.map((x) => ({ name: x.name, sub: [x.itype, x.state && stateKo(x.state), natId(x.n)].filter(Boolean).join(' · '), key: x.id })), secs: itemSecs({ kind: k0, n: { attrs: {} }, subnets: [], aggKey: key }) })) // 묶음도 낱개와 같은 칸(§17.11)
     return { key, kind: k0, acct: g[0].acct, l1, l2: '', agg: g.length, subs: [g[0].subnets[0]], ids: g.map((x) => x.id) }
   }
@@ -1900,8 +1903,8 @@
     const k = g.kind; const key = `aws:g:${k}:${where}`; const ids = g.members.map((x) => x.id)
     const l1 = `${SVC[k]} ×${g.members.length}`
     for (const x of g.members) memReg(key, x) // 목록 줄 → 그 낱개 정보창(§17.11 · 검사 162) — 낱개 칸이 없으니 `B.det` 이 아니라 멤버 표에
-    B.det.set(key, () => ({ title: l1, sub: `선이 이어지지 않은 ${SVC[k]} ${g.members.length}개를 하나로 묶었습니다 — 선이 이어진 것은 따로 서 있습니다`,
-      rows: [['위치', place], ['계정', acctName(ai)]],
+    B.det.set(key, () => ({ title: l1, sub: NT_T('선이 이어지지 않은 {0} {1}개를 하나로 묶었습니다 — 선이 이어진 것은 따로 서 있습니다', [SVC[k], g.members.length]),
+      rows: [[NT_T('위치'), place], [NT_T('계정'), acctName(ai)]],
       // CloudFront 줄 = 콘솔이 배포를 구분하는 「설명」 먼저(🔴 비교정리 C R-13 — 「CloudFront ×7」 목록이 도메인뿐이라 어느 배포인지 몰랐다) · 도메인은 아래 작은 글씨
       members: g.members.map((x) => { const cm = k === 'cf' && x.n.con && x.n.con.comment
         return { name: cm || x.name, sub: [cm ? x.name : '', x.state && stateKo(x.state), natId(x.n)].filter(Boolean).join(' · '), key: x.id } }), secs: [...mergeSecs(g.members), ...relSec(key)] }))
@@ -1914,8 +1917,8 @@
     const key = `aws:g:vpce:${v.id}`
     for (const x of list) memReg(key, x)
     const nI = list.filter((x) => x.epType === 'Interface').length; const nG = list.filter((x) => x.epType === 'Gateway').length
-    B.det.set(key, () => ({ title: `${SVC.vpce} ×${list.length}`, sub: `인터페이스 ${nI} · 게이트웨이 ${nG}`, rows: [['VPC', v.name], ['계정', acctName(v.acct)]],
-      members: list.map((x) => ({ name: x.svc, sub: `${x.epType === 'Gateway' ? '게이트웨이' : '인터페이스'} · ${natId(x.n)}${x.subnets.length ? ' · ' + x.subnets.map(subnetName).join(', ') : x.epType === 'Gateway' ? '' : ' · 서브넷 없음'}`, key: x.id })),   // 개수만 적으면 엔드포인트가 선 서브넷을 이 화면 어디서도 못 본다
+    B.det.set(key, () => ({ title: `${SVC.vpce} ×${list.length}`, sub: NT_T('인터페이스 {0} · 게이트웨이 {1}', [nI, nG]), rows: [['VPC', v.name], [NT_T('계정'), acctName(v.acct)]],
+      members: list.map((x) => ({ name: x.svc, sub: `${x.epType === 'Gateway' ? NT_T('게이트웨이') : NT_T('인터페이스')} · ${natId(x.n)}${x.subnets.length ? ' · ' + x.subnets.map(subnetName).join(', ') : x.epType === 'Gateway' ? '' : NT_T(' · 서브넷 없음')}`, key: x.id })),   // 개수만 적으면 엔드포인트가 선 서브넷을 이 화면 어디서도 못 본다
       secs: [...(list.some((x) => Array.isArray(x.n.epUnres)) ? [epSec({ n: {} }, key, list)] : []), ...lbInSec({}, key), ...relSec(key)] }))
     return { key, kind: 'vpce', acct: v.acct, l1: SVC.vpce, l2: `×${list.length}`, agg: list.length, subs: [], ids: list.map((x) => x.id) }
   }
@@ -1931,12 +1934,12 @@
   const iconL = (c) => c.x + CW / 2 - IC / 2 - 1; const iconR = (c) => c.x + CW / 2 + IC / 2 + 1; const iconY = (c) => c.y + 2 + IC / 2
   const kindOfTarget = (tk) => (M.ports.has(tk) ? 'port' : M.pp.has(tk) ? 'pcx' : B.cellKind.get(tk) || '')
   // ENI 주인으로 가는 라우트(2.8.0 · P2-2 — NVA·NAT 인스턴스·어플라이언스) = 그 자원 종류 + 「(ENI)」
-  const whyOf = (tk) => (M.ports.has(tk) && M.ports.get(tk).vgw ? '가상 프라이빗 게이트웨이(VGW)' : M.ports.has(tk) && M.ports.get(tk).cwan ? 'Cloud WAN 코어 네트워크' : 0) || ({ port: 'Transit Gateway', pcx: 'VPC 피어링', igw: 'Internet Gateway', nat: 'NAT Gateway', vpce: 'VPC Endpoint(게이트웨이)' }[kindOfTarget(tk)] ||
+  const whyOf = (tk) => (M.ports.has(tk) && M.ports.get(tk).vgw ? NT_T('가상 프라이빗 게이트웨이(VGW)') : M.ports.has(tk) && M.ports.get(tk).cwan ? NT_T('Cloud WAN 코어 네트워크') : 0) || ({ port: 'Transit Gateway', pcx: NT_T('VPC 피어링'), igw: 'Internet Gateway', nat: 'NAT Gateway', vpce: NT_T('VPC Endpoint(게이트웨이)') }[kindOfTarget(tk)] ||
     (TYPE_KO[kindOfTarget(tk)] ? `${TYPE_KO[kindOfTarget(tk)]}(ENI)` : '?'))
-  const ppPeer = (P) => (M.vpcs.has(P.other) ? 'VPC ' + M.vpcs.get(P.other).name : 'VPC · 수집 범위 밖')
-  const tgtName = (tk) => (M.ports.has(tk) ? hubName(M.ports.get(tk).tgw) : M.pp.has(tk) ? `VPC 피어링 → ${ppPeer(M.pp.get(tk))}` : B.cellL.get(tk) || tk)
-  const rdet = (sid, tk, from) => () => ({ title: '라우트로 나가는 길', sub: whyOf(tk), rows: [...(from ? [['출발', from]] : []), ['서브넷', subnetName(sid)], ['대상', tgtName(tk)]],
-    secs: [sec('이 길의 라우트', M.subnets.get(sid).routes.filter((r) => r.t && (r.t === tk || (M.ports.has(tk) && r.t === M.ports.get(tk).tgw) || (M.pp.has(tk) && r.t === M.pp.get(tk).pcx) || (B.cellIds.get(tk) || []).includes(r.t))).map((r) => ({ a: dstWord(M.subnets.get(sid), r.d) || '(목적지 미상)', b: nodeName(r.t), cls: r.bh ? 'bh' : '' })))] })
+  const ppPeer = (P) => (M.vpcs.has(P.other) ? 'VPC ' + M.vpcs.get(P.other).name : NT_T('VPC · 수집 범위 밖'))
+  const tgtName = (tk) => (M.ports.has(tk) ? hubName(M.ports.get(tk).tgw) : M.pp.has(tk) ? NT_T('VPC 피어링 → {0}', [ppPeer(M.pp.get(tk))]) : B.cellL.get(tk) || tk)
+  const rdet = (sid, tk, from) => () => ({ title: NT_T('라우트로 나가는 길'), sub: whyOf(tk), rows: [...(from ? [[NT_T('출발'), from]] : []), [NT_T('서브넷'), subnetName(sid)], [NT_T('대상'), tgtName(tk)]],
+    secs: [sec(NT_T('이 길의 라우트'), M.subnets.get(sid).routes.filter((r) => r.t && (r.t === tk || (M.ports.has(tk) && r.t === M.ports.get(tk).tgw) || (M.pp.has(tk) && r.t === M.pp.get(tk).pcx) || (B.cellIds.get(tk) || []).includes(r.t))).map((r) => ({ a: dstWord(M.subnets.get(sid), r.d) || NT_T('(목적지 미상)'), b: nodeName(r.t), cls: r.bh ? 'bh' : '' })))] })
   const tgtOf = (v, t, epCell) => {
     const ty = (X.mById.get(t) || {}).type
     if (ty === 'transit_gateway' || ty === 'vpn_gateway' || ty === 'core_network') return M.portOf.get(v.id + '|' + t) || null
@@ -1979,11 +1982,11 @@
     Lo.inet = { key, kind: 'inet', acct: v.acct, l1: SVC.inet, l2: '', subs: [], ids: [], synth: true, cx: -INET_DX, cy: g.cy }
     B.cellKind.set(key, 'inet'); B.cellL.set(key, SVC.inet); B.cellIds.set(key, []); B.inet.set(key, { acct: v.acct, igw: g.key })
     const subs = [...dm.keys()].sort((a, b) => subnetName(a).localeCompare(subnetName(b)) || (a < b ? -1 : 1))
-    const dst = (sid) => [...dm.get(sid)].sort().join(' · ') || '기본 라우트'
-    B.det.set(key, () => ({ title: SVC.inet, sub: '이 도구가 그린 칸입니다 — 수집한 리소스가 아닙니다', rows: [['IGW', igwN], ['VPC', v.name], ['계정', acctName(v.acct)]],
-      secs: [sec('기본 라우트를 보내는 서브넷', subs.map((sid) => ({ a: dst(sid), b: subnetName(sid), tk: [sid] })))] }))
+    const dst = (sid) => [...dm.get(sid)].sort().join(' · ') || NT_T('기본 라우트')
+    B.det.set(key, () => ({ title: SVC.inet, sub: NT_T('이 도구가 그린 칸입니다 — 수집한 리소스가 아닙니다'), rows: [['IGW', igwN], ['VPC', v.name], [NT_T('계정'), acctName(v.acct)]],
+      secs: [sec(NT_T('기본 라우트를 보내는 서브넷'), subs.map((sid) => ({ a: dst(sid), b: subnetName(sid), tk: [sid] })))] }))
     Lo.lines.push({ a: g.key, b: key, kind: 'inet', arrow: false, pts: [[-IC / 2, g.cy], [-INET_DX + IC / 2, g.cy]],
-      det: () => ({ title: 'Internet Gateway ↔ 인터넷', sub: '이 VPC 의 기본 라우팅이 이 IGW 로 향합니다', rows: [['IGW', igwN], ['서브넷', subs.map(subnetName).join('\n')]], secs: [] }) })
+      det: () => ({ title: NT_T('Internet Gateway ↔ 인터넷'), sub: NT_T('이 VPC 의 기본 라우팅이 이 IGW 로 향합니다'), rows: [['IGW', igwN], [NT_T('서브넷'), subs.map(subnetName).join('\n')]], secs: [] }) })
     Lo.padL = INET_PAD
   }
   function finishVpc (v, C, FR, bottom, empty) {
@@ -2007,7 +2010,7 @@
     feeds.forEach((lb, j) => {
       const c = Lo.right.find((x) => x.key === lb.id); const Xl = laneX(rt.length + j); const top = VPC_HDR + 6
       Lo.lines.push({ a: Lo.igw.key, b: c.key, kind: 'route', arrow: true, pts: [[8, Lo.igw.cy - 10], [8, top], [Xl, top], [Xl, iconY(c)], [iconL(c), iconY(c)]],
-        det: () => ({ title: '인터넷 → 로드밸런서', sub: '인터넷용 LB 의 서브넷이 이 IGW 로 나갑니다', rows: [['서브넷', lb.subnets.map(subnetName).join('\n')]], secs: [] }) })
+        det: () => ({ title: NT_T('인터넷 → 로드밸런서'), sub: NT_T('인터넷용 LB 의 서브넷이 이 IGW 로 나갑니다'), rows: [[NT_T('서브넷'), lb.subnets.map(subnetName).join('\n')]], secs: [] }) })
     })
   }
   // IGW 도 칸이다 — 빼면 범례에 IGW 줄이 없고 서브넷 → IGW 선 정보창이 대상 이름 대신 원 id 를 쓴다(#45 리뷰)
@@ -2036,7 +2039,7 @@
       y += box.h + 10
     }
     if (O.az) Lo.azb = rows
-    const laneX = finishVpc(v, C, GL + azW, azs.length ? y - 10 : VPC_HDR + 14, !azs.length && '서브넷 없음')
+    const laneX = finishVpc(v, C, GL + azW, azs.length ? y - 10 : VPC_HDR + 14, !azs.length && NT_T('서브넷 없음'))
     if (igwIt) {
       const fp = Lo.subs.filter((s) => s.s.tier === 'public').sort((a, b) => a.row - b.row || a.col - b.col)[0]
       const iy = fp ? fp.y + 14 : rows[0] ? rows[0].y + azHdr + 14 : VPC_HDR + 26
@@ -2121,7 +2124,7 @@
       rows.push({ x: FL, y: top, w: azW, h, az: r.az }); y = top + h + 10
     }
     if (O.az) Lo.azb = rows
-    const laneX = finishVpc(v, C, FL + azW, rows.length ? y - 10 : VPC_HDR + 14, !rows.length && '표시할 리소스 없음')
+    const laneX = finishVpc(v, C, FL + azW, rows.length ? y - 10 : VPC_HDR + 14, !rows.length && NT_T('표시할 리소스 없음'))
     const isPub = (c) => c.subs.length === 1 && M.subnets.get(c.subs[0]).tier === 'public'
     let iy = VPC_HDR + 26
     if (igwIt) {
@@ -2222,7 +2225,7 @@
     const over = []
     const seq = (h) => {
       const g = lg.of.get(h.id); if (g && g.members[0] !== h) return
-      const c = g ? lineAggCell(g, R.region, ai, `리전 자원 줄 · ${regName(R.region)}`) : cellMake(h, 'right')
+      const c = g ? lineAggCell(g, R.region, ai, NT_T('리전 자원 줄 · {0}', [regName(R.region)])) : cellMake(h, 'right')
       if ((g || lg.free(h)) && hx + HW + 36 > cap) { over.push(c); return }
       R.hub.push({ ...c, hx, hy: hubTop }); hx += HW + 16 }
     for (const h of hubs.filter((h) => h.kind === 'dxcon')) seq(h)
@@ -2479,30 +2482,30 @@
     const wipedA = (a) => { const rs = regs.get(a); return rs.length ? !globsOf(a).length && rs.every(wipedR) : PM.has(X.accounts[a].id) }
     for (const a of accts) if (regs.get(a).length && wipedA(a)) PM.add(X.accounts[a].id)
     B.pm = PM
-    const warn = (x, y, all) => `<text x="${x}" y="${y}" text-anchor="end" fill="#d29922" font-size="11.5">${all ? '읽지 못함' : '일부 못 읽음'}</text>`
+    const warn = (x, y, all) => `<text x="${x}" y="${y}" text-anchor="end" fill="#d29922" font-size="11.5">${all ? NT_T('읽지 못함') : NT_T('일부 못 읽음')}</text>`
 
     // 계정 틀 이름표(§17.5 「계정은 이름으로 부른다」) — `계정 ` 과 ` (앞4…뒤4)` 는 그대로 두고 **이름만** 폭 예산 안으로 줄인다(형제 = 화면의 계정 틀 전부 · ①②③).
     //   예산 = 틀 폭 − 22(띠 여백) − 오른쪽 「일부 못 읽음」/「읽지 못함」 자리. 전체 이름은 그 계정 자원의 정보창 「계정」 줄 · 「계정:」 팝오버 줄
     const aTail = (a) => ` (${X.acctMask(X.acctNumOf(X.accounts[a]))})`
-    const aBud = (a) => acctW.get(a) - 22 - (PM.has(X.accounts[a].id) ? tw(wipedA(a) ? '읽지 못함' : '일부 못 읽음', 11.5) + 22 : 10)
-    const aNm = fitNames(accts.filter((a) => X.acctNameOf(X.accounts[a])).map((a) => ({ key: a, name: X.acctNameOf(X.accounts[a]), W: Math.max(24, aBud(a) - tw('계정 ' + aTail(a), 12)) })), 12)
-    const acctLab = (a) => (aNm.has(a) ? '계정 ' + aNm.get(a) + aTail(a) : acctName(a))
+    const aBud = (a) => acctW.get(a) - 22 - (PM.has(X.accounts[a].id) ? tw(wipedA(a) ? NT_T('읽지 못함') : NT_T('일부 못 읽음'), 11.5) + 22 : 10)
+    const aNm = fitNames(accts.filter((a) => X.acctNameOf(X.accounts[a])).map((a) => ({ key: a, name: X.acctNameOf(X.accounts[a]), W: Math.max(24, aBud(a) - tw(NT_T('계정 ') + aTail(a), 12)) })), 12)
+    const acctLab = (a) => (aNm.has(a) ? NT_T('계정 ') + aNm.get(a) + aTail(a) : acctName(a))
     for (const a of accts) {
       const an = X.accounts[a]; const ax = OX + acctX.get(a); const ay = OY + acctY.get(a)
       const lab = acctLab(a)
       out.box.push(`<g class="aw-acct" data-f="${esc(an.id)}"><rect x="${ax}" y="${ay}" width="${acctW.get(a)}" height="${acctH.get(a)}" rx="2" fill="none" stroke="#8b949e" stroke-width="1.4"/><rect x="${ax}" y="${ay}" width="${P2(tw(lab, 12) + 22)}" height="24" fill="#30363d"/><text x="${ax + 11}" y="${ay + 16.5}" fill="#e6edf3" font-weight="700" font-size="12">${esc(lab)}</text>` +
         (PM.has(an.id) ? warn(ax + acctW.get(a) - 10, ay + 16.5, wipedA(a)) : '') +
-        (regs.get(a).length ? '' : PM.has(an.id) ? `<text x="${ax + AG}" y="${ay + TOP + 20}" fill="#d29922" font-size="12">이 계정을 읽지 못했습니다 — 비어 있는 것이 아닙니다</text>` : `<text x="${ax + AG}" y="${ay + TOP + 20}" fill="#6e7681" font-size="12">표시할 리소스 없음</text>`) + '</g>')
+        (regs.get(a).length ? '' : PM.has(an.id) ? NT_T('<text x="{0}" y="{1}" fill="#d29922" font-size="12">이 계정을 읽지 못했습니다 — 비어 있는 것이 아닙니다</text>', [ax + AG, ay + TOP + 20]) : NT_T('<text x="{0}" y="{1}" fill="#6e7681" font-size="12">표시할 리소스 없음</text>', [ax + AG, ay + TOP + 20])) + '</g>')
       B.labels.push({ key: an.id, text: lab, frame: true })
       addBox(an.id, 'aws-acct', ax, ay, acctW.get(a), acctH.get(a), an, null)
       B.frames.push({ id: an.id, kind: 'acct', x: ax, y: ay, w: acctW.get(a), h: acctH.get(a), parent: null })
       const gws = globRow(a)
       if (gws.length) {
         const gx = ax + AG; const gy = ay + TOP; const gid = 'aws:glob:' + an.id; const gh = globH(a, regW.get(a)); const per = globPer(regW.get(a))
-        out.box.push(`<g class="aw-glob" data-f="${esc(gid)}"><rect x="${gx}" y="${gy}" width="${regW.get(a)}" height="${gh}" rx="2" fill="none" stroke="#6e7681" stroke-width="1.2" stroke-dasharray="6 4"/>${TILE.globe(gx + 8, gy + 6, '#30363d', '#c9d1d9')}<text x="${gx + 32}" y="${gy + 19}" fill="#8b949e" font-size="12.5">전역 · 리전에 속하지 않음</text></g>`)
+        out.box.push(NT_T('<g class="aw-glob" data-f="{0}"><rect x="{1}" y="{2}" width="{3}" height="{4}" rx="2" fill="none" stroke="#6e7681" stroke-width="1.2" stroke-dasharray="6 4"/>{5}<text x="{6}" y="{7}" fill="#8b949e" font-size="12.5">전역 · 리전에 속하지 않음</text></g>', [esc(gid), gx, gy, regW.get(a), gh, TILE.globe(gx + 8, gy + 6, '#30363d', '#c9d1d9'), gx + 32, gy + 19]))
         addBox(gid, 'aws-glob', gx, gy, regW.get(a), gh, synth(gid, 'aws-glob', an.id), an.id)
         B.frames.push({ id: gid, kind: 'glob', x: gx, y: gy, w: regW.get(a), h: gh, parent: an.id })
-        const gcs = gws.map((g) => (g.members ? lineAggCell(g, an.id, a, '전역 줄 · 리전에 속하지 않음') : cellMake(g, 'right'))); fitIcons(gcs)
+        const gcs = gws.map((g) => (g.members ? lineAggCell(g, an.id, a, NT_T('전역 줄 · 리전에 속하지 않음')) : cellMake(g, 'right'))); fitIcons(gcs)
         gws.forEach((g, i) => {
           const c = gcs[i]; const cx = gx + GLOB_X + (i % per) * (HW + 16) + IC / 2; const cy = gy + 26 + Math.floor(i / per) * GLOB_ROW + IC / 2 + 2
           out.ic.push(iconSvg(c, cx, cy, 'right'))
@@ -2513,8 +2516,8 @@
         const rx = OX + R.X; const ry = OY + R.Y
         const pm = PM.has(R.region) ? warn(rx + R.w - 10, ry + 20, wipedR(R)) : ''
         // 전멸한 리전의 빈 자리 = 「비어 있다」가 아니라 「못 읽었다」(불변식 ④ — 있는데 없다고 그리지 않는다) · 계정째 전멸이면 계정을 말한다
-        const emptyT = !R.empty ? '' : !wipedR(R) ? `<text x="${rx + 34}" y="${ry + REG_HDR + 22}" fill="#6e7681" font-size="12">표시할 리소스 없음</text>`
-          : `<text x="${rx + 34}" y="${ry + REG_HDR + 22}" fill="#d29922" font-size="12">${wipedA(a) ? '이 계정을 읽지 못했습니다 — 비어 있는 것이 아닙니다' : '이 리전을 읽지 못했습니다 — 비어 있는 것이 아닙니다'}</text>`
+        const emptyT = !R.empty ? '' : !wipedR(R) ? NT_T('<text x="{0}" y="{1}" fill="#6e7681" font-size="12">표시할 리소스 없음</text>', [rx + 34, ry + REG_HDR + 22])
+          : `<text x="${rx + 34}" y="${ry + REG_HDR + 22}" fill="#d29922" font-size="12">${wipedA(a) ? NT_T('이 계정을 읽지 못했습니다 — 비어 있는 것이 아닙니다') : NT_T('이 리전을 읽지 못했습니다 — 비어 있는 것이 아닙니다')}</text>`
         out.box.push(`<g class="aw-reg" data-f="${esc(R.region)}"><rect x="${rx}" y="${ry}" width="${R.w}" height="${R.h}" rx="2" fill="none" stroke="#6e7681" stroke-width="1.2" stroke-dasharray="6 4"/>${TILE.region(rx + 8, ry + 6)}<text x="${rx + 34}" y="${ry + 20}" fill="#8b949e" font-size="12.5">${esc(regName(R.region))}</text>${pm}` +
           emptyT + '</g>')
         B.labels.push({ key: R.region, text: regName(R.region), frame: true })
@@ -2596,9 +2599,9 @@
             const P = M.ports.get(p.key); const pc = P.vgw ? COL.vgw : P.cwan ? COL.cwan : P.lsn ? COL.lsn : COL.tgw
             out.ic.push(`<g class="aw-pt" data-k="${esc(p.key)}" data-kind="${P.vgw ? 'vgwport' : P.cwan ? 'cwanport' : P.lsn ? 'lsnport' : 'port'}" data-subs=""><rect class="aw-hit" x="${px - 11}" y="${py - 11}" width="22" height="22" fill="transparent"/>${portSvg(px, py, pc)}</g>`)
             B.icon.set(p.key, { cx: px, cy: py }); B.rect.set(p.key, { x: px - 9, y: py - 9, w: 18, h: 18 }); B.col.set(p.key, pc)
-            B.det.set(p.key, () => detPort(P, P.vgw ? 'VPC 테두리의 작은 원 — 이 VPC 가 VGW 에 연결된 지점입니다.' : P.cwan ? 'VPC 테두리의 작은 원 — 이 VPC 가 Cloud WAN 코어 네트워크에 연결된 지점입니다.'
-              : P.lsn ? 'VPC 테두리의 작은 원 — 이 VPC 가 VPC Lattice 서비스 네트워크에 연결된 지점입니다. 이 VPC 안의 클라이언트가 그 네트워크의 서비스를 이름으로 부릅니다.'
-                : 'VPC 테두리의 작은 원 — 이 VPC 가 TGW 에 연결된 지점입니다. 연결된 서브넷은 아래 칸에 있습니다.'))
+            B.det.set(p.key, () => detPort(P, P.vgw ? NT_T('VPC 테두리의 작은 원 — 이 VPC 가 VGW 에 연결된 지점입니다.') : P.cwan ? NT_T('VPC 테두리의 작은 원 — 이 VPC 가 Cloud WAN 코어 네트워크에 연결된 지점입니다.')
+              : P.lsn ? NT_T('VPC 테두리의 작은 원 — 이 VPC 가 VPC Lattice 서비스 네트워크에 연결된 지점입니다. 이 VPC 안의 클라이언트가 그 네트워크의 서비스를 이름으로 부릅니다.')
+                : NT_T('VPC 테두리의 작은 원 — 이 VPC 가 TGW 에 연결된 지점입니다. 연결된 서브넷은 아래 칸에 있습니다.')))
             const hid = [...M.hidden.entries()].filter(([, r]) => r === p.key).map(([id]) => id)
             addBox(p.key, 'aws-port', px - 9, py - 9, 18, 18, P.n, v.id, { border: true, ...(hid.length ? { hiddenIds: hid } : {}) })
           }
@@ -2626,10 +2629,10 @@
             const P = B.icon.get(p.key); const Tt = B.icon.get(p.tgw); if (!P || !Tt) continue
             const Pp = M.ports.get(p.key); const RH = regOf(M.hubs.get(p.tgw).region)
             // VPC Lattice 연결(§17.40) = 어태치먼트와 같은 길 · Lattice 색(선 종류 `lsnatt`)
-            const ak = Pp.lsn ? 'lsnatt' : 'att'; const how = Pp.lsn ? '이 선이 VPC Lattice 서비스 네트워크 연결입니다' : '이 선이 TGW 연결입니다'
+            const ak = Pp.lsn ? 'lsnatt' : 'att'; const how = Pp.lsn ? NT_T('이 선이 VPC Lattice 서비스 네트워크 연결입니다') : NT_T('이 선이 TGW 연결입니다')
             const ex = OX + RH.X + RH.attE.get(p.key); const tb = Tt.cy + IC / 2
             if (RH !== R) {
-              pushLine(p.key, p.tgw, ak, null, () => detPort(Pp, `${how} — 다른 계정의 ${Pp.lsn ? '서비스 네트워크' : 'TGW'}`), false, { xacct: true })
+              pushLine(p.key, p.tgw, ak, null, () => detPort(Pp, NT_T('{0} — 다른 계정의 {1}', [how, Pp.lsn ? NT_T('서비스 네트워크') : 'TGW'])), false, { xacct: true })
               xAtt.push({ l: B.lines[B.lines.length - 1], va: L.v.acct, ha: M.hubs.get(p.tgw).acct, s: [[P.cx, P.cy - 9], [P.cx, ry + R.attY.get(p.key)]],
                 yh: OY + RH.Y + RH.attY.get(p.key), e: [[ex, tb]] })
               continue
@@ -2684,15 +2687,15 @@
     for (const p of M.tgwPeers) {
       hubLine(p.a, p.b, 'tgwpeer', () => {
         const A = M.hubs.get(p.a); const Bh = M.hubs.get(p.b)
-        return { title: 'TGW 피어링', sub: `${A.name} ↔ ${Bh.name}`, rows: [['계정', `${acctName(A.acct)} · ${X.mById.get(A.region).name} ↔ ${acctName(Bh.acct)} · ${X.mById.get(Bh.region).name}`],
-          ...(p.att ? [['어태치먼트', natId(X.mById.get(p.att))]] : [])], secs: [] }
+        return { title: NT_T('TGW 피어링'), sub: `${A.name} ↔ ${Bh.name}`, rows: [[NT_T('계정'), `${acctName(A.acct)} · ${X.mById.get(A.region).name} ↔ ${acctName(Bh.acct)} · ${X.mById.get(Bh.region).name}`],
+          ...(p.att ? [[NT_T('어태치먼트'), natId(X.mById.get(p.att))]] : [])], secs: [] }
       }, p.att ? { rep: [p.att], att: p.att } : null)
     }
     for (const p of M.stubLines) {
       hubLine(p.a, p.b, 'tgwpeer', () => {
         const st = M.hubs.get(p.b); const a = st.n.attrs || {}
-        if (st.xscope) return { title: 'TGW 피어링 · 다른 계정', sub: '보기 범위 밖', rows: [['TGW', hubName(p.a)], ['상대 계정', acctName(st.xacct)]], secs: [] }
-        return { title: 'TGW 피어링 · 다른 계정', sub: '수집 범위 밖', rows: [['TGW', hubName(p.a)], ...attrRows(st.n)], secs: [] }
+        if (st.xscope) return { title: NT_T('TGW 피어링 · 다른 계정'), sub: NT_T('보기 범위 밖'), rows: [['TGW', hubName(p.a)], [NT_T('상대 계정'), acctName(st.xacct)]], secs: [] }
+        return { title: NT_T('TGW 피어링 · 다른 계정'), sub: NT_T('수집 범위 밖'), rows: [['TGW', hubName(p.a)], ...attrRows(st.n)], secs: [] }
       })
     }
     // VPC 피어링(점선): VPC 밑 → 그 줄 아래 차선 → (계정 사이 틈) → 상대 VPC 밑
@@ -2708,7 +2711,7 @@
       const lane = (x) => OY + x.R.Y + x.R.contentBottom + 20 + PEER_LANE * li.get(x.R)
       const [ax, ab] = ppExit(A.L, p.pcx); const [bx, bb] = ppExit(Bv.L, p.pcx)
       const pts = A.L.v.acct === Bv.L.v.acct ? [[ax, ab], [ax, lane(A)], [bx, lane(A)], [bx, bb]] : [[ax, ab], [ax, lane(A)], ...across(A.L.v.acct, lane(A), Bv.L.v.acct, lane(Bv)), [bx, lane(Bv)], [bx, bb]]
-      pushLine(A.L.v.id, Bv.L.v.id, 'peer', pts, () => ({ title: 'VPC 피어링', sub: disp(p.n), rows: [['ID', natId(p.n)], ...attrRows(p.n), ...(p.n.attrs && p.n.attrs.state ? [['상태', stateKo(p.n.attrs.state)]] : [])], secs: [] }), false, { pcx: p.pcx, rep: [p.pcx] })
+      pushLine(A.L.v.id, Bv.L.v.id, 'peer', pts, () => ({ title: NT_T('VPC 피어링'), sub: disp(p.n), rows: [['ID', natId(p.n)], ...attrRows(p.n), ...(p.n.attrs && p.n.attrs.state ? [[NT_T('상태'), stateKo(p.n.attrs.state)]] : [])], secs: [] }), false, { pcx: p.pcx, rep: [p.pcx] })
     }
     // 범위 밖 피어 VPC(점선): VPC 밑 → 리전 밑 차선 → 흐린 VPC 칸 위
     for (const R of [...regs.values()].flat()) {
@@ -2717,7 +2720,7 @@
         const [ax, ab] = ppExit(A.L, xc.xp.pcx); const lane = OY + R.Y + R.contentBottom + 28 + R.peerPL
         const pts = Math.abs(ax - PG.cx) < 0.5 ? [[ax, ab], [ax, PG.cy - IC / 2]] : [[ax, ab], [ax, lane], [PG.cx, lane], [PG.cx, PG.cy - IC / 2]]
         const p = xc.xp
-        pushLine(p.a, xc.key, 'peer', pts, () => ({ title: 'VPC 피어링 · 범위 밖', sub: disp(p.n), rows: [['ID', natId(p.n)], ['상대 VPC', p.it.side.vpc], ...attrRows(p.n), ...(p.n.attrs && p.n.attrs.state ? [['상태', stateKo(p.n.attrs.state)]] : [])], secs: [] }), false, { pcx: p.pcx, rep: [p.pcx] })
+        pushLine(p.a, xc.key, 'peer', pts, () => ({ title: NT_T('VPC 피어링 · 범위 밖'), sub: disp(p.n), rows: [['ID', natId(p.n)], [NT_T('상대 VPC'), p.it.side.vpc], ...attrRows(p.n), ...(p.n.attrs && p.n.attrs.state ? [[NT_T('상태'), stateKo(p.n.attrs.state)]] : [])], secs: [] }), false, { pcx: p.pcx, rep: [p.pcx] })
       }
     }
     // DX 게이트웨이 ↔ TGW: TGW 위 → 리전 차선 → 계정 안 왼쪽 틈 → 전역 줄 아이콘 밑 → DX 게이트웨이 밑
@@ -2727,7 +2730,7 @@
       const y = OY + R.Y + REG_HDR + 9 + 3 * i; const Xl = leftX(Tt.acct); const gy = PG.cy + IC / 2 + 8 + 4 * i
       const sx = PT.cx - 8; const ex = PG.cx - 8
       pushLine(p.tgw, p.dxgw, 'dxtgw', [[sx, PT.cy - IC / 2], [sx, y], [Xl, y], [Xl, gy], [ex, gy], [ex, PG.cy + IC / 2]],
-        () => ({ title: 'TGW ↔ DX 게이트웨이', sub: '연결(association) — 온프레미스 경로가 이 TGW 로 들어옵니다', rows: [['TGW', hubName(p.tgw)], ['DX 게이트웨이', M.globs.get(p.dxgw).ghost ? '읽지 못함' : M.globs.get(p.dxgw).name], ['어태치먼트', natId(X.mById.get(p.att))]], secs: [] }), false, { att: p.att })
+        () => ({ title: NT_T('TGW ↔ DX 게이트웨이'), sub: NT_T('연결(association) — 온프레미스 경로가 이 TGW 로 들어옵니다'), rows: [['TGW', hubName(p.tgw)], [NT_T('DX 게이트웨이'), M.globs.get(p.dxgw).ghost ? NT_T('읽지 못함') : M.globs.get(p.dxgw).name], [NT_T('어태치먼트'), natId(X.mById.get(p.att))]], secs: [] }), false, { att: p.att })
     })
     // DX 연결 → DX 게이트웨이 · DX 게이트웨이 → VGW(사용자 결정 2026-10-26) — 같은 길 모양 · 차선은 TGW ↔ DXGW 다음 번호부터(서로 포개지지 않게)
     //   차선 번호 — 리전 머리 밑 = 그 리전 안 차례(리전 상자가 `dxlN` 만큼 자원 줄을 내렸다) · 전역 줄 밑 = 그 계정 안 차례
@@ -2741,10 +2744,10 @@
       const sx = PH.cx - 8; const ex = PG.cx - 8 + 3 * ((j % 3) - 1)
       const vif = p.kind === 'dxvif'
       pushLine(p.hub, p.dxgw, p.kind, [[sx, PH.cy - IC / 2], [sx, y], [Xl, y], [Xl, gy], [ex, gy], [ex, PG.cy + IC / 2]],
-        () => (vif ? { title: 'DX 연결 → DX 게이트웨이', sub: '가상 인터페이스(VIF)로 연결 — 온프레미스 경로가 이 게이트웨이로 들어옵니다',
-          rows: [['DX 연결', H.name], ['DX 게이트웨이', G.name], ['가상 인터페이스', p.vifs.map((v) => natId(X.mById.get(v))).join(', ')]], secs: [] }
-          : { title: 'DX 게이트웨이 → VGW', sub: '게이트웨이 연결(association) — 이 게이트웨이의 경로가 VGW 가 붙은 VPC 로 갑니다',
-            rows: [['DX 게이트웨이', G.name], ['VGW', H.name]], secs: [] }), false, {})
+        () => (vif ? { title: NT_T('DX 연결 → DX 게이트웨이'), sub: NT_T('가상 인터페이스(VIF)로 연결 — 온프레미스 경로가 이 게이트웨이로 들어옵니다'),
+          rows: [[NT_T('DX 연결'), H.name], [NT_T('DX 게이트웨이'), G.name], [NT_T('가상 인터페이스'), p.vifs.map((v) => natId(X.mById.get(v))).join(', ')]], secs: [] }
+          : { title: NT_T('DX 게이트웨이 → VGW'), sub: NT_T('게이트웨이 연결(association) — 이 게이트웨이의 경로가 VGW 가 붙은 VPC 로 갑니다'),
+            rows: [[NT_T('DX 게이트웨이'), G.name], ['VGW', H.name]], secs: [] }), false, {})
     })
     // Site-to-Site VPN(§17.1): VPN 연결 ↔ CGW · VGW · TGW — 아이콘 위 → 리전 줄 위 제 차선 → 상대 아이콘 위(화살표 없음).
     //   긴 선이 위 차선(짧은 선을 품는다 → 겹쳐 지나지 않는다) · 한 아이콘에 여러 선이면 끝을 옆으로 벌린다(TGW 는 오른쪽 — 왼쪽은 DX 차선)
@@ -2771,13 +2774,13 @@
         if (l.kind === 'lsvctgt') {
           // VPC Lattice 서비스 → Lambda(§17.40) = Lattice 색 1.5 · 같은 색 화살촉(함수 쪽) · 리전 줄 위 차선(VPN 선과 같은 길)
           const ea = (l.e && l.e.attrs) || {}; const sv = M.hubs.get(l.a)
-          pushLine(l.a, l.b, 'lsvctgt', [[xa, ta], [xa, y], [xb, y], [xb, tb]], () => ({ title: 'VPC Lattice 서비스 → Lambda 함수', sub: '이 서비스로 들어온 요청이 대상 그룹을 거쳐 이 함수로 전달됩니다',
-            rows: [['서비스', sv.name], ['Lambda 함수', ob.name], ['대상 그룹', (ea.target_groups || []).join(', ') || '?']], secs: [] }), true,
+          pushLine(l.a, l.b, 'lsvctgt', [[xa, ta], [xa, y], [xb, y], [xb, tb]], () => ({ title: NT_T('VPC Lattice 서비스 → Lambda 함수'), sub: NT_T('이 서비스로 들어온 요청이 대상 그룹을 거쳐 이 함수로 전달됩니다'),
+            rows: [[NT_T('서비스'), sv.name], [NT_T('Lambda 함수'), ob.name], [NT_T('대상 그룹'), (ea.target_groups || []).join(', ') || '?']], secs: [] }), true,
           { ltg: { tgs: (ea.target_groups || []).slice(), name: ob.name, type: 'lambda', ports: '' } })
           continue
         }
-        pushLine(l.a, l.b, 'vpn', [[xa, ta], [xa, y], [xb, y], [xb, tb]], () => ({ title: 'Site-to-Site VPN', sub: ob.kind === 'cgw' ? 'VPN 연결 ↔ 고객 게이트웨이' : `VPN 연결 ↔ ${ob.kind === 'tgw' ? 'TGW' : 'VGW'}`,
-          rows: [['VPN 연결', hubName(l.a)], [ob.kind === 'cgw' ? '고객 게이트웨이' : ob.kind === 'tgw' ? 'TGW' : 'VGW', ob.name], ...(l.att ? [['어태치먼트', natId(X.mById.get(l.att))]] : [])], secs: [] }), false, l.att ? { att: l.att } : null)
+        pushLine(l.a, l.b, 'vpn', [[xa, ta], [xa, y], [xb, y], [xb, tb]], () => ({ title: 'Site-to-Site VPN', sub: ob.kind === 'cgw' ? NT_T('VPN 연결 ↔ 고객 게이트웨이') : NT_T('VPN 연결 ↔ {0}', [ob.kind === 'tgw' ? 'TGW' : 'VGW']),
+          rows: [[NT_T('VPN 연결'), hubName(l.a)], [ob.kind === 'cgw' ? NT_T('고객 게이트웨이') : ob.kind === 'tgw' ? 'TGW' : 'VGW', ob.name], ...(l.att ? [[NT_T('어태치먼트'), natId(X.mById.get(l.att))]] : [])], secs: [] }), false, l.att ? { att: l.att } : null)
       }
     }
     // CloudFront 범위 WAF → 배포(2.12.0 · §17.41): 같은 전역 줄 — WAF 아이콘 위 → 그 줄 아이콘 위 틈의 제 차선(아이콘 위 5px · 선마다 3px 위로 · 여섯째부터 같은 차선) → 배포 위(화살촉).
@@ -2791,7 +2794,7 @@
         const ta = Math.round(PA.cy - IC / 2 - 1); const tb = Math.round(PB.cy - IC / 2 - 1)
         const ya = lane(ta); const yb = ta === tb ? ya : lane(tb); const xc = F.x + GLOB_X - 14
         const pts = ta === tb ? [[PA.cx, ta], [PA.cx, ya], [PB.cx, ya], [PB.cx, tb]] : [[PA.cx, ta], [PA.cx, ya], [xc, ya], [xc, yb], [PB.cx, yb], [PB.cx, tb]]
-        pushLine(p.waf, p.id, 'wafp', pts, () => wafLineDet(M.globs.get(p.waf), M.globs.get(p.id).name, 'CloudFront 배포', null), true)
+        pushLine(p.waf, p.id, 'wafp', pts, () => wafLineDet(M.globs.get(p.waf), M.globs.get(p.id).name, NT_T('CloudFront 배포'), null), true)
       }
     }
     // CloudFront → 원본 LB(#43 · §17.1): 전역 줄 아이콘 밑 → 계정 안 왼쪽 틈(다른 계정이면 계정 사이 길) → LB 의 리전 차선 → LB.
@@ -2858,32 +2861,32 @@
         if (p.cwan) {
           // Cloud WAN(§17.39) = Cloud WAN 색 1.5 · 화살촉 없음(연결 — TGW 어태치먼트와 같다) · 정보창 = 코어 네트워크 · VPC · 세그먼트 · 엣지 위치 · 연결 ID
           const ea = p.ea || {}
-          pushLine(p.cf, lk, 'cwanatt', best, () => ({ title: 'Cloud WAN 연결', sub: '이 VPC 가 Cloud WAN 코어 네트워크에 연결되어 있습니다(VPC 연결)',
-            rows: [['코어 네트워크', G.name], ['VPC', it.name], ['세그먼트', (ea.segments || []).join(', ') || '?'], ['엣지 위치', (ea.edge_locations || []).map(gaRegion).join(', ') || '?'],
-              ['연결 ID', (ea.attachment_ids || []).join(', ') || '?'], ...(xa ? [] : [['계정', `${acctName(G.acct)} → ${acctName(it.acct)}`]])], secs: [] }), false,
+          pushLine(p.cf, lk, 'cwanatt', best, () => ({ title: NT_T('Cloud WAN 연결'), sub: NT_T('이 VPC 가 Cloud WAN 코어 네트워크에 연결되어 있습니다(VPC 연결)'),
+            rows: [[NT_T('코어 네트워크'), G.name], ['VPC', it.name], [NT_T('세그먼트'), (ea.segments || []).join(', ') || '?'], [NT_T('엣지 위치'), (ea.edge_locations || []).map(gaRegion).join(', ') || '?'],
+              [NT_T('연결 ID'), (ea.attachment_ids || []).join(', ') || '?'], ...(xa ? [] : [[NT_T('계정'), `${acctName(G.acct)} → ${acctName(it.acct)}`]])], secs: [] }), false,
           { cwan: { vpc: it.vpc, name: it.name, segs: (ea.segments || []).slice(), locs: (ea.edge_locations || []).slice() } })
           return
         }
         if (p.ga) {
           // Global Accelerator(§17.37) = 가속기 색 1.5 · 같은 색 화살촉(엔드포인트 쪽) · 정보창 = 가속기 · 엔드포인트 · 리전 · 리스너 · 거친 EIP
-          const ea = p.ea || {}; const tw = it.kind === 'ec2' ? 'EC2 인스턴스' : '로드밸런서'
-          pushLine(p.cf, lk, 'gaep', best, () => ({ title: `Global Accelerator → ${tw}`, sub: 'Global Accelerator의 고정 IP 로 들어온 요청이 이 엔드포인트로 전달됩니다',
-            rows: [['Global Accelerator', G.name], [tw, it.name], ['엔드포인트 리전', ea.endpoint_region || '?'], ['리스너', (ea.listener_ports || []).join(', ') || '?'],
-              ...(ea.via_eip ? [['탄력적 IP', `${ea.via_eip} — 엔드포인트로 등록한 탄력적 IP 가 이 인스턴스에 연결되어 있습니다`]] : []),
-              ...(xa ? [] : [['계정', `${acctName(G.acct)} → ${acctName(it.acct)}`]])], secs: [] }), true,
-          { gae: { what: it.kind === 'ec2' ? 'EC2 인스턴스' : '로드 밸런서', name: it.name, region: ea.endpoint_region || '?', eip: ea.via_eip || null } })
+          const ea = p.ea || {}; const tw = it.kind === 'ec2' ? NT_T('EC2 인스턴스') : NT_T('로드밸런서')
+          pushLine(p.cf, lk, 'gaep', best, () => ({ title: `Global Accelerator → ${tw}`, sub: NT_T('Global Accelerator의 고정 IP 로 들어온 요청이 이 엔드포인트로 전달됩니다'),
+            rows: [['Global Accelerator', G.name], [tw, it.name], [NT_T('엔드포인트 리전'), ea.endpoint_region || '?'], [NT_T('리스너'), (ea.listener_ports || []).join(', ') || '?'],
+              ...(ea.via_eip ? [[NT_T('탄력적 IP'), NT_T('{0} — 엔드포인트로 등록한 탄력적 IP 가 이 인스턴스에 연결되어 있습니다', [ea.via_eip])]] : []),
+              ...(xa ? [] : [[NT_T('계정'), `${acctName(G.acct)} → ${acctName(it.acct)}`]])], secs: [] }), true,
+          { gae: { what: it.kind === 'ec2' ? NT_T('EC2 인스턴스') : NT_T('로드 밸런서'), name: it.name, region: ea.endpoint_region || '?', eip: ea.via_eip || null } })
           return
         }
         if (p.dns) {
           // Route 53 별칭(§17.30) = 영역 색 1.5 · 같은 색 화살촉(이름이 가리키는 쪽) · 정보창 = 영역 · 레코드 이름 · 로드밸런서
-          pushLine(p.cf, lk, 'dnsalias', best, () => ({ title: 'Route 53 별칭 → 로드밸런서', sub: '이 이름으로 들어온 요청이 이 로드밸런서로 전달됩니다(별칭 레코드)',
-            rows: [['호스팅 영역', a['영역'] || G.name], ['레코드', p.rec.join('\n') || '?'], ['로드밸런서', it.name], ...(xa ? [] : [['계정', `${acctName(G.acct)} → ${acctName(it.acct)}`]])], secs: [] }), true)
+          pushLine(p.cf, lk, 'dnsalias', best, () => ({ title: NT_T('Route 53 별칭 → 로드밸런서'), sub: NT_T('이 이름으로 들어온 요청이 이 로드밸런서로 전달됩니다(별칭 레코드)'),
+            rows: [[NT_T('호스팅 영역'), a['영역'] || G.name], [NT_T('레코드'), p.rec.join('\n') || '?'], [NT_T('로드밸런서'), it.name], ...(xa ? [] : [[NT_T('계정'), `${acctName(G.acct)} → ${acctName(it.acct)}`]])], secs: [] }), true)
           return
         }
         // 오리진 유형(§17.31) — VPC 원본 · 사용자 도메인 → Route 53 별칭 · 없음 = 주소 꼴(#43 · 줄 없음)
-        const vw = cfVia(p.via, p.alias); const tw = it.kind === 'ec2' ? 'EC2 인스턴스' : '로드밸런서'
-        pushLine(p.cf, lk, 'cforigin', best, () => ({ title: `CloudFront → ${tw}`, sub: `오리진 — 이 배포로 들어온 요청을 이 ${tw}로 전달합니다`,
-          rows: [['CloudFront', a['도메인'] || G.name], [tw, it.name], ...(vw ? [['오리진 유형', vw]] : []), ...(xa ? [] : [['계정', `${acctName(G.acct)} → ${acctName(it.acct)}`]])], secs: [] }), true)
+        const vw = cfVia(p.via, p.alias); const tw = it.kind === 'ec2' ? NT_T('EC2 인스턴스') : NT_T('로드밸런서')
+        pushLine(p.cf, lk, 'cforigin', best, () => ({ title: `CloudFront → ${tw}`, sub: NT_T('오리진 — 이 배포로 들어온 요청을 이 {0}로 전달합니다', [tw]),
+          rows: [['CloudFront', a['도메인'] || G.name], [tw, it.name], ...(vw ? [[NT_T('오리진 유형'), vw]] : []), ...(xa ? [] : [[NT_T('계정'), `${acctName(G.acct)} → ${acctName(it.acct)}`]])], secs: [] }), true)
       })
     }
     // 다른 계정 TGW 어태치먼트(§17.1 · §17.15 · #75): 포트 위 → 스포크 리전 제 차선 → 계정 사이 길 → 허브 리전 제 차선 → TGW 밑
@@ -2929,26 +2932,26 @@
   //   실측 2026-10-20). 40 이면 포개짐은 없지만 굽힘 상한이 이 픽스처에서 한 번도 걸리지 않아 브레이크 `148-굽힘상한없음` 이 죽었다 → 30 = 둘 다 산다
   //   (2.8.0 브레이크 `148-포개짐값작음` 을 이 값에 다시 걸었다)
   const LBT_BEND = 30; const LBT_LAP = 30; const LBT_BMAX = 6
-  const LBT_KIND = { instance: '인스턴스', ip: 'IP', lambda: 'Lambda', alb: 'ALB' }
+  const LBT_KIND = { instance: NT_T('인스턴스'), ip: 'IP', lambda: 'Lambda', alb: 'ALB' }
   // 엔진 `unresolved_targets` 의 까닭 코드 → 사람 말(ADR 0002 §8). 모르는 코드 = 「<코드> — 수집하지 않는 서비스」(코드를 지우지 않는다)
-  const LBT_WHY = { not_collected: '이 수집본에 없는 리소스 — 수집 범위 밖이거나 수집하지 않았습니다', not_in_scope: '수집 범위 밖 계정·리전',
-    no_eni: 'VPC 안 IP · 소유 리소스 없음(ENI 없음)', eni_unread: 'ENI 를 읽지 못함 — 권한 부족(「없음」이 아닙니다)', ambiguous: '같은 IP 의 ENI 가 둘 이상 — 하나로 정하지 않았습니다',
+  const LBT_WHY = { not_collected: NT_T('이 수집본에 없는 리소스 — 수집 범위 밖이거나 수집하지 않았습니다'), not_in_scope: NT_T('수집 범위 밖 계정·리전'),
+    no_eni: NT_T('VPC 안 IP · 소유 리소스 없음(ENI 없음)'), eni_unread: NT_T('ENI 를 읽지 못함 — 권한 부족(「없음」이 아닙니다)'), ambiguous: NT_T('같은 IP 의 ENI 가 둘 이상 — 하나로 정하지 않았습니다'),
     // 2.9.0(#114 · §17.32) — 수집하는 서비스가 됐다. 이 코드 = 그 ENI 의 주인 카드를 못 찾았다(권한 거부 · 범위 밖 · 지워졌다)
-    elasticache: 'ElastiCache — 연결된 캐시 클러스터를 찾지 못함(권한이 없거나 수집 범위 밖일 수 있습니다)', opensearch: 'OpenSearch — 연결된 도메인을 찾지 못함(권한이 없거나 수집 범위 밖일 수 있습니다)', msk: 'MSK(Kafka) — 연결된 클러스터를 찾지 못함(브로커 목록을 읽지 못했거나 서버리스 클러스터일 수 있습니다)',
-    efs: 'EFS 마운트 대상 — 수집하지 않는 서비스', lambda: 'Lambda(VPC ENI) — 함수를 특정하지 못함', nat_gateway: 'NAT 게이트웨이의 ENI',
-    ecs_task: 'ECS 태스크 — 이 대상 그룹을 사용하는 서비스를 특정하지 못함', rds: 'RDS — DB 를 특정하지 못함(같은 VPC·AZ 에 DB 가 여러 개이고 한 클러스터의 멤버도 아님)',
-    vpc_endpoint: 'VPC 엔드포인트 — 이 수집본에 없음', load_balancer: '로드밸런서의 ENI — 이 수집본에 없음', eks: 'EKS — 클러스터가 이 수집본에 없음',
-    redshift: 'Redshift — 수집하지 않는 서비스', dms: 'DMS — 수집하지 않는 서비스', directory_service: 'Directory Service — 수집하지 않는 서비스',
-    sagemaker: 'SageMaker — 리소스를 특정하지 못함', eni: '소유자를 알 수 없는 ENI(연결된 리소스 없음)' }
-  const lbtWhy = (code) => LBT_WHY[code] || `${code} — 수집하지 않는 서비스`
+    elasticache: NT_T('ElastiCache — 연결된 캐시 클러스터를 찾지 못함(권한이 없거나 수집 범위 밖일 수 있습니다)'), opensearch: NT_T('OpenSearch — 연결된 도메인을 찾지 못함(권한이 없거나 수집 범위 밖일 수 있습니다)'), msk: NT_T('MSK(Kafka) — 연결된 클러스터를 찾지 못함(브로커 목록을 읽지 못했거나 서버리스 클러스터일 수 있습니다)'),
+    efs: NT_T('EFS 마운트 대상 — 수집하지 않는 서비스'), lambda: NT_T('Lambda(VPC ENI) — 함수를 특정하지 못함'), nat_gateway: NT_T('NAT 게이트웨이의 ENI'),
+    ecs_task: NT_T('ECS 태스크 — 이 대상 그룹을 사용하는 서비스를 특정하지 못함'), rds: NT_T('RDS — DB 를 특정하지 못함(같은 VPC·AZ 에 DB 가 여러 개이고 한 클러스터의 멤버도 아님)'),
+    vpc_endpoint: NT_T('VPC 엔드포인트 — 이 수집본에 없음'), load_balancer: NT_T('로드밸런서의 ENI — 이 수집본에 없음'), eks: NT_T('EKS — 클러스터가 이 수집본에 없음'),
+    redshift: NT_T('Redshift — 수집하지 않는 서비스'), dms: NT_T('DMS — 수집하지 않는 서비스'), directory_service: NT_T('Directory Service — 수집하지 않는 서비스'),
+    sagemaker: NT_T('SageMaker — 리소스를 특정하지 못함'), eni: NT_T('소유자를 알 수 없는 ENI(연결된 리소스 없음)') }
+  const lbtWhy = (code) => LBT_WHY[code] || NT_T('{0} — 수집하지 않는 서비스', [code])
   // 라우트 ENI 의 까닭(2.8.0 · P2-2) — ENI 를 물은 뒤의 말(LB 대상의 「VPC 안 IP」 말과 다르다) · 나머지는 LB 대상과 같은 서비스 이름
-  const ROUTE_WHY = { no_eni: '이 ENI 를 찾지 못했습니다(삭제되었거나 다른 계정의 ENI)', eni_unread: 'ENI 를 읽지 못함(권한)', not_collected: '소유 리소스가 이 수집본에 없습니다(수집하지 않음)', ambiguous: '소유 리소스를 하나로 정하지 못함' }
+  const ROUTE_WHY = { no_eni: NT_T('이 ENI 를 찾지 못했습니다(삭제되었거나 다른 계정의 ENI)'), eni_unread: NT_T('ENI 를 읽지 못함(권한)'), not_collected: NT_T('소유 리소스가 이 수집본에 없습니다(수집하지 않음)'), ambiguous: NT_T('소유 리소스를 하나로 정하지 못함') }
   const routeWhy = (code) => ROUTE_WHY[code] || lbtWhy(code)
   // 라우트 선을 이미 따로 긋는 대상(서브넷 칸 배치 · 레인 차선) — 나머지 같은 VPC 아이콘 대상(ENI 주인 · P2-2)은 넘김 선 길 찾기로 긋는다
   const ROUTE_DRAWN = new Set(['igw', 'nat', 'vpce'])
   // 엔드포인트 → 제공자를 무엇으로 이었나(엔진 `resolved_by` · §17.28)
-  const EPP_HOW = { endpoint_service: '제공자 계정의 엔드포인트 서비스 구성이 이 서비스 뒤의 로드밸런서를 가리킵니다',
-    firewall_endpoint: '방화벽 동기화 상태에 이 엔드포인트가 방화벽 엔드포인트로 나와 있습니다 — 이 서브넷의 트래픽은 방화벽을 거칩니다' }
+  const EPP_HOW = { endpoint_service: NT_T('제공자 계정의 엔드포인트 서비스 구성이 이 서비스 뒤의 로드밸런서를 가리킵니다'),
+    firewall_endpoint: NT_T('방화벽 동기화 상태에 이 엔드포인트가 방화벽 엔드포인트로 나와 있습니다 — 이 서브넷의 트래픽은 방화벽을 거칩니다') }
   // TGW Connect(2.11.0 · §17.38) — Connect 어태치먼트 = 전송 어태치먼트 선(VPC 포트 → TGW · DX 게이트웨이 ↔ TGW) **위에 겹친** 점선(TGW 색).
   //   새 길을 찾지 않는다 — 그 선의 곧은 마디마다 4px 옆으로 민 평행선이다(끝점은 같은 아이콘 변 위) · Connect 가 여럿이면 4px 씩 더 민다
   const offsetOrth = (pts, d) => {
@@ -2972,18 +2975,18 @@
       const cn = c.n.connect || {}; const peers = cn.peers
       const tr = X.mById.get(cn.on); const onDx = !!c.dx
       // 두 끝 = 전송 선의 두 끝(포트 · TGW / TGW · DX 게이트웨이) — 검색 흐림·길 강조가 같은 칸으로 판단한다
-      pushLine(base.a, base.b, 'cnx', offsetOrth(base.pts, 4 * (j + 1)), () => ({ title: 'TGW Connect(SD-WAN 오버레이)', sub: `GRE 터널이 이 ${onDx ? 'Direct Connect 게이트웨이' : 'VPC'} 어태치먼트 위로 지나갑니다 — 피어(SD-WAN 장비)와 TGW 가 BGP 로 경로를 주고받습니다`,
-        rows: [['Connect 어태치먼트', `${disp(c.n)}${named(c.n) ? ` · ${natId(c.n)}` : ''}`], ['전송 어태치먼트', `${onDx ? 'DX 게이트웨이' : 'VPC'} · ${tr ? natId(tr) : cn.transport || '?'}`],
-          ['TGW', hubName(c.tgw)], ['프로토콜', cn.proto ? String(cn.proto).toUpperCase() : '?'], ...(c.n.attrs && c.n.attrs.state ? [['상태', stateKo(c.n.attrs.state)]] : [])],
+      pushLine(base.a, base.b, 'cnx', offsetOrth(base.pts, 4 * (j + 1)), () => ({ title: NT_T('TGW Connect(SD-WAN 오버레이)'), sub: NT_T('GRE 터널이 이 {0} 어태치먼트 위로 지나갑니다 — 피어(SD-WAN 장비)와 TGW 가 BGP 로 경로를 주고받습니다', [onDx ? NT_T('Direct Connect 게이트웨이') : 'VPC']),
+        rows: [[NT_T('Connect 어태치먼트'), `${disp(c.n)}${named(c.n) ? ` · ${natId(c.n)}` : ''}`], [NT_T('전송 어태치먼트'), `${onDx ? NT_T('DX 게이트웨이') : 'VPC'} · ${tr ? natId(tr) : cn.transport || '?'}`],
+          ['TGW', hubName(c.tgw)], [NT_T('프로토콜'), cn.proto ? String(cn.proto).toUpperCase() : '?'], ...(c.n.attrs && c.n.attrs.state ? [[NT_T('상태'), stateKo(c.n.attrs.state)]] : [])],
         secs: [peerSec(c)] }), false, { att: c.id, rep: [c.id], base: base.k, cnx: { id: c.id, on: cn.on, dx: onDx, peers: Array.isArray(peers) ? peers.length : null } })
     }
   }
   // Connect 피어 칸 — 피어마다 한 줄(GRE 주소 · BGP 내부 CIDR · ASN) · 못 읽었으면 「읽지 못함」(「피어 없음」과 가른다 · 불변식 ④)
   function peerSec (c) {
     const peers = (c.n.connect || {}).peers
-    if (!Array.isArray(peers)) return M.partial.has(c.id) ? urSec('Connect 피어') : sec('Connect 피어', [], { nc: true })
-    return sec('Connect 피어', peers.map((p) => ({ a: p.name || p.id, b: `GRE ${p.tgw} ↔ ${p.peer} · BGP 내부 CIDR ${p.cidrs.join(', ') || '?'} · ASN ${p.tasn} ↔ ${p.pasn}` })),
-      { empty: '(없음) — 이 Connect 에 피어가 없습니다(GRE 터널이 없어 경로를 주고받지 않습니다)' })
+    if (!Array.isArray(peers)) return M.partial.has(c.id) ? urSec(NT_T('Connect 피어')) : sec(NT_T('Connect 피어'), [], { nc: true })
+    return sec(NT_T('Connect 피어'), peers.map((p) => ({ a: p.name || p.id, b: NT_T('GRE {0} ↔ {1} · BGP 내부 CIDR {2} · ASN {3} ↔ {4}', [p.tgw, p.peer, p.cidrs.join(', ') || '?', p.tasn, p.pasn]) })),
+      { empty: NT_T('(없음) — 이 Connect 에 피어가 없습니다(GRE 터널이 없어 경로를 주고받지 않습니다)') })
   }
   function lbtLines (allLays, regOf) {
     const layOf = new Map(allLays.map((x) => [x.L.v.id, x]))
@@ -3301,32 +3304,32 @@
       if (g.kind === 'vpclink') {
         // API Gateway → LB(§17.35) = API 색 1.5 · 같은 색 화살촉(LB 쪽) — 길은 LB → 리전 줄로 찾았으니 거꾸로 긋는다
         const ids = [...g.vids].sort(); const names = [...g.vnames].sort(); const api = M.hubs.get(g.b)
-        pushLine(g.b, g.a, 'vpclink', pts.slice().reverse(), () => ({ title: 'API Gateway → 로드밸런서', sub: '이 API 로 들어온 요청이 VPC 링크를 거쳐 이 로드밸런서로 전달됩니다',
-          rows: [['API', `${api.name} · ${typeKo(api)}`], ['VPC 링크', [...names, ...(names.length ? [] : ids)].join('\n') || '?'], ['VPC 링크 ID', ids.join(', ') || '?'], ['로드밸런서', g.lb.name]], secs: [] }), true,
+        pushLine(g.b, g.a, 'vpclink', pts.slice().reverse(), () => ({ title: NT_T('API Gateway → 로드밸런서'), sub: NT_T('이 API 로 들어온 요청이 VPC 링크를 거쳐 이 로드밸런서로 전달됩니다'),
+          rows: [['API', `${api.name} · ${typeKo(api)}`], [NT_T('VPC 링크'), [...names, ...(names.length ? [] : ids)].join('\n') || '?'], [NT_T('VPC 링크 ID'), ids.join(', ') || '?'], [NT_T('로드밸런서'), g.lb.name]], secs: [] }), true,
         { lbe: g.lbe.slice(), vlk: { ids, names, lbName: g.lb.name } })
         continue
       }
       if (g.kind === 'lsvctgt') {
         // VPC Lattice 서비스 → 대상(§17.40) = Lattice 색 1.5 · 같은 색 화살촉(대상 쪽) — 길은 대상 → 리전 줄로 찾았으니 거꾸로 긋는다
         const sv = M.hubs.get(g.b); const tNm = g.ids.size === 1 ? nodeName([...g.ids][0]) : B.cellL.get(g.a) || g.a
-        const ports = [...g.ports].sort((x, y) => x - y).join(', '); const tw = g.lb.kind === 'lb' ? '로드 밸런서' : 'EC2 인스턴스'
-        pushLine(g.b, g.a, 'lsvctgt', pts.slice().reverse(), () => ({ title: `VPC Lattice 서비스 → ${tw}`, sub: '이 서비스로 들어온 요청이 대상 그룹을 거쳐 이 대상으로 전달됩니다',
-          rows: [['서비스', sv.name], [tw, tNm], ['대상 그룹', [...g.tgs].sort().join(', ') || '?'], ['포트', ports || '?']], secs: [] }), true,
+        const ports = [...g.ports].sort((x, y) => x - y).join(', '); const tw = g.lb.kind === 'lb' ? NT_T('로드 밸런서') : NT_T('EC2 인스턴스')
+        pushLine(g.b, g.a, 'lsvctgt', pts.slice().reverse(), () => ({ title: NT_T('VPC Lattice 서비스 → {0}', [tw]), sub: NT_T('이 서비스로 들어온 요청이 대상 그룹을 거쳐 이 대상으로 전달됩니다'),
+          rows: [[NT_T('서비스'), sv.name], [tw, tNm], [NT_T('대상 그룹'), [...g.tgs].sort().join(', ') || '?'], [NT_T('포트'), ports || '?']], secs: [] }), true,
         { lbe: g.lbe.slice(), ltg: { tgs: [...g.tgs].sort(), name: tNm, type: g.lb.kind === 'lb' ? 'alb' : 'instance', ports } })
         continue
       }
       if (g.kind === 'wafp') {
         // WAF 웹 ACL → ALB(§17.41) = WAF 색 1.5 · 같은 색 화살촉(LB 쪽) — 길은 LB → 리전 줄로 찾았으니 거꾸로 긋는다
         const w = M.hubs.get(g.b)
-        pushLine(g.b, g.a, 'wafp', pts.slice().reverse(), () => wafLineDet(w, g.lb.name, '로드밸런서', null), true, { lbe: g.lbe.slice() })
+        pushLine(g.b, g.a, 'wafp', pts.slice().reverse(), () => wafLineDet(w, g.lb.name, NT_T('로드밸런서'), null), true, { lbe: g.lbe.slice() })
         continue
       }
       if (g.kind === 'dbproxy') {
         // RDS 프록시 → DB(§17.36) = RDS 색 1.5 · 같은 색 화살촉(DB 쪽) · 칩 없음
         // 대상 이름 = 그 DB 의 이름(묶음 칸이면 칸 이름) — 칸 이름표 첫 줄(「RDS」)만 적으면 어느 DB 인지 모른다(188 실화면)
         const tNm = g.ids.size === 1 ? nodeName([...g.ids][0]) : B.cellL.get(g.b) || g.b; const ports = [...g.ports].sort((x, y) => x - y).join(', '); const kind = g.types.has('cluster') ? 'cluster' : 'instance'
-        pushLine(g.a, g.b, 'dbproxy', pts, () => ({ title: `RDS 프록시 → ${kind === 'cluster' ? 'DB 클러스터' : 'DB 인스턴스'}`, sub: '앱이 프록시로 연결하면 프록시가 연결을 모아 이 DB 로 전달합니다',
-          rows: [['프록시', g.lb.name], [kind === 'cluster' ? 'DB 클러스터' : 'DB 인스턴스', tNm], ['포트', ports || '?']], secs: [] }), true,
+        pushLine(g.a, g.b, 'dbproxy', pts, () => ({ title: NT_T('RDS 프록시 → {0}', [kind === 'cluster' ? NT_T('DB 클러스터') : NT_T('DB 인스턴스')]), sub: NT_T('앱이 프록시로 연결하면 프록시가 연결을 모아 이 DB 로 전달합니다'),
+          rows: [[NT_T('프록시'), g.lb.name], [kind === 'cluster' ? NT_T('DB 클러스터') : NT_T('DB 인스턴스'), tNm], [NT_T('포트'), ports || '?']], secs: [] }), true,
         { lbe: g.lbe.slice(), prx: { name: tNm, kind, ports } })
         continue
       }
@@ -3334,28 +3337,28 @@
         // 엔드포인트 → 제공자(§17.28) — 칩 없음(한 엔드포인트 = 서비스 하나) · 정보창 = 엔드포인트 · 제공자 · 서비스 · 연결 근거
         const tNm = B.cellL.get(g.b) || g.b; const fromNm = B.cellL.get(g.a) || g.a
         const svcs = [...g.svcs].sort(); const eps = [...g.eps].sort()
-        pushLine(g.a, g.b, 'epprov', pts, () => ({ title: 'VPC 엔드포인트 → 제공자', sub: g.how.has('firewall_endpoint') ? '이 엔드포인트로 보낸 트래픽을 방화벽이 검사합니다' : '이 엔드포인트로 보낸 트래픽을 서비스의 로드밸런서가 받습니다',
-          rows: [['엔드포인트', eps.map((id) => `${nodeName(id)} · ${natId(X.mById.get(id) || { id })}`).join('\n') || fromNm], ['제공자', tNm], ['서비스', svcs.map(shortSvc).join('\n') || '?'],
-            ['연결 근거', [...g.how].sort().map((h) => EPP_HOW[h] || h).join('\n')]], secs: [] }), true,
+        pushLine(g.a, g.b, 'epprov', pts, () => ({ title: NT_T('VPC 엔드포인트 → 제공자'), sub: g.how.has('firewall_endpoint') ? NT_T('이 엔드포인트로 보낸 트래픽을 방화벽이 검사합니다') : NT_T('이 엔드포인트로 보낸 트래픽을 서비스의 로드밸런서가 받습니다'),
+          rows: [[NT_T('엔드포인트'), eps.map((id) => `${nodeName(id)} · ${natId(X.mById.get(id) || { id })}`).join('\n') || fromNm], [NT_T('제공자'), tNm], [NT_T('서비스'), svcs.map(shortSvc).join('\n') || '?'],
+            [NT_T('연결 근거'), [...g.how].sort().map((h) => EPP_HOW[h] || h).join('\n')]], secs: [] }), true,
         { lbe: g.lbe.slice(), epp: { name: tNm, from: fromNm, svcs, eps: new Set(eps) } })
         continue
       }
       const lbName = g.lb.name
-      const tName = g.ext ? `외부 IP ${[...g.ips].length}개` : B.cellL.get(g.b) || (M.hubs.get(g.b) ? `${svcOf(M.hubs.get(g.b))} (${M.hubs.get(g.b).name})` : g.b)
+      const tName = g.ext ? NT_T('외부 IP {0}개', [[...g.ips].length]) : B.cellL.get(g.b) || (M.hubs.get(g.b) ? `${svcOf(M.hubs.get(g.b))} (${M.hubs.get(g.b).name})` : g.b)
       const ports = [...g.ports].sort((x, y) => x - y).join(', ')
       const types = [...g.types].sort().map((t) => LBT_KIND[t] || t).join(' · ')
       const ips = [...g.ips].sort()
-      const label = g.ext ? `외부 IP ${ips.length}` : M.hubs.get(g.b) ? `${svcOf(M.hubs.get(g.b))} (${M.hubs.get(g.b).name})` : B.cellL.get(g.b) || g.b
-      const exitName = g.ext ? (g.exit ? `${whyOf(g.exit.key)} · ${M.hubs.has(g.exit.hub) ? M.hubs.get(g.exit.hub).name : g.exit.nat}` : g.raw.size ? `${[...g.raw].sort().join(', ')} — 이 VPC 에 해당 연결 지점이 없습니다(선은 VPC 오른쪽 변에서 끝납니다)` : 'VPC 밖으로 나가는 경로를 알 수 없습니다 — 라우팅 테이블에 이 IP 로 가는 라우트가 없거나 읽지 못했습니다') : null
-      const lk = pushLine(g.a, g.b, 'lbtarget', pts, () => ({ title: '로드밸런서 → 대상', sub: g.ext ? '이 로드밸런서가 VPC 밖 IP 로 요청을 전달합니다(화살표는 그 IP 가 나가는 연결 지점입니다)' : '대상 그룹이 이 대상으로 요청을 전달합니다',
-        rows: [['로드밸런서', lbName], ['대상', tName], ['대상 그룹', [...g.tgs].sort().join(', ') || '?'], ['포트', ports || '없음(Lambda)'], ['대상 유형', types || '?'], ['등록된 대상', `${g.cnt}개`],
-          ...(g.fold ? [['포함된 인스턴스', [...g.ids].sort().map((id) => nodeName(id)).join('\n')]] : []),
-          ...(g.ext ? [['외부 IP', ips.join('\n')], ['나가는 연결 지점', exitName]] : [])], secs: [] }), true,
+      const label = g.ext ? NT_T('외부 IP {0}', [ips.length]) : M.hubs.get(g.b) ? `${svcOf(M.hubs.get(g.b))} (${M.hubs.get(g.b).name})` : B.cellL.get(g.b) || g.b
+      const exitName = g.ext ? (g.exit ? `${whyOf(g.exit.key)} · ${M.hubs.has(g.exit.hub) ? M.hubs.get(g.exit.hub).name : g.exit.nat}` : g.raw.size ? NT_T('{0} — 이 VPC 에 해당 연결 지점이 없습니다(선은 VPC 오른쪽 변에서 끝납니다)', [[...g.raw].sort().join(', ')]) : NT_T('VPC 밖으로 나가는 경로를 알 수 없습니다 — 라우팅 테이블에 이 IP 로 가는 라우트가 없거나 읽지 못했습니다')) : null
+      const lk = pushLine(g.a, g.b, 'lbtarget', pts, () => ({ title: NT_T('로드밸런서 → 대상'), sub: g.ext ? NT_T('이 로드밸런서가 VPC 밖 IP 로 요청을 전달합니다(화살표는 그 IP 가 나가는 연결 지점입니다)') : NT_T('대상 그룹이 이 대상으로 요청을 전달합니다'),
+        rows: [[NT_T('로드밸런서'), lbName], [NT_T('대상'), tName], [NT_T('대상 그룹'), [...g.tgs].sort().join(', ') || '?'], [NT_T('포트'), ports || NT_T('없음(Lambda)')], [NT_T('대상 유형'), types || '?'], [NT_T('등록된 대상'), NT_T('{0}개', [g.cnt])],
+          ...(g.fold ? [[NT_T('포함된 인스턴스'), [...g.ids].sort().map((id) => nodeName(id)).join('\n')]] : []),
+          ...(g.ext ? [[NT_T('외부 IP'), ips.join('\n')], [NT_T('나가는 연결 지점'), exitName]] : [])], secs: [] }), true,
       { lbe: g.lbe.slice(), lbt: { name: label, lbName, tgs: new Set(g.tgs), ports, cnt: g.cnt, ext: g.ext, ips, ...(g.fold ? { fold: new Set(g.ids) } : {}) } })
       const l = B.lines[B.lines.length - 1]
       // 칩 — 등록 2 이상 = `×N` · 등록 0(그룹을 든 ECS 서비스 · 2.8.0) = `×0` · 외부 IP = `외부 IP N`(1 이어도). 자리는 **선을 다 그은 뒤** 정한다(뒤에 그은 선이 칩을 지나지 않게)
       //   🔴 0 에 칩을 안 달면 「등록 0 인 서비스로 가는 선」과 「등록 1」이 같은 모양이다 — 요청을 받을 곳이 없는데 받는 것처럼 읽힌다
-      const text = g.ext ? `외부 IP ${ips.length}` : g.cnt >= 2 || g.cnt === 0 ? `×${g.cnt}` : null
+      const text = g.ext ? NT_T('외부 IP {0}', [ips.length]) : g.cnt >= 2 || g.cnt === 0 ? `×${g.cnt}` : null
       if (text) chipTodo.push({ l, text })
       void lk
     }
@@ -3450,12 +3453,12 @@
       const ga = gh(e.source); const gb = gh(e.target)
       if (ga || gb) {
         // 범위 안 ↔ 범위 밖인데 흐린 TGW 로 못 이은 관계 — 조용히 지우지 않는다(§17.22 · 「못 그린 관계 N」에 센다)
-        if (ro(e.source) !== ro(e.target) && !gh(ro(e.source) ? e.target : e.source)) { cnt.unwired++; unwired.push({ e, dead: '범위 밖', why: '보기 범위 밖과 잇는 관계 — 새 화면은 아직 이 관계를 범위 밖 표시에 잇지 못한다(§17.22)' }); continue }
+        if (ro(e.source) !== ro(e.target) && !gh(ro(e.source) ? e.target : e.source)) { cnt.unwired++; const w = NT_T.both('보기 범위 밖과 잇는 관계 — 새 화면은 아직 이 관계를 범위 밖 표시에 잇지 못한다(§17.22)'); const d = NT_T.both('범위 밖'); unwired.push({ e, dead: d.t, deadKo: d.ko, why: w.t, whyKo: w.ko }); continue }
         cnt.hand++; continue
       }
       const ka = keyOf(e.source); const kb = keyOf(e.target)
-      const bad = (w) => { cnt.unwired++; unwired.push({ e, dead: w.dead || null, why: w.why }) }
-      if (e.fallback) { bad({ why: `${WHY_NEW} — 엣지 종류 «${e.kind}»` }); continue }
+      const bad = (w) => { cnt.unwired++; unwired.push({ e, dead: w.dead ? w.dead.t : null, deadKo: w.dead ? w.dead.ko : null, why: w.why.t, whyKo: w.why.ko }) }
+      if (e.fallback) { bad({ why: NT_T.both('{0} — 엣지 종류 «{1}»', [WHY_NEW_P, e.kind]) }); continue }
       // TGW Connect 어태치먼트의 관계(Connect → TGW) = 그 오버레이 점선(§17.38) — 전송 선(포트 → TGW)에 앉히면 전송의 판정이 Connect 의 것과 섞인다
       const cxk = cnxLine.get(e.source) || cnxLine.get(e.target)
       if (cxk) { cnt.drawn++; B.edgeOf.set(e.id, cxk); tie(cxk, e); continue }
@@ -3471,9 +3474,9 @@
       if (pcxDrawn.has(e.source) || pcxDrawn.has(e.target)) { cnt.drawn++; tie(pcxLine.get(e.source) || pcxLine.get(e.target), e); continue }
       if (!ka || !kb) {
         // 끝점이 모델에 아예 없는 것과 모델에는 있지만 그리지 않는 종류는 다른 말이다(대장 98 · 검사 89 e4)
-        const nw = (id) => (X.mById.has(id) ? '그리지 않은 종류' : '모델에 없다')
-        const dead = !ka && !kb ? (nw(e.source) === nw(e.target) ? `양쪽 다 ${nw(e.source)}` : `출발이 ${nw(e.source)} · 도착이 ${nw(e.target)}`) : `${!ka ? '출발' : '도착'}이 ${nw(!ka ? e.source : e.target)}`
-        bad({ dead, why: `${WHY_NEW} — 끝점이 잔차다(${dead})` }); continue
+        const nw = (id) => (X.mById.has(id) ? NT_T.both('그리지 않은 종류') : NT_T.both('모델에 없다'))
+        const dead = !ka && !kb ? (nw(e.source).ko === nw(e.target).ko ? NT_T.both('양쪽 다 {0}', [nw(e.source)]) : NT_T.both('출발이 {0} · 도착이 {1}', [nw(e.source), nw(e.target)])) : NT_T.both('{0}이 {1}', [!ka ? NT_T.both('출발') : NT_T.both('도착'), nw(!ka ? e.source : e.target)])
+        bad({ dead, why: NT_T.both('{0} — 끝점이 잔차다({1})', [WHY_NEW_P, dead]) }); continue
       }
       if (ka === kb || ka === 'aws:rep' || kb === 'aws:rep') { cnt.represented++; tie(attLine.get(e.source) || attLine.get(e.target), e); continue }
       // 픽스처의 인터넷 노드 ↔ 칸이 있는 IGW = 그 IGW 의 인터넷 칸 선이 그렸다(§17.24 · 노드는 첫째 칸 하나로 숨는다)
@@ -3501,7 +3504,7 @@
     SC = { out, W, H, cnt, opt: { ...O } }
     const nXwire = B.lines.filter((l) => M.xg.has(l.a) || M.xg.has(l.b)).length   // 배너 「외부 연결 N」(§17.22)
     const nItems = [...B.boxes.values()].filter((b) => b.kind === 'aws-item' || b.kind === 'aws-hub' || b.kind === 'aws-port').length
-    return { nXwire, boxes: B.boxes, unwired, awsWhy: M.why, awsNotes: gaNotes(), canvasW: W, canvasH: H,
+    return { nXwire, boxes: B.boxes, unwired, awsWhy: M.why, awsWhyKo: M.whyKo, awsNotes: gaNotes(), canvasW: W, canvasH: H,
       nEdges: B.lines.length, nRawEdges: ctx.T.edges.length, ms: performance.now() - t0, nItems, scope: ctx.SCOPE || null }
   }
   function defs () {
@@ -3658,7 +3661,7 @@
       // 그래도 자리가 없으면 등급 글자만(§17.20) — 온전한 말은 정보창 「판정 등급」 줄. 다 막히면 첫 후보(결정론)
       let text = bd.label; let short = false; const all = lineCands(l, tw(text, 9))
       let c = all.find((r) => !hitIn(busy, r))
-      if (!c) { const t2 = bd.short || (bd.g === 'A' || bd.g === 'E' ? '드롭' : bd.g); const c2 = lineCands(l, tw(t2, 9)).find((r) => !hitIn(busy, r)); if (c2) { c = c2; text = t2; short = true } }
+      if (!c) { const t2 = bd.short || (bd.g === 'A' || bd.g === 'E' ? NT_T('드롭') : bd.g); const c2 = lineCands(l, tw(t2, 9)).find((r) => !hitIn(busy, r)); if (c2) { c = c2; text = t2; short = true } }
       c = c || all[0]; if (!c) continue
       busy.push(c)
       out.push(`<text class="aw-wg" data-k="${l.k}" data-g="${bd.g}"${short ? ' data-short="1"' : ''} x="${P2(c.tx)}" y="${P2(c.ty)}" fill="${C.dim}" font-size="9" text-anchor="${c.a}" paint-order="stroke" stroke="${BG}" stroke-width="3" stroke-linejoin="round" pointer-events="none">${esc(text)}</text>`)
@@ -3675,9 +3678,9 @@
   // 숫자는 엔진이 낸 원래 단위(bit/s · pps · % · 개수)다 — 비율은 여기서 `limit` 으로 나눈다. 판정(초록 선)은 바꾸지 않는다(ADR 0008).
   // 🔴 없는 값을 0 으로 그리지 마라: 못 읽음 = `사용률 ?` · 한도 모름 = `한도 ?` · 그 기간이 없는 행 = `?`(앞 기간 값을 끌어 쓰지 않는다)
   const UT_WIN = [
-    { m: 15, t: '15분', g: 0 }, { m: 60, t: '1시간', g: 0 }, { m: 1440, t: '24시간', g: 0 },
-    { m: 10080, t: '1주', g: 1 }, { m: 43200, t: '1달', g: 1 }, { m: 129600, t: '3달', g: 1 }]
-  const UT_UNIT = { 15: '1분', 60: '1분', 1440: '1분', 10080: '1분', 43200: '5분', 129600: '1시간' }   // CloudWatch 보관 해상도(ADR 0011 D2)
+    { m: 15, t: NT_T('15분'), g: 0 }, { m: 60, t: NT_T('1시간'), g: 0 }, { m: 1440, t: NT_T('24시간'), g: 0 },
+    { m: 10080, t: NT_T('1주'), g: 1 }, { m: 43200, t: NT_T('1달'), g: 1 }, { m: 129600, t: NT_T('3달'), g: 1 }]
+  const UT_UNIT = { 15: NT_T('1분'), 60: NT_T('1분'), 1440: NT_T('1분'), 10080: NT_T('1분'), 43200: NT_T('5분'), 129600: NT_T('1시간') }   // CloudWatch 보관 해상도(ADR 0011 D2)
   const UT_SPD = [0, 4.4, 10, 25.7, 65]          // px/s · 단 = <1 Mbps · 1–100 Mbps · 100 Mbps–1 Gbps · ≥1 Gbps(2026-10-26 · 옛 = 비율 <10 · 10–50 · 50–80 · ≥80)
   const UT_GAP = 40
   const UT_TRI = [[4.4, 0], [-3.6, -3.7], [-3.6, 3.7]]
@@ -3690,25 +3693,25 @@
   // 합의 단위 → 목록 정렬 묶음(바이트 → 횟수 → 패킷 → 그 밖) — 서로 다른 단위의 합을 한 줄로 견주지 않는다
   const UT_TCLS = { byte: 0, count: 1, packet: 2 }
   const UT_M = {
-    bandwidth: '통신량', packet_rate: '패킷', capacity: '용량', rejected_connections: '연결 거부', port_allocation_errors: '포트 할당 오류',
-    invocations: '호출', requests: '요청', connections: '연결',
-    packets_dropped: '드롭 패킷', ip_addresses: 'IP 주소', security_group_rules: '규칙', network_acl_entries: '항목',
-    routes_ipv4: 'IPv4 라우트', routes_ipv6: 'IPv6 라우트', routes_propagated: '전파 라우트', vpc_ipv4_cidrs: 'IPv4 CIDR', vpc_ipv6_cidrs: 'IPv6 CIDR',
-    vpc_subnets: '서브넷', vpc_network_acls: '네트워크 ACL', vpc_route_tables: '라우팅 테이블', vpc_interface_endpoints: '인터페이스 엔드포인트',
-    vpc_active_peerings: '활성 피어링', tgw_attachments: '어태치먼트', tgw_route_tables: '라우팅 테이블', tgw_peering_attachments: '피어링 어태치먼트',
-    tgw_routes: '라우트(테이블 합)', dxgw_virtual_interfaces: '가상 인터페이스', dxgw_virtual_private_gateways: '가상 프라이빗 게이트웨이', dxgw_transit_gateways: 'Transit Gateway' }
-  const UT_PART = { ingress_ipv4: '인바운드 IPv4', ingress_ipv6: '인바운드 IPv6', egress_ipv4: '아웃바운드 IPv4', egress_ipv6: '아웃바운드 IPv6', ingress: '인바운드', egress: '아웃바운드' }
-  const UT_SRC = { account_quota: '계정 한도', default_quota: '기본 한도', fixed: '고정 한도', resource_attribute: '회선 대역폭', aws_computed: 'AWS 계산' }
-  const utSrc = (m) => m.limit_source === 'arithmetic' && m.limit ? `계산(/${Math.round(32 - Math.log2(m.limit + 5))} − 5)` : UT_SRC[m.limit_source] || '—'
+    bandwidth: NT_T('통신량'), packet_rate: NT_T('패킷'), capacity: NT_T('용량'), rejected_connections: NT_T('연결 거부'), port_allocation_errors: NT_T('포트 할당 오류'),
+    invocations: NT_T('호출'), requests: NT_T('요청'), connections: NT_T('연결'),
+    packets_dropped: NT_T('드롭 패킷'), ip_addresses: NT_T('IP 주소'), security_group_rules: NT_T('규칙'), network_acl_entries: NT_T('항목'),
+    routes_ipv4: NT_T('IPv4 라우트'), routes_ipv6: NT_T('IPv6 라우트'), routes_propagated: NT_T('전파 라우트'), vpc_ipv4_cidrs: 'IPv4 CIDR', vpc_ipv6_cidrs: 'IPv6 CIDR',
+    vpc_subnets: NT_T('서브넷'), vpc_network_acls: NT_T('네트워크 ACL'), vpc_route_tables: NT_T('라우팅 테이블'), vpc_interface_endpoints: NT_T('인터페이스 엔드포인트'),
+    vpc_active_peerings: NT_T('활성 피어링'), tgw_attachments: NT_T('어태치먼트'), tgw_route_tables: NT_T('라우팅 테이블'), tgw_peering_attachments: NT_T('피어링 어태치먼트'),
+    tgw_routes: NT_T('라우트(테이블 합)'), dxgw_virtual_interfaces: NT_T('가상 인터페이스'), dxgw_virtual_private_gateways: NT_T('가상 프라이빗 게이트웨이'), dxgw_transit_gateways: 'Transit Gateway' }
+  const UT_PART = { ingress_ipv4: NT_T('인바운드 IPv4'), ingress_ipv6: NT_T('인바운드 IPv6'), egress_ipv4: NT_T('아웃바운드 IPv4'), egress_ipv6: NT_T('아웃바운드 IPv6'), ingress: NT_T('인바운드'), egress: NT_T('아웃바운드') }
+  const UT_SRC = { account_quota: NT_T('계정 한도'), default_quota: NT_T('기본 한도'), fixed: NT_T('고정 한도'), resource_attribute: NT_T('회선 대역폭'), aws_computed: NT_T('AWS 계산') }
+  const utSrc = (m) => m.limit_source === 'arithmetic' && m.limit ? NT_T('계산(/{0} − 5)', [Math.round(32 - Math.log2(m.limit + 5))]) : UT_SRC[m.limit_source] || '—'
   // 한도·사용률을 못 읽은 이유(§3k K3 · 화면 말투 = docs/qa/copy-a.md 합니다체) — 첫 줄 = 고객 말(`X.popReason` = §17.26 C-3 표 ·
   //   표 밖 코드 = 「읽지 못했습니다.」) · 둘째 줄 = 원문(코드 · 실패한 API · AWS 메시지). 🔴 코드·API 이름을 사람 문장 자리에 내지 않는다
   //   (옛 결함 2개: 객체를 그대로 찍어 `[object Object]` · 메시지가 없으면 `access_denied` 가 그대로 보였다)
   const utReason = (r, lead) => {
     if (!r) return ''
     const raw = [r.code, r.api, r.message].filter(Boolean).join(' · ')
-    return (lead ? lead + ' ' : '') + X.popReason(r.code) + (raw ? '\n원문: ' + raw : '')
+    return (lead ? lead + ' ' : '') + X.popReason(r.code) + (raw ? NT_T('\n원문: ') + raw : '')
   }
-  const UT_LIMIT_LEAD = '계정 한도를 읽지 못해 기본 한도로 계산합니다.'
+  const UT_LIMIT_LEAD = NT_T('계정 한도를 읽지 못해 기본 한도로 계산합니다.')
   const utNum = (x) => { const r = x >= 10 ? Math.round(x) : Math.round(x * 10) / 10; return String(r) }
   function utFmt (v, unit) {
     if (v == null) return '?'
@@ -3730,27 +3733,27 @@
     while (x >= 1000 && i < u.length - 1) { x /= 1000; i++ }
     return `${i ? utNum(x) : Math.round(x)} ${u[i]}`
   }
-  const utTot = (v) => (v.tot == null ? '?' : v.tu === 'byte' ? utBytes(v.tot) : v.tu === 'packet' ? `${Math.round(v.tot).toLocaleString('en-US')} 패킷` : Math.round(v.tot).toLocaleString('en-US'))
+  const utTot = (v) => (v.tot == null ? '?' : v.tu === 'byte' ? utBytes(v.tot) : v.tu === 'packet' ? NT_T('{0} 패킷', [Math.round(v.tot).toLocaleString('en-US')]) : Math.round(v.tot).toLocaleString('en-US'))
   // 통신량 한 값의 글자(배지 · 줄인 글자 · 목록 첫 칸) — 요청·호출 = 「요청 N건」·「호출 N회」 · 연결 = 「연결 N」 · 옛 문서(합 없음) = 가장 바빴던 단위
   function utMain (v) {
     const m = v.m
-    if (UT_BADGE === 'total' && v.tot != null) return m.measure === 'requests' ? `요청 ${utTot(v)}건` : m.measure === 'invocations' ? `호출 ${utTot(v)}회` : utTot(v)
-    if (m.measure === 'connections') return `연결 ${utFmt(v.peak, 'count')}`
+    if (UT_BADGE === 'total' && v.tot != null) return m.measure === 'requests' ? NT_T('요청 {0}건', [utTot(v)]) : m.measure === 'invocations' ? NT_T('호출 {0}회', [utTot(v)]) : utTot(v)
+    if (m.measure === 'connections') return NT_T('연결 {0}', [utFmt(v.peak, 'count')])
     return m.unit === 'percent' ? `${UT_M[m.measure] || m.measure} ${utFmt(v.peak, 'percent')}` : utFmt(v.peak, m.unit)
   }
   // 「N일치만」 — 기록이 기간보다 짧은 선(엔진이 덮은 시간을 줄여 실은 것만)
   function utShort (w) {
     const c = w && w.covered_seconds; if (c == null || c >= w.minutes * 60) return ''
-    if (c >= 86400) return `${Math.floor(c / 86400)}일치만`
-    if (c >= 3600) return `${Math.floor(c / 3600)}시간치만`
-    return `${Math.max(1, Math.floor(c / 60))}분치만`
+    if (c >= 86400) return NT_T('{0}일치만', [Math.floor(c / 86400)])
+    if (c >= 3600) return NT_T('{0}시간치만', [Math.floor(c / 3600)])
+    return NT_T('{0}분치만', [Math.max(1, Math.floor(c / 60))])
   }
   // 멈춘 EC2(§17.25 「멈춘 EC2」) — 스냅샷 상태가 stopped. 멈춘 인스턴스는 지표를 내지 않는다
   const utStopped = (id) => { const n = id && X.mById.get(id); return !!n && n.type === 'ec2_instance' && (n.attrs || {}).state === 'stopped' }
   // 값 없음(#128 · 불변식 ④ · 관측 1.13.0 `no_points`) — 읽었는데 「값이 있을 때만 보내는」 지표가 이 기간에 점을 하나도 안 보냈다.
   //   트래픽이 없었는지 · 새 자원인지 · 지표가 발행되지 않는지 엔진도 모른다 → 0 도 「?」(못 읽음)도 아니다. 정렬·세모 = 모름
   const utNoPts = (w) => w.no_points === true
-  const UT_NONE_WHY = 'AWS 가 이 기간에 이 지표 값을 하나도 보내지 않았습니다. 트래픽이 없었거나, 새로 만든 자원이거나, 이 지표가 발행되지 않는 경우입니다.'
+  const UT_NONE_WHY = NT_T('AWS 가 이 기간에 이 지표 값을 하나도 보내지 않았습니다. 트래픽이 없었거나, 새로 만든 자원이거나, 이 지표가 발행되지 않는 경우입니다.')
   // 한 측정의 이 기간 값 — st: 'pct'(비율 있음) · 'val'(값만 · 한도 ?) · 'unread'(사용률 ?) · 'none'(값 없음 = 읽었고 · 점이 없다 · 0 이 아니다)
   //   · 'stop'(멈춤 = 멈췄고 · 읽었고 · 점이 없다)
   function utVal (m, W, id) {
@@ -3820,7 +3823,7 @@
     let best = null
     if (ms.some((m) => m.measure === 'ip_addresses')) {
       const v = utVal(ms.find((m) => m.measure === 'ip_addresses'), W)
-      return { v, text: v.st === 'pct' ? `IP ${utPct(v.pct)} · ${utFmt(v.peak, 'count')} / ${utFmt(v.m.limit, 'count')}` : '사용률 ?' }
+      return { v, text: v.st === 'pct' ? `IP ${utPct(v.pct)} · ${utFmt(v.peak, 'count')} / ${utFmt(v.m.limit, 'count')}` : NT_T('사용률 ?') }
     }
     // 대표 = 상태 → 합의 단위 묶음(바이트가 먼저) → 합이 큰 것 · 같으면 먼저 적힌 측정. 연결 수(RDS 보조)는 대표가 아니라 꼬리
     for (const m of ms) {
@@ -3831,10 +3834,10 @@
     const conn = ms.find((m) => m.kind === 'rate' && m.measure === 'connections')
     if (!best && conn) best = utVal(conn, W, r.target_id)
     if (!best) return null
-    let text = best.st === 'unread' ? '사용률 ?' : best.st === 'stop' ? '멈춤' : best.st === 'none' ? '값 없음' : utMain(best)
-    if (best.st === 'val' && best.m.includes === 'tunnel_health_checks') text += ' · 점검 포함'
+    let text = best.st === 'unread' ? NT_T('사용률 ?') : best.st === 'stop' ? NT_T('멈춤') : best.st === 'none' ? NT_T('값 없음') : utMain(best)
+    if (best.st === 'val' && best.m.includes === 'tunnel_health_checks') text += NT_T(' · 점검 포함')
     if (best.st !== 'unread' && best.short) text += ` · ${best.short}`
-    if (conn && conn !== best.m) { const cv = utVal(conn, W, r.target_id); if (cv.st === 'val') text += ` · 연결 ${utFmt(cv.peak, 'count')}` }
+    if (conn && conn !== best.m) { const cv = utVal(conn, W, r.target_id); if (cv.st === 'val') text += NT_T(' · 연결 {0}', [utFmt(cv.peak, 'count')]) }
     for (const e of ms) {
       if (e.kind !== 'events') continue
       const v = utVal(e, W); const nm = UT_M[e.measure] || e.measure
@@ -3846,8 +3849,8 @@
   // 줄인 글자 — 자리가 없을 때만(§17.25). 비율 · IP 비율 · 「한도 ?」 · 「?」
   function utTight (t) {
     if (t.st === 'unread') return '?'
-    if (t.st === 'stop') return '멈춤'
-    if (t.st === 'none') return '값 없음'
+    if (t.st === 'stop') return NT_T('멈춤')
+    if (t.st === 'none') return NT_T('값 없음')
     if (t.v.m.measure === 'ip_addresses') return `IP ${utPct(t.pct)}`
     return t.st === 'pct' ? utPct(t.pct) : utMain(t.v)
   }
@@ -3908,7 +3911,7 @@
       } else if (s.box && (s.box.kind === 'aws-item' || s.box.kind === 'aws-hub' || s.box.kind === 'aws-port')) {
         if (!B.icon.get(s.at.key)) continue
       } else continue   // 틀(VPC · 접힌 묶음)에 앉는 rate — 목록에만
-      let text = top.text + (s.list.length > 1 ? ` 외 ${s.list.length - 1}` : ''); let short = false
+      let text = top.text + (s.list.length > 1 ? NT_T(' 외 {0}', [s.list.length - 1]) : ''); let short = false
       let c = seat(s, tw(text, 9.5))
       if (!c) { text = utTight(top); short = true; c = seat(s, tw(text, 9.5)) }
       if (!c) { drop.push({ k: s.k, id: top.key }); continue }
@@ -4008,7 +4011,7 @@
     const dis = !can && !on
     b.classList.toggle('dis', dis); b.classList.toggle('on', on)
     b.setAttribute('aria-disabled', dis ? 'true' : 'false'); b.setAttribute('aria-pressed', on ? 'true' : 'false')
-    b.title = dis ? '사용률 — 이 파일에는 사용률 값과 실시간 주소가 없어 켤 수 없습니다' : on ? '사용률 — 눌러서 사용률을 끕니다' : '사용률 — 눌러서 사용률을 켭니다(모니터링과 별개)'
+    b.title = dis ? NT_T('사용률 — 이 파일에는 사용률 값과 실시간 주소가 없어 켤 수 없습니다') : on ? NT_T('사용률 — 눌러서 사용률을 끕니다') : NT_T('사용률 — 눌러서 사용률을 켭니다(모니터링과 별개)')
   }
   function utBtnClick (e) {
     if (!X) return
@@ -4026,38 +4029,38 @@
     // 「보기: 모니터링만/사용률만/둘 다」 칸은 걷어냈다(2026-10-06) — 상단 두 버튼이 그 셋을 이미 고른다
     const W = S.utWin; const R = utRows(rows, W)
     const win = UT_WIN.find((x) => x.m === W) || UT_WIN[0]
-    let h = `<button type="button" class="ut-b${utOpen === 'win' ? ' on' : ''}" data-ut="win">최근 ${win.t} ▾</button>` +
-      `<button type="button" class="ut-b${utOpen === 'list' ? ' on' : ''}" data-ut="list">사용률 목록 ▾ <b>${R.rate.length + R.count.length}</b></button>`
+    let h = NT_T('<button type="button" class="ut-b{0}" data-ut="win">최근 {1} ▾</button>', [utOpen === 'win' ? ' on' : '', win.t]) +
+      NT_T('<button type="button" class="ut-b{0}" data-ut="list">사용률 목록 ▾ <b>{1}</b></button>', [utOpen === 'list' ? ' on' : '', R.rate.length + R.count.length])
     const pk = S.utPick ? [...R.rate, ...R.count].find((r) => r.key === S.utPick) : null
-    if (pk) h += `<span class="ut-chip">선택: ${esc(pk.name)} <button type="button" data-ut="unpick" title="고르기 풀기">✕</button></span>`
+    if (pk) h += NT_T('<span class="ut-chip">선택: {0} <button type="button" data-ut="unpick" title="고르기 풀기">✕</button></span>', [esc(pk.name)])
     if (utOpen === 'win') {
-      h += `<div id="aws-utm" class="ut-pop"><div class="ut-h">${UT_BADGE === 'total' ? '기간 동안의 사용량 합 기준' : '기간 중 가장 바빴던 때 기준'}</div>`
+      h += `<div id="aws-utm" class="ut-pop"><div class="ut-h">${UT_BADGE === 'total' ? NT_T('기간 동안의 사용량 합 기준') : NT_T('기간 중 가장 바빴던 때 기준')}</div>`
       for (const g of [0, 1]) {
-        h += `<div class="ut-g">${g ? '추세 · 1시간마다 갱신' : '지금 상태'}</div>`
-        for (const x of UT_WIN.filter((q) => q.g === g)) h += `<button type="button" class="ut-w${x.m === W ? ' on' : ''}" data-ut="w" data-m="${x.m}"><span class="ut-ck">${x.m === W ? '✓' : ''}</span>최근 ${x.t}</button>`
+        h += `<div class="ut-g">${g ? NT_T('추세 · 1시간마다 갱신') : NT_T('지금 상태')}</div>`
+        for (const x of UT_WIN.filter((q) => q.g === g)) h += NT_T('<button type="button" class="ut-w{0}" data-ut="w" data-m="{1}"><span class="ut-ck">{2}</span>최근 {3}</button>', [x.m === W ? ' on' : '', x.m, x.m === W ? '✓' : '', x.t])
       }
       h += '</div>'
     }
     if (utOpen === 'list') {
       const tab = (t, nm, n) => `<button type="button" class="ut-tab${utTab === t ? ' on' : ''}" data-ut="tab" data-t="${t}">${nm} ${n}</button>`
-      h += `<div id="aws-utp" class="ut-pop"><div class="ut-tabs">${tab('rate', '통신량', R.rate.length)}${tab('count', '개수 한도', R.count.length)}</div>`
+      h += `<div id="aws-utp" class="ut-pop"><div class="ut-tabs">${tab('rate', NT_T('통신량'), R.rate.length)}${tab('count', NT_T('개수 한도'), R.count.length)}</div>`
       const bar = (p) => p == null ? '' : `<i class="ut-bar" style="width:${Math.min(100, p) * 0.5}px"></i>`
-      const cell = (r, p, s) => r.st === 'unread' ? '?' : r.st === 'stop' ? '멈춤' : r.st === 'none' ? '값 없음' : r.st === 'val' ? (s === 'pct' ? '한도 ?' : '') : `${bar(p)}${utPct(p)}`
+      const cell = (r, p, s) => r.st === 'unread' ? '?' : r.st === 'stop' ? NT_T('멈춤') : r.st === 'none' ? NT_T('값 없음') : r.st === 'val' ? (s === 'pct' ? NT_T('한도 ?') : '') : `${bar(p)}${utPct(p)}`
       if (utTab === 'rate') {
         // 🔁 사용량(§17.25 개정 2026-10-26) — 칸 = 대상 · 종류 · 사용량(기간 합) · 가장 바빴던 <단위> · 평균. 「값 / 한도」·「한도 출처」 칸은 개수 한도 칸에만
-        h += `<div class="ut-h">사용량 많은 순 · 최근 ${win.t} · 줄을 누르면 그 선이 굵어집니다</div><table><thead><tr><th>대상</th><th>종류</th><th>사용량</th><th>가장 바빴던 ${UT_UNIT[W]}</th><th>평균</th></tr></thead><tbody>`
+        h += NT_T('<div class="ut-h">사용량 많은 순 · 최근 {0} · 줄을 누르면 그 선이 굵어집니다</div><table><thead><tr><th>대상</th><th>종류</th><th>사용량</th><th>가장 바빴던 {1}</th><th>평균</th></tr></thead><tbody>', [win.t, UT_UNIT[W]])
         for (const r of R.rate) {
           const m = r.m; const sh = r.short ? ` <span class="ut-sh">${r.short}</span>` : ''
-          const gone = r.st === 'stop' ? '멈춤' : r.st === 'none' ? '값 없음' : '?'
+          const gone = r.st === 'stop' ? NT_T('멈춤') : r.st === 'none' ? NT_T('값 없음') : '?'
           const use = r.st === 'val' ? esc(utMain(r)) + sh : gone
           const pk = r.st === 'val' ? utFmt(r.peak, m.unit) : r.st === 'unread' ? '?' : '—'
           const avg = r.st === 'val' ? (r.avg == null ? '—' : utFmt(r.avg, m.unit)) : r.st === 'unread' ? '?' : '—'
-          const nm = r.name + (r.az ? ` · ${r.az}` : '') + (m.includes === 'tunnel_health_checks' ? ' (점검 바이트 포함)' : '')
+          const nm = r.name + (r.az ? ` · ${r.az}` : '') + (m.includes === 'tunnel_health_checks' ? NT_T(' (점검 바이트 포함)') : '')
           h += `<tr class="ut-r${S.utPick === r.key ? ' on' : ''}" data-ut="row" data-r="${esc(r.key)}" data-st="${r.st}"${m.unread ? ` title="${esc(utReason(m.unread))}"` : r.st === 'none' ? ` title="${esc(UT_NONE_WHY)}"` : ''}><td title="${esc(r.aid)}">${esc(nm)}</td><td>${esc(((TYPE_LBL(r.type)) + ' ' + (UT_M[m.measure] || m.measure)).trim())}</td>` +
             `<td>${use}</td><td>${pk}</td><td>${avg}</td></tr>`
         }
       } else {
-        h += '<div class="ut-h">한도에 가까운 순 · 지금 개수(기간과 무관)</div><table><thead><tr><th>대상</th><th>무엇을 세나</th><th>사용률</th><th>지금 / 한도</th><th>한도 출처</th></tr></thead><tbody>'
+        h += NT_T('<div class="ut-h">한도에 가까운 순 · 지금 개수(기간과 무관)</div><table><thead><tr><th>대상</th><th>무엇을 세나</th><th>사용률</th><th>지금 / 한도</th><th>한도 출처</th></tr></thead><tbody>')
         for (const r of R.count) {
           const m = r.m; const what = (UT_M[m.measure] || m.measure) + (m.part ? ` · ${UT_PART[m.part] || m.part}` : '')
           const val = r.st === 'unread' ? '?' : r.st === 'pct' ? `${utFmt(r.peak, 'count')} / ${utFmt(m.limit, 'count')}` : utFmt(r.peak, 'count')
@@ -4370,6 +4373,7 @@
     if (i < t.length) el.appendChild(document.createTextNode(t.slice(i)))
   }
   function idText (el, text) {
+    text = NT_T(text)   // Korean that comes from data (adapter labels, engine reasons) is translated at display time too — unchanged if not in the table
     const t = String(text ?? ''); let j = 0
     if (!t) { el.appendChild(document.createTextNode('')); return }
     // UUID 먼저(NB_RE 가 UUID 가운데의 `d0e0f00-…` 를 한 줄 묶음으로 잡지 않게)
@@ -4382,7 +4386,7 @@
       e.onclick = (ev) => { ev.stopPropagation(); unhl(); const { nodes, lines } = expandL(tk); if (nodes.length) mark(nodes, lines) } }
   }
   // 콘솔식 표(§17.11 「콘솔 표현 원칙」) — 머리줄 + 행 · 열 폭 고정(행끼리 줄이 맞는다) · wrap < 열 수 = 두 줄 행(머리줄도 같은 모양)
-  const tabLab = (t) => t.label + (t.nc ? ' — 수집 안 함' : t.ur ? ' — 읽지 못함' : ` (${t.n ?? '?'})`)
+  const tabLab = (t) => t.label + (t.nc ? NT_T(' — 수집 안 함') : t.ur ? NT_T(' — 읽지 못함') : ` (${t.n ?? '?'})`)
   function tblEl (t) {
     const w = document.createElement('div'); w.className = 'aw-tbl'; w.dataset.tbl = t.label || ''
     if (t.nc || t.ur || !t.rows.length) { const e = document.createElement('div'); e.className = 'aw-tmt' + (t.ur ? ' aw-wn' : ''); e.textContent = t.empty; w.appendChild(e); return w }
@@ -4437,24 +4441,24 @@
   function secEl (s) {
     const b = document.createElement('div'); b.className = 'aw-rtb'
     const box = document.createElement('div'); box.className = 'aw-rtl'; box.style.display = 'none'
-    const lab = () => (box.style.display === 'none' ? '▸ ' : '▾ ') + s.label + (s.nc ? ' — 수집 안 함' : s.ur ? ' — 읽지 못함' : ` (${s.n ?? '?'})`)
+    const lab = () => (box.style.display === 'none' ? '▸ ' : '▾ ') + s.label + (s.nc ? NT_T(' — 수집 안 함') : s.ur ? NT_T(' — 읽지 못함') : ` (${s.n ?? '?'})`)
     b.textContent = lab(); b.dataset.sec = s.label
     b.onclick = (e) => { e.stopPropagation(); box.style.display = box.style.display === 'none' ? 'block' : 'none'; b.textContent = lab() }
-    if (!s.groups.length) { const e = document.createElement('div'); e.className = 'aw-mt'; e.textContent = s.empty || '(없음)'; box.appendChild(e) }
+    if (!s.groups.length) { const e = document.createElement('div'); e.className = 'aw-mt'; e.textContent = NT_T(s.empty || '(없음)'); box.appendChild(e) }
     for (const g of s.groups) {
       if (g.h) {
         const h4 = document.createElement('h4'); if (g.hcls) h4.className = 'aw-' + g.hcls; idText(h4, g.h)
-        if (g.cu) { const a = document.createElement('a'); a.className = 'aw-clink aw-clink-s'; a.href = g.cu; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = '콘솔 ↗'; a.onclick = (ev) => ev.stopPropagation(); h4.append(' ', a) }
+        if (g.cu) { const a = document.createElement('a'); a.className = 'aw-clink aw-clink-s'; a.href = g.cu; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = NT_T('콘솔 ↗'); a.onclick = (ev) => ev.stopPropagation(); h4.append(' ', a) }
         box.appendChild(h4)
       }
       // 세부 정보 한 줄(콘솔 「세부 정보」 상자) — 「이름 값 · 이름 값」
-      if (g.dl && g.dl.length) { const e = document.createElement('div'); e.className = 'aw-gd'; e.textContent = g.dl.map(([k, v]) => `${k} ${v}`).join(' · '); box.appendChild(e) }
+      if (g.dl && g.dl.length) { const e = document.createElement('div'); e.className = 'aw-gd'; e.textContent = g.dl.map(([k, v]) => `${NT_T(k)} ${NT_T(v)}`).join(' · '); box.appendChild(e) }
       if (g.tabs) box.appendChild(tabsEl(g.tabs))
       else if (g.tbl) box.appendChild(tblEl(g.tbl))
       for (const r of g.rows || []) {
         const e = document.createElement('div'); const tk = r.tk || []
         e.className = 'aw-r' + (r.t !== undefined ? ' aw-t' : '') + (r.cls ? ' aw-' + r.cls : '') + (tk.length ? '' : ' aw-nk')
-        if (r.t !== undefined) { const sp = document.createElement('span'); sp.textContent = r.t; e.append(sp) } else {
+        if (r.t !== undefined) { const sp = document.createElement('span'); sp.textContent = NT_T(r.t); e.append(sp) } else {
           const a = document.createElement('span'); idText(a, r.a ?? ''); const c = document.createElement('span'); idText(c, r.b ?? ''); e.append(a, c)
         }
         bindTk(e, tk)
@@ -4471,12 +4475,12 @@
   let memAll = null; let memQ = ''   // 「전체 보기」를 누른 묶음 · 찾기 칸 글자 — 낱개에서 돌아왔을 때 그대로
   function memList (k, d) {
     const m = document.createElement('div'); m.className = 'aw-mem'; m.dataset.g = k
-    const hd = document.createElement('b'); hd.textContent = '포함된 리소스 ' + d.members.length + '개'; m.appendChild(hd)
+    const hd = document.createElement('b'); hd.textContent = NT_T('포함된 리소스 ') + d.members.length + NT_T('개'); m.appendChild(hd)
     const hit = SHITS && memAll !== k ? d.members.filter((x) => SHITS.has(x.key)) : []
     const list = hit.length && hit.length < d.members.length ? hit : d.members
     if (list !== d.members) {
-      const n = document.createElement('div'); n.className = 'aw-memn'; n.textContent = `검색어와 일치하는 ${list.length}개만 보여 줍니다 `
-      const all = document.createElement('button'); all.type = 'button'; all.className = 'aw-mema'; all.textContent = `전체 ${d.members.length}개 보기`
+      const n = document.createElement('div'); n.className = 'aw-memn'; n.textContent = NT_T('검색어와 일치하는 {0}개만 보여 줍니다 ', [list.length])
+      const all = document.createElement('button'); all.type = 'button'; all.className = 'aw-mema'; all.textContent = NT_T('전체 {0}개 보기', [d.members.length])
       all.onclick = (ev) => { ev.stopPropagation(); memAll = k; fill(k, cardBack); place() }
       n.appendChild(all); m.appendChild(n)
     }
@@ -4488,8 +4492,8 @@
       const s = document.createElement('small'); s.textContent = x.sub; e.appendChild(s); rows.push([e, `${x.name} ${x.sub}`.toLowerCase()])
     }
     if (list.length > MEM_FIND) {
-      const q = document.createElement('input'); q.type = 'search'; q.className = 'aw-memq'; q.placeholder = '이름으로 찾기'; q.setAttribute('aria-label', '포함된 리소스를 이름으로 찾기'); q.value = memQ
-      const z = document.createElement('div'); z.className = 'aw-memz'; z.textContent = '일치하는 리소스가 없습니다'
+      const q = document.createElement('input'); q.type = 'search'; q.className = 'aw-memq'; q.placeholder = NT_T('이름으로 찾기'); q.setAttribute('aria-label', NT_T('포함된 리소스를 이름으로 찾기')); q.value = memQ
+      const z = document.createElement('div'); z.className = 'aw-memz'; z.textContent = NT_T('일치하는 리소스가 없습니다')
       const run = () => { const t = q.value.trim().toLowerCase(); let any = false; for (const [e, txt] of rows) { const on = !t || txt.includes(t); e.hidden = !on; any = any || on } z.hidden = any }
       q.oninput = () => { memQ = q.value; run() }
       m.appendChild(q); for (const [e] of rows) m.appendChild(e); m.appendChild(z); run()
@@ -4513,28 +4517,28 @@
       const bt = document.createElement('button'); bt.type = 'button'; bt.className = 'aw-back'; bt.dataset.back = back
       const bd = det(back) || {}
       // 묶음 목록에서 왔으면 「목록으로」 · 다른 정보창의 표 줄(`go`)에서 왔으면 「돌아가기」(예: VIF → 그 DX 연결)
-      bt.textContent = bd.members ? `← ${bd.title || '묶음'} 목록으로` : `← ${bd.title || '이전'} 정보창으로 돌아가기`; bt.onclick = (ev) => { ev.stopPropagation(); memBack() }
+      bt.textContent = bd.members ? NT_T('← {0} 목록으로', [bd.title || NT_T('묶음')]) : NT_T('← {0} 정보창으로 돌아가기', [bd.title || NT_T('이전')]); bt.onclick = (ev) => { ev.stopPropagation(); memBack() }
       body.appendChild(bt)
     }
-    const h = document.createElement('h3'); h.innerHTML = '<span class="aw-tri">▾</span><span></span>'; h.lastChild.textContent = (d && d.title) || '(정보 없음)'; body.appendChild(h)
+    const h = document.createElement('h3'); h.innerHTML = '<span class="aw-tri">▾</span><span></span>'; h.lastChild.textContent = NT_T((d && d.title) || '(정보 없음)'); body.appendChild(h)
     if (d) {
-      const sb = document.createElement('div'); sb.className = 'aw-sub'; sb.textContent = d.sub || ''; body.appendChild(sb)
+      const sb = document.createElement('div'); sb.className = 'aw-sub'; sb.textContent = NT_T(d.sub || ''); body.appendChild(sb)
       // 대장 58 — 이 자원 하나를 가리키는 카드에만 붙인다(묶음 아이콘·그린 칸·유령은 가리킬 대상이 하나가 아니다).
       //   새 탭으로 연다(`_blank`+`noopener`) — 이 화면을 떠나지 않는다. 불변식 ⑥ 의 「요청 0」은 **누르기 전**의 약속이다.
       const cn = X.mById ? X.mById.get(k) : null
       const cu = cn && X.consoleUrl ? X.consoleUrl(cn) : null
       if (cu) {
         const a = document.createElement('a'); a.className = 'aw-clink'; a.href = cu
-        a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = 'AWS 콘솔에서 열기 ↗'
+        a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = NT_T('AWS 콘솔에서 열기 ↗')
         a.onclick = (ev) => ev.stopPropagation()
         body.appendChild(a)
         // 다른 계정 소유(예: 575 의 피어링 · Lattice 서비스) — 콘솔은 그 계정으로 로그인해야 열린다(2026-10-24 실콘솔: 188 콘솔에서 「No matching resource」)
         const own = String((X.acctOf && X.acctOf(cn)) || '').replace(/^acct-/, '')
-        if (own && M.accts.length > 1) { const sp = document.createElement('span'); sp.className = 'aw-cacct'; sp.textContent = ` 계정 ${X.acctText(own)} 콘솔에서 열립니다`; body.appendChild(sp) }
+        if (own && M.accts.length > 1) { const sp = document.createElement('span'); sp.className = 'aw-cacct'; sp.textContent = NT_T(' 계정 {0} 콘솔에서 열립니다', [X.acctText(own)]); body.appendChild(sp) }
       }
       const t = document.createElement('table')
       for (const [a, b, cl, go] of d.rows || []) {
-        const tr = t.insertRow(); tr.insertCell().textContent = a; const td = tr.insertCell(); idText(td, b ?? ''); if (cl) td.className = 'aw-' + cl
+        const tr = t.insertRow(); tr.insertCell().textContent = NT_T(a); const td = tr.insertCell(); idText(td, b ?? ''); if (cl) td.className = 'aw-' + cl
         // 넷째 칸 = 누르면 열 정보창(§17.41 「웹 ACL」 줄 → 그 WAF) — 도식에 그 칸이 있을 때만 누를 수 있다(없으면 글자 그대로)
         if (go && (B.det.has(go) || B.mem.has(go))) {
           td.classList.add('aw-go'); td.tabIndex = 0; td.setAttribute('role', 'button'); td.dataset.go = go
@@ -4549,13 +4553,13 @@
     // 실시간 모니터링 켜짐이면 맨 아래 「상태」 칸(§17.20) — 줄은 flow.js `obsRows` 가 준다. 꺼짐이면 칸 자체가 없다(§17.11 칸 목록 = 꺼짐 기준)
     const ob = X.obs && X.obs.on() ? obsRowsOf(k) : null
     if (ob && ob.length) {
-      const hd = document.createElement('div'); hd.className = 'aw-sech aw-obsh'; hd.textContent = '상태(모니터링)'; body.appendChild(hd)
+      const hd = document.createElement('div'); hd.className = 'aw-sech aw-obsh'; hd.textContent = NT_T('상태(모니터링)'); body.appendChild(hd)
       const t = document.createElement('table'); t.className = 'aw-obst'
-      for (const [a, v, ti, dr] of ob) { const tr = t.insertRow(); if (dr) tr.dataset.row = dr; tr.insertCell().textContent = a; const td = tr.insertCell(); td.textContent = v ?? ''; if (ti) td.title = ti }
+      for (const [a, v, ti, dr] of ob) { const tr = t.insertRow(); if (dr) tr.dataset.row = dr; tr.insertCell().textContent = NT_T(a); const td = tr.insertCell(); td.textContent = NT_T(v ?? ''); if (ti) td.title = NT_T(ti) }
       body.appendChild(t)
     }
     const op = document.createElement('div'); op.className = 'aw-op'
-    op.innerHTML = '<span>투명도</span><input type="range" min="0" max="100" step="5" aria-label="정보창 투명도"><b></b>'; c.appendChild(op)
+    op.innerHTML = NT_T('<span>투명도</span><input type="range" min="0" max="100" step="5" aria-label="정보창 투명도"><b></b>'); c.appendChild(op)
     const rg = op.querySelector('input'); rg.value = X.S.awsOp || 0
     rg.oninput = () => { X.S.awsOp = +rg.value; setOp() }
     setOp()
@@ -4619,51 +4623,51 @@
   function legendRows () {
     const present = new Set([...B.cellKind.values()]); for (const h of M.hubs.values()) present.add(h.ghost ? 'ghost-tgw' : h.kind); for (const g of M.globs.values()) present.add(g.ghost ? 'ghost' : g.kind)
     if (M.xpeers.length) present.add('xvpc')
-    const LEGK = [['inet', '인터넷'], ['igw', 'Internet Gateway'], ['nat', 'NAT Gateway'], ['lb', 'Load Balancer'], ['vpce', 'VPC Endpoint'], ['nfw', 'Network Firewall'], ['ec2', 'EC2'], ['asg', 'Auto Scaling 그룹'], ['ecs', 'ECS'], ['eks', 'EKS'],
-      ['sm', 'SageMaker'], ['eic', 'EIC Endpoint (EC2 Instance Connect Endpoint)'], ['rds', 'RDS'], ['tgw', 'Transit Gateway'], ['ghost-tgw', 'Transit Gateway · 다른 계정'],
-      ['dxcon', 'Direct Connect'], ['dxgw', 'DX Gateway (Direct Connect Gateway)'], ['ghost', 'DX Gateway · 읽지 못함'], ['vgw', 'Virtual Private Gateway (VGW)'], ['vpn', 'Site-to-Site VPN 연결'], ['cgw', 'Customer Gateway'], ['cf', 'CloudFront'], ['xvpc', 'VPC · 수집 범위 밖'],
+    const LEGK = [['inet', NT_T('인터넷')], ['igw', 'Internet Gateway'], ['nat', 'NAT Gateway'], ['lb', 'Load Balancer'], ['vpce', 'VPC Endpoint'], ['nfw', 'Network Firewall'], ['ec2', 'EC2'], ['asg', NT_T('Auto Scaling 그룹')], ['ecs', 'ECS'], ['eks', 'EKS'],
+      ['sm', 'SageMaker'], ['eic', 'EIC Endpoint (EC2 Instance Connect Endpoint)'], ['rds', 'RDS'], ['tgw', 'Transit Gateway'], ['ghost-tgw', NT_T('Transit Gateway · 다른 계정')],
+      ['dxcon', 'Direct Connect'], ['dxgw', 'DX Gateway (Direct Connect Gateway)'], ['ghost', NT_T('DX Gateway · 읽지 못함')], ['vgw', 'Virtual Private Gateway (VGW)'], ['vpn', NT_T('Site-to-Site VPN 연결')], ['cgw', 'Customer Gateway'], ['cf', 'CloudFront'], ['xvpc', NT_T('VPC · 수집 범위 밖')],
       // #114(§17.32) — 범례 = 서비스 이름만(PR #118 · 손그림 메모는 개발 문서 몫)
-      ['lambda', 'Lambda'], ['r53', 'Route 53 호스팅 영역'], ['s3', 'S3 버킷'],
-      ['ec', 'ElastiCache'], ['rdsc', 'Aurora · DB 클러스터'], ['os', 'OpenSearch'], ['msk', 'MSK(Kafka)'], ['brk', 'Bedrock Endpoint'],
+      ['lambda', 'Lambda'], ['r53', NT_T('Route 53 호스팅 영역')], ['s3', NT_T('S3 버킷')],
+      ['ec', 'ElastiCache'], ['rdsc', NT_T('Aurora · DB 클러스터')], ['os', 'OpenSearch'], ['msk', 'MSK(Kafka)'], ['brk', 'Bedrock Endpoint'],
       // 배치 D(2.10.0 · §17.35~37)
       ['apigw', 'API Gateway'], ['rdsp', 'RDS Proxy'], ['ga', 'Global Accelerator'],
       // #129(2.11.0 · §17.39~40)
-      ['cwan', 'Cloud WAN'], ['lsn', 'VPC Lattice 서비스 네트워크'], ['lsvc', 'VPC Lattice 서비스'],
+      ['cwan', 'Cloud WAN'], ['lsn', NT_T('VPC Lattice 서비스 네트워크')], ['lsvc', NT_T('VPC Lattice 서비스')],
       // 2.12.0(§17.41)
-      ['waf', 'WAF 웹 ACL']].filter(([k]) => present.has(k))
+      ['waf', NT_T('WAF 웹 ACL')]].filter(([k]) => present.has(k))
     const mini = (k, sub) => `<svg width="24" height="24" viewBox="-20 -20 40 40">${k === 'ghost' ? glyph('dxgw', 0, 0, COL.ghost, 'ghost') : k === 'ghost-tgw' ? glyph('tgw', 0, 0, COL.ghost, 'ghost') : glyph(k, 0, 0, COL[k], false, sub)}</svg>`
     const lbTypes = [...new Set([...M.items.values()].filter((x) => x.kind === 'lb').map((x) => x.lbType))].sort()
     const box = (st, tile = '') => `<svg width="34" height="22" viewBox="0 0 34 22"><rect x="1" y="1" width="32" height="20" rx="2" ${st}/>${tile}</svg>`
-    return [{ h: '영역' },
-      { ic: [box('fill="none" stroke="#8b949e" stroke-width="1.4"')], t: '계정' },
-      { ic: [box('fill="none" stroke="#6e7681" stroke-width="1.2" stroke-dasharray="6 4"')], t: '리전 · 전역' },
+    return [{ h: NT_T('영역') },
+      { ic: [box('fill="none" stroke="#8b949e" stroke-width="1.4"')], t: NT_T('계정') },
+      { ic: [box('fill="none" stroke="#6e7681" stroke-width="1.2" stroke-dasharray="6 4"')], t: NT_T('리전 · 전역') },
       { ic: [box(`fill="#10151c" stroke="${COL.vpc}" stroke-width="1.4"`, TILE.vpc(4, 3, COL.vpc).replace(/width="22" height="22"/, 'width="16" height="16"'))], t: 'VPC' },
-      { ic: [box('fill="none" stroke="#484f58" stroke-width="1.1" stroke-dasharray="5 4"')], t: '가용 영역(AZ)' },
-      { ic: [box(`fill="${SNF.pub}" stroke="${COL.pub}"`, TILE.globe(3, 2.5))], t: '퍼블릭 서브넷 (지구본)' },
-      { ic: [box(`fill="${SNF.priv}" stroke="${COL.priv}"`, TILE.lock(3, 2.5))], t: '프라이빗 서브넷 (자물쇠)' },
-      { h: '서비스 (같은 서비스는 같은 색 · 계정과 무관)' },
-      ...LEGK.map(([k, n]) => (k === 'lb' ? { kind: 'lb', ic: lbTypes.map((t) => mini('lb', t)), t: `${lbTypes.join(' · ')} (로드 밸런서)` } : { kind: k, ic: [mini(k)], t: n })),
-      ...([...M.ports.values()].some((p) => !p.vgw && !p.cwan && !p.lsn) ? [{ ic: [`<svg width="24" height="24" viewBox="-12 -12 24 24">${portSvg(0, 0)}</svg>`], t: 'VPC 테두리의 작은 원 = TGW 연결 지점' }] : []),
-      ...([...M.ports.values()].some((p) => p.cwan) ? [{ kind: 'cwanport', ic: [`<svg width="24" height="24" viewBox="-12 -12 24 24">${portSvg(0, 0, COL.cwan)}</svg>`], t: 'VPC 테두리의 민트색 원 = Cloud WAN 연결 지점' }] : []),
-      ...([...M.ports.values()].some((p) => p.lsn) ? [{ kind: 'lsnport', ic: [`<svg width="24" height="24" viewBox="-12 -12 24 24">${portSvg(0, 0, COL.lsn)}</svg>`], t: 'VPC 테두리의 장미색 원 = VPC Lattice 서비스 네트워크 연결 지점' }] : []),
-      ...([...M.ports.values()].some((p) => p.vgw) ? [{ kind: 'vgwport', ic: [`<svg width="24" height="24" viewBox="-12 -12 24 24">${portSvg(0, 0, COL.vgw)}</svg>`], t: 'VPC 테두리의 하늘색 원 = VGW 연결 지점' }] : []),
-      ...(B.lines.some((l) => l.sub && M.pp.has(l.b)) ? [{ ic: [`<svg width="24" height="24" viewBox="-12 -12 24 24">${ppSvg(0, 0)}</svg>`], t: 'VPC 아래쪽 변의 작은 원 = VPC 피어링 연결 지점' }] : []),
-      { h: '선' },
-      { ic: ['<svg width="34" height="12"><path d="M1,6H26" stroke="#7d8590" stroke-width="1.3"/><path d="M24,2.5L31,6L24,9.5z" fill="#7d8590"/></svg>'], t: '라우트로 나가는 길(화살표 = 진행 방향)' },
-      { ic: ['<svg width="34" height="12"><path d="M1,6H33" stroke="#9aa4b0" stroke-width="1.6"/></svg>'], t: `연결(어태치먼트 · TGW 피어링 · DX 게이트웨이${B.lines.some((l) => l.kind === 'vpn') ? ' · VPN' : ''})` },
-      ...(B.lines.some((l) => l.kind === 'cforigin') ? [{ ic: ['<svg width="34" height="12"><path d="M1,6H26" stroke="#9aa4b0" stroke-width="1.6"/><path d="M24,2.5L31,6L24,9.5z" fill="#7d8590"/></svg>'], t: 'CloudFront 오리진(화살표 = 요청이 가는 로드밸런서·EC2)' }] : []),
-      ...(B.lines.some((l) => l.kind === 'dnsalias') ? [{ kind: 'dnsalias', ic: [`<svg width="34" height="12"><path d="M1,6H26" stroke="${COL.r53}" stroke-width="1.5"/><path d="M24,2.5L31,6L24,9.5z" fill="${COL.r53}"/></svg>`], t: 'Route 53 별칭(화살표 = 그 이름이 가리키는 로드밸런서)' }] : []),
-      ...(B.lines.some((l) => l.kind === 'vpclink') ? [{ kind: 'vpclink', ic: [`<svg width="34" height="12"><path d="M1,6H26" stroke="${COL.apigw}" stroke-width="1.5"/><path d="M24,2.5L31,6L24,9.5z" fill="${COL.apigw}"/></svg>`], t: 'API Gateway VPC 링크(화살표 = 요청이 전달되는 로드밸런서)' }] : []),
-      ...(B.lines.some((l) => l.kind === 'dbproxy') ? [{ kind: 'dbproxy', ic: [`<svg width="34" height="12"><path d="M1,6H26" stroke="${COL.rdsp}" stroke-width="1.5"/><path d="M24,2.5L31,6L24,9.5z" fill="${COL.rdsp}"/></svg>`], t: 'RDS 프록시 → DB(화살표 = 프록시가 연결을 전달하는 DB)' }] : []),
-      ...(B.lines.some((l) => l.kind === 'gaep') ? [{ kind: 'gaep', ic: [`<svg width="34" height="12"><path d="M1,6H26" stroke="${COL.ga}" stroke-width="1.5"/><path d="M24,2.5L31,6L24,9.5z" fill="${COL.ga}"/></svg>`], t: 'Global Accelerator → 엔드포인트(화살표 = 요청이 전달되는 로드밸런서·인스턴스)' }] : []),
-      ...(B.lines.some((l) => l.kind === 'cnx') ? [{ kind: 'cnx', ic: [`<svg width="34" height="12"><path d="M1,6H33" stroke="${COL.tgw}" stroke-width="1.2" stroke-dasharray="4 3"/></svg>`], t: 'TGW Connect(SD-WAN 오버레이 · 점선 = 그 어태치먼트 위로 지나가는 GRE 터널)' }] : []),
-      ...(B.lines.some((l) => l.kind === 'cwanatt') ? [{ kind: 'cwanatt', ic: [`<svg width="34" height="12"><path d="M1,6H33" stroke="${COL.cwan}" stroke-width="1.5"/></svg>`], t: 'Cloud WAN 연결(코어 네트워크 ↔ VPC)' }] : []),
-      ...(B.lines.some((l) => l.kind === 'lsnatt') ? [{ kind: 'lsnatt', ic: [`<svg width="34" height="12"><path d="M1,6H33" stroke="${COL.lsn}" stroke-width="1.5"/></svg>`], t: 'VPC Lattice 서비스 네트워크 연결(서비스 네트워크 ↔ VPC)' }] : []),
-      ...(B.lines.some((l) => l.kind === 'lsvctgt') ? [{ kind: 'lsvctgt', ic: [`<svg width="34" height="12"><path d="M1,6H26" stroke="${COL.lsvc}" stroke-width="1.5"/><path d="M24,2.5L31,6L24,9.5z" fill="${COL.lsvc}"/></svg>`], t: 'VPC Lattice 서비스 → 대상(화살표 = 요청이 전달되는 EC2·로드 밸런서·Lambda)' }] : []),
-      ...(B.lines.some((l) => l.kind === 'wafp') ? [{ kind: 'wafp', ic: [`<svg width="34" height="12"><path d="M1,6H26" stroke="${COL.waf}" stroke-width="1.5"/><path d="M24,2.5L31,6L24,9.5z" fill="${COL.waf}"/></svg>`], t: 'WAF 웹 ACL → 보호 대상(화살표 = 이 웹 ACL 이 요청을 먼저 검사하는 CloudFront·로드 밸런서·API Gateway)' }] : []),
-      ...(B.lines.some((l) => l.kind === 'epprov') ? [{ kind: 'epprov', ic: [`<svg width="34" height="12"><path d="M1,6H26" stroke="${COL.vpce}" stroke-width="1.5"/><path d="M24,2.5L31,6L24,9.5z" fill="${COL.vpce}"/></svg>`], t: 'VPC 엔드포인트 → 제공자(화살표 = 트래픽을 전달받는 GWLB·방화벽)' }] : []),
-      ...(B.lines.some((l) => l.kind === 'lbtarget') ? [{ kind: 'lbtarget', ic: [`<svg width="34" height="12"><path d="M1,6H26" stroke="${COL.lb}" stroke-width="1.5"/><path d="M24,2.5L31,6L24,9.5z" fill="${COL.lb}"/></svg>`], t: 'LB → 대상(화살표 = 요청이 전달되는 대상 · ×N = 등록 수 · 외부 IP N = VPC 밖 IP 수)' }] : []),
-      { ic: ['<svg width="34" height="12"><path d="M1,6H33" stroke="#9aa4b0" stroke-width="1.6" stroke-dasharray="7 5"/></svg>'], t: 'VPC 피어링' }]
+      { ic: [box('fill="none" stroke="#484f58" stroke-width="1.1" stroke-dasharray="5 4"')], t: NT_T('가용 영역(AZ)') },
+      { ic: [box(`fill="${SNF.pub}" stroke="${COL.pub}"`, TILE.globe(3, 2.5))], t: NT_T('퍼블릭 서브넷 (지구본)') },
+      { ic: [box(`fill="${SNF.priv}" stroke="${COL.priv}"`, TILE.lock(3, 2.5))], t: NT_T('프라이빗 서브넷 (자물쇠)') },
+      { h: NT_T('서비스 (같은 서비스는 같은 색 · 계정과 무관)') },
+      ...LEGK.map(([k, n]) => (k === 'lb' ? { kind: 'lb', ic: lbTypes.map((t) => mini('lb', t)), t: NT_T('{0} (로드 밸런서)', [lbTypes.join(' · ')]) } : { kind: k, ic: [mini(k)], t: n })),
+      ...([...M.ports.values()].some((p) => !p.vgw && !p.cwan && !p.lsn) ? [{ ic: [`<svg width="24" height="24" viewBox="-12 -12 24 24">${portSvg(0, 0)}</svg>`], t: NT_T('VPC 테두리의 작은 원 = TGW 연결 지점') }] : []),
+      ...([...M.ports.values()].some((p) => p.cwan) ? [{ kind: 'cwanport', ic: [`<svg width="24" height="24" viewBox="-12 -12 24 24">${portSvg(0, 0, COL.cwan)}</svg>`], t: NT_T('VPC 테두리의 민트색 원 = Cloud WAN 연결 지점') }] : []),
+      ...([...M.ports.values()].some((p) => p.lsn) ? [{ kind: 'lsnport', ic: [`<svg width="24" height="24" viewBox="-12 -12 24 24">${portSvg(0, 0, COL.lsn)}</svg>`], t: NT_T('VPC 테두리의 장미색 원 = VPC Lattice 서비스 네트워크 연결 지점') }] : []),
+      ...([...M.ports.values()].some((p) => p.vgw) ? [{ kind: 'vgwport', ic: [`<svg width="24" height="24" viewBox="-12 -12 24 24">${portSvg(0, 0, COL.vgw)}</svg>`], t: NT_T('VPC 테두리의 하늘색 원 = VGW 연결 지점') }] : []),
+      ...(B.lines.some((l) => l.sub && M.pp.has(l.b)) ? [{ ic: [`<svg width="24" height="24" viewBox="-12 -12 24 24">${ppSvg(0, 0)}</svg>`], t: NT_T('VPC 아래쪽 변의 작은 원 = VPC 피어링 연결 지점') }] : []),
+      { h: NT_T('선') },
+      { ic: ['<svg width="34" height="12"><path d="M1,6H26" stroke="#7d8590" stroke-width="1.3"/><path d="M24,2.5L31,6L24,9.5z" fill="#7d8590"/></svg>'], t: NT_T('라우트로 나가는 길(화살표 = 진행 방향)') },
+      { ic: ['<svg width="34" height="12"><path d="M1,6H33" stroke="#9aa4b0" stroke-width="1.6"/></svg>'], t: NT_T('연결(어태치먼트 · TGW 피어링 · DX 게이트웨이{0})', [B.lines.some((l) => l.kind === 'vpn') ? ' · VPN' : '']) },
+      ...(B.lines.some((l) => l.kind === 'cforigin') ? [{ ic: ['<svg width="34" height="12"><path d="M1,6H26" stroke="#9aa4b0" stroke-width="1.6"/><path d="M24,2.5L31,6L24,9.5z" fill="#7d8590"/></svg>'], t: NT_T('CloudFront 오리진(화살표 = 요청이 가는 로드밸런서·EC2)') }] : []),
+      ...(B.lines.some((l) => l.kind === 'dnsalias') ? [{ kind: 'dnsalias', ic: [`<svg width="34" height="12"><path d="M1,6H26" stroke="${COL.r53}" stroke-width="1.5"/><path d="M24,2.5L31,6L24,9.5z" fill="${COL.r53}"/></svg>`], t: NT_T('Route 53 별칭(화살표 = 그 이름이 가리키는 로드밸런서)') }] : []),
+      ...(B.lines.some((l) => l.kind === 'vpclink') ? [{ kind: 'vpclink', ic: [`<svg width="34" height="12"><path d="M1,6H26" stroke="${COL.apigw}" stroke-width="1.5"/><path d="M24,2.5L31,6L24,9.5z" fill="${COL.apigw}"/></svg>`], t: NT_T('API Gateway VPC 링크(화살표 = 요청이 전달되는 로드밸런서)') }] : []),
+      ...(B.lines.some((l) => l.kind === 'dbproxy') ? [{ kind: 'dbproxy', ic: [`<svg width="34" height="12"><path d="M1,6H26" stroke="${COL.rdsp}" stroke-width="1.5"/><path d="M24,2.5L31,6L24,9.5z" fill="${COL.rdsp}"/></svg>`], t: NT_T('RDS 프록시 → DB(화살표 = 프록시가 연결을 전달하는 DB)') }] : []),
+      ...(B.lines.some((l) => l.kind === 'gaep') ? [{ kind: 'gaep', ic: [`<svg width="34" height="12"><path d="M1,6H26" stroke="${COL.ga}" stroke-width="1.5"/><path d="M24,2.5L31,6L24,9.5z" fill="${COL.ga}"/></svg>`], t: NT_T('Global Accelerator → 엔드포인트(화살표 = 요청이 전달되는 로드밸런서·인스턴스)') }] : []),
+      ...(B.lines.some((l) => l.kind === 'cnx') ? [{ kind: 'cnx', ic: [`<svg width="34" height="12"><path d="M1,6H33" stroke="${COL.tgw}" stroke-width="1.2" stroke-dasharray="4 3"/></svg>`], t: NT_T('TGW Connect(SD-WAN 오버레이 · 점선 = 그 어태치먼트 위로 지나가는 GRE 터널)') }] : []),
+      ...(B.lines.some((l) => l.kind === 'cwanatt') ? [{ kind: 'cwanatt', ic: [`<svg width="34" height="12"><path d="M1,6H33" stroke="${COL.cwan}" stroke-width="1.5"/></svg>`], t: NT_T('Cloud WAN 연결(코어 네트워크 ↔ VPC)') }] : []),
+      ...(B.lines.some((l) => l.kind === 'lsnatt') ? [{ kind: 'lsnatt', ic: [`<svg width="34" height="12"><path d="M1,6H33" stroke="${COL.lsn}" stroke-width="1.5"/></svg>`], t: NT_T('VPC Lattice 서비스 네트워크 연결(서비스 네트워크 ↔ VPC)') }] : []),
+      ...(B.lines.some((l) => l.kind === 'lsvctgt') ? [{ kind: 'lsvctgt', ic: [`<svg width="34" height="12"><path d="M1,6H26" stroke="${COL.lsvc}" stroke-width="1.5"/><path d="M24,2.5L31,6L24,9.5z" fill="${COL.lsvc}"/></svg>`], t: NT_T('VPC Lattice 서비스 → 대상(화살표 = 요청이 전달되는 EC2·로드 밸런서·Lambda)') }] : []),
+      ...(B.lines.some((l) => l.kind === 'wafp') ? [{ kind: 'wafp', ic: [`<svg width="34" height="12"><path d="M1,6H26" stroke="${COL.waf}" stroke-width="1.5"/><path d="M24,2.5L31,6L24,9.5z" fill="${COL.waf}"/></svg>`], t: NT_T('WAF 웹 ACL → 보호 대상(화살표 = 이 웹 ACL 이 요청을 먼저 검사하는 CloudFront·로드 밸런서·API Gateway)') }] : []),
+      ...(B.lines.some((l) => l.kind === 'epprov') ? [{ kind: 'epprov', ic: [`<svg width="34" height="12"><path d="M1,6H26" stroke="${COL.vpce}" stroke-width="1.5"/><path d="M24,2.5L31,6L24,9.5z" fill="${COL.vpce}"/></svg>`], t: NT_T('VPC 엔드포인트 → 제공자(화살표 = 트래픽을 전달받는 GWLB·방화벽)') }] : []),
+      ...(B.lines.some((l) => l.kind === 'lbtarget') ? [{ kind: 'lbtarget', ic: [`<svg width="34" height="12"><path d="M1,6H26" stroke="${COL.lb}" stroke-width="1.5"/><path d="M24,2.5L31,6L24,9.5z" fill="${COL.lb}"/></svg>`], t: NT_T('LB → 대상(화살표 = 요청이 전달되는 대상 · ×N = 등록 수 · 외부 IP N = VPC 밖 IP 수)') }] : []),
+      { ic: ['<svg width="34" height="12"><path d="M1,6H33" stroke="#9aa4b0" stroke-width="1.6" stroke-dasharray="7 5"/></svg>'], t: NT_T('VPC 피어링') }]
   }
   function legend () {
     const el = document.getElementById('awsleg'); if (!el) return
