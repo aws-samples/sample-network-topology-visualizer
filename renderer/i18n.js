@@ -66,6 +66,18 @@
   }
   document.documentElement.lang = lang
   globalThis.NT_T = NT_T
+  // `?lang=` outranks the saved choice, so it is removed before the reload — otherwise the switch could never undo
+  // it. Only that one parameter is cut out of the raw query string; the others keep their exact bytes and order
+  // (signed links carry their signature in the query).
+  function dropLangParam () {
+    try {
+      const q = location.search.replace(/^\?/, '')
+      if (!q) return
+      const keep = q.split('&').filter((kv) => { let k = kv.split('=')[0]; try { k = decodeURIComponent(k.replace(/\+/g, ' ')) } catch { /* keep raw */ } return k !== 'lang' })
+      if (keep.length === q.split('&').length) return
+      history.replaceState(history.state, '', location.pathname + (keep.length ? '?' + keep.join('&') : '') + location.hash)
+    } catch { /* history blocked — the reload keeps the URL as it is */ }
+  }
   // Static HTML text + the language switch. The table (i18n-en.js) is loaded **after** this file, so this runs
   // again at the end of `add()` — before that the table is empty and nothing changes. Dynamic text is built by
   // flow.js through NT_T.
@@ -81,7 +93,7 @@
       if (!NT_T.has(code)) continue
       const sp = document.createElement('span'); sp.className = 'lg' + (code === lang ? ' on' : ''); sp.dataset.lang = code
       sp.textContent = code.toUpperCase(); sp.title = NAME[code]; sp.setAttribute('role', 'radio'); sp.setAttribute('aria-checked', String(code === lang)); sp.tabIndex = 0
-      const go = (e) => { e.stopPropagation(); if (code !== lang) { NT_T.save(code); location.reload() } }
+      const go = (e) => { e.stopPropagation(); if (code !== lang) { NT_T.save(code); dropLangParam(); location.reload() } }
       sp.onclick = go; sp.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') go(e) }
       b.appendChild(sp)
     }
