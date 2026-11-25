@@ -48,9 +48,10 @@
   const SM_KO = { sagemaker_notebook_instance: NT_T('SageMaker 노트북 인스턴스'), sagemaker_domain: NT_T('SageMaker Studio 도메인'), sagemaker_endpoint: NT_T('SageMaker 추론 엔드포인트') }
   // 구성을 읽었는데 서브넷이 비었다(어댑터 `noSubnets`) — 종류마다 그 뜻이 다르다. 「걸친 서브넷이 이 화면에 없다」와 섞지 않는다.
   //   여기 있는 종류는 서브넷에 ENI 를 두지 않는 리전 단위 자원이다 → 리전 줄에 선다(§17.12 ①) · 정보창 「서브넷」 칸이 이 글로 이유를 말한다
-  const NOSUB_WHY = { ecs_service: NT_T('이 서비스는 서브넷을 지정하지 않습니다(awsvpc 네트워크 모드가 아닙니다 — 태스크는 컨테이너 인스턴스(EC2)에서 실행되고, 그 EC2 는 자기 서브넷에 표시됩니다)'),
-    sagemaker_endpoint: NT_T('VPC 설정이 없습니다 — 고객 VPC 밖(SageMaker 관리 네트워크)에서 실행됩니다'),
-    opensearch_domain: NT_T('VPC 설정이 없습니다 — 퍼블릭 엔드포인트 도메인입니다(고객 VPC 밖에 있어 이 VPC 에 네트워크 인터페이스가 없습니다)') }
+  const NOSUB_WHY_P = { ecs_service: NT_T.both('이 서비스는 서브넷을 지정하지 않습니다(awsvpc 네트워크 모드가 아닙니다 — 태스크는 컨테이너 인스턴스(EC2)에서 실행되고, 그 EC2 는 자기 서브넷에 표시됩니다)'),
+    sagemaker_endpoint: NT_T.both('VPC 설정이 없습니다 — 고객 VPC 밖(SageMaker 관리 네트워크)에서 실행됩니다'),
+    opensearch_domain: NT_T.both('VPC 설정이 없습니다 — 퍼블릭 엔드포인트 도메인입니다(고객 VPC 밖에 있어 이 VPC 에 네트워크 인터페이스가 없습니다)') }
+  const NOSUB_WHY = Object.fromEntries(Object.entries(NOSUB_WHY_P).map(([k, v]) => [k, v.t]))
   // Lambda(2.7.0 · §17.27) = 리전 자원 줄 — VPC 에 붙었는지 모른다(`lambda:GetFunctionConfiguration` 을 더하지 않았다)
   // API Gateway(2.10.0 · §17.35) = 리전 자원 줄 — API 는 VPC 에 살지 않는다(VPC 링크가 LB 로 들어간다)
   // VPC Lattice(2.11.0 · §17.40) = 리전 자원 줄 — 서비스 네트워크는 붙은 VPC 위 변 포트 가운데(TGW 와 같은 자리) · 서비스는 줄의 맨 끝
@@ -71,7 +72,8 @@
   const NC = NT_T('이 도구는 수집하지 않습니다')
   // 규칙 공백(§3i) — 표 사유 열의 어휘는 flow.js `WHY_NONE` 과 **같은 말로 시작한다**. 「그리지 않는 종류」(§7)와 갈라야 개발이 할 일이 보인다.
   //   옛 화면을 걷어낸 뒤라 「새 도식에 아직」은 대비할 화면이 없는 말이다(W5 2026-10-03)
-  const WHY_NEW = NT_T('아직 그리지 못하는 종류')
+  const WHY_NEW_P = NT_T.both('아직 그리지 못하는 종류')
+  const WHY_NEW = WHY_NEW_P.t
   const REGION_KO = { 'us-east-1': NT_T('버지니아 북부'), 'us-east-2': NT_T('오하이오'), 'us-west-1': NT_T('캘리포니아 북부'), 'us-west-2': NT_T('오리건'),
     'ca-central-1': NT_T('캐나다 중부'), 'sa-east-1': NT_T('상파울루'), 'eu-central-1': NT_T('프랑크푸르트'), 'eu-west-1': NT_T('아일랜드'), 'eu-west-2': NT_T('런던'),
     'eu-west-3': NT_T('파리'), 'eu-north-1': NT_T('스톡홀름'), 'eu-south-1': NT_T('밀라노'), 'ap-northeast-1': NT_T('도쿄'), 'ap-northeast-2': NT_T('서울'),
@@ -156,9 +158,10 @@
     const up = (n, t) => { let c = n; let g = 0; while (c && g++ < 40) { if (c.type === t) return c; c = c.parent_id ? mById.get(c.parent_id) : null } return null }
     const aiOf = (n) => { const a = up(n, 'account'); return a ? X.accounts.indexOf(a) : -1 }
     const Mo = { accts: [], regs: new Map(), vpcs: new Map(), subnets: new Map(), items: new Map(), hubs: new Map(), globs: new Map(),
-      ports: new Map(), portOf: new Map(), peers: [], xpeers: [], tgwPeers: [], dxtgw: [], stubLines: [], hidden: new Map(), why: new Map(),
+      ports: new Map(), portOf: new Map(), peers: [], xpeers: [], tgwPeers: [], dxtgw: [], stubLines: [], hidden: new Map(), why: new Map(), whyKo: new Map(),
       partial: new Set(), list: new Map(), rel: new Map(), vifOf: new Map(), attOf: new Map(), tgwRt: new Map(), pp: new Map(), ppOf: new Map(), cfo: [], vpnl: [], cnx: [], ltg: [], wfl: [], wfg: [] }
-    const why = (n, w) => Mo.why.set(n.id, w)
+    // `w` = `NT_T.both(...)` — the shown reason and its Korean original (flow.js classifies the 「!」 rows on the original)
+    const why = (n, w) => { Mo.why.set(n.id, w.t); Mo.whyKo.set(n.id, w.ko) }
     const natIx = new Map(); for (const n of T.nodes) natIx.set(X.acctOf(n) + '|' + natId(n), n.id)
     const byNat = (n, v) => (v ? natIx.get(X.acctOf(n) + '|' + v) || null : null)
     const eOf = new Map(); for (const e of T.edges) { push(eOf, e.source, e); if (e.target !== e.source) push(eOf, e.target, e) }
@@ -171,7 +174,7 @@
     const live = T.nodes.filter((n) => !gone(n.id))
     for (const n of live) {
       if (n.type !== 'region') continue
-      const i = aiOf(n); if (i < 0 || !Mo.accts.includes(i)) { why(n, NT_T('들어갈 계정 상자가 없다')); continue }
+      const i = aiOf(n); if (i < 0 || !Mo.accts.includes(i)) { why(n, NT_T.both('들어갈 계정 상자가 없다')); continue }
       push(Mo.regs, i, n)
     }
     for (const rs of Mo.regs.values()) rs.sort((a, b) => X.regionRank(a.name) - X.regionRank(b.name) || a.name.localeCompare(b.name))
@@ -180,7 +183,7 @@
 
     for (const n of live) {
       if (n.type !== 'vpc') continue
-      const r = regOk(n); if (!r) { why(n, NT_T('들어갈 리전 상자가 없다')); continue }
+      const r = regOk(n); if (!r) { why(n, NT_T.both('들어갈 리전 상자가 없다')); continue }
       const a = n.attrs || {}
       Mo.vpcs.set(n.id, { id: n.id, n, acct: aiOf(n), region: r.id, code: r.name, name: disp(n), named: named(n), cidr: a.cidr || '',
         subnets: [], items: [], ports: [] })
@@ -188,7 +191,7 @@
     for (const n of live) {
       if (n.type !== 'subnet') continue
       const vn = up(mById.get(n.parent_id), 'vpc'); const v = vn && Mo.vpcs.get(vn.id)
-      if (!v) { why(n, NT_T('들어갈 VPC 상자가 없다')); continue }
+      if (!v) { why(n, NT_T.both('들어갈 VPC 상자가 없다')); continue }
       const s = { id: n.id, n, vpc: v.id, acct: v.acct, az: n.az || (n.attrs || {}).az || '?', name: disp(n), named: named(n),
         tier: n.tier === 'public' ? 'public' : 'private', items: [], exits: new Set(), routes: [] }
       Mo.subnets.set(n.id, s); v.subnets.push(s)
@@ -201,11 +204,11 @@
       const base = { id: n.id, n, kind: k, acct: aiOf(n), name: disp(n), named: named(n), state: a.state, subnets: [] }
       // CloudFront 범위 WAF(2.12.0 · §17.41) = 리전이 없다 → 전역 줄(아래 다른 전역 자원과 같은 자리) · 리전 범위 WAF = 리전 자원 줄(아래 `hubK`)
       if (k === 'waf' && n.wafScope === 'cloudfront') {
-        if (base.acct < 0 || !Mo.accts.includes(base.acct)) { why(n, NT_T('들어갈 계정 상자가 없다')); continue }
+        if (base.acct < 0 || !Mo.accts.includes(base.acct)) { why(n, NT_T.both('들어갈 계정 상자가 없다')); continue }
         Mo.globs.set(n.id, base); continue
       }
       if (k === 'dxgw' || k === 'cf' || k === 'r53' || k === 's3' || k === 'ga' || k === 'cwan') { // 리전이 없는 자원 → 계정 상자의 전역 줄(§17.1 · Route 53 = 2.8.0 §17.30 · S3 = §17.31 · 가속기 = 2.10.0 §17.37)
-        if (base.acct < 0 || !Mo.accts.includes(base.acct)) { why(n, NT_T('들어갈 계정 상자가 없다')); continue }
+        if (base.acct < 0 || !Mo.accts.includes(base.acct)) { why(n, NT_T.both('들어갈 계정 상자가 없다')); continue }
         // S3 버킷(§17.31) — 버킷 이름이 native id 이자 사람이 알아보는 이름이다(Name 태그가 없다) → 이름표 `S3 (버킷 이름)`
         if (k === 's3') base.named = true
         Mo.globs.set(n.id, base); continue
@@ -217,15 +220,15 @@
       const inVpcFn = k === 'lambda' && v && Array.isArray(n.spans) && n.spans.length
       const hubK = HUB.has(k) || k === 'waf'   // 리전 범위 WAF(2.12.0 · §17.41) = 리전 자원 줄
       if ((hubK && !inVpcFn) || (k === 'igw' && !v) || regional) {
-        const r = regOk(n); if (!r) { why(n, NT_T('들어갈 리전 상자가 없다')); continue }
+        const r = regOk(n); if (!r) { why(n, NT_T.both('들어갈 리전 상자가 없다')); continue }
         Mo.hubs.set(n.id, { ...base, region: r.id, detached: k === 'igw', ...(regional ? { regional: true } : {}) }); continue
       }
       // ASG·ECS·엔드포인트는 VPC 를 서브넷으로만 안다(어댑터) — 그 서브넷이 이 화면에 없으면 VPC 상자가 아니라 서브넷이 없는 것이다.
       //   서브넷이 **비었다**(읽었고 없다)는 다른 일이다 · 구성을 못 읽어(권한 부족) 자리를 모르는 것도 다른 일이다
       if (!v) {
-        why(n, n.noSubnets ? NOSUB_WHY[n.type] || NT_T('구성에 서브넷이 없다 — 들어갈 VPC 를 말하지 않는다')
-          : Array.isArray(n.spans) ? NT_T('걸친 서브넷이 이 화면에 없다')
-            : Mo.partial.has(n.id) ? NT_T('구성 일부를 읽지 못해(권한 부족) 들어갈 자리를 모른다') : NT_T('들어갈 VPC 상자가 없다'))
+        why(n, n.noSubnets ? NOSUB_WHY_P[n.type] || NT_T.both('구성에 서브넷이 없다 — 들어갈 VPC 를 말하지 않는다')
+          : Array.isArray(n.spans) ? NT_T.both('걸친 서브넷이 이 화면에 없다')
+            : Mo.partial.has(n.id) ? NT_T.both('구성 일부를 읽지 못해(권한 부족) 들어갈 자리를 모른다') : NT_T.both('들어갈 VPC 상자가 없다'))
         continue
       }
       const it = { ...base, region: v.region, vpc: v.id }
@@ -275,11 +278,11 @@
       it.subnets = [...S].sort()
       // 걸친 서브넷을 말하는 종류인데 이 화면에 하나도 없으면 놓을 곳이 없다 — 오른쪽 열에 세우면 「어느 서브넷에도 없다」는 거짓이 된다
       if (Array.isArray(it.n.spans) && !it.subnets.length) {
-        why(it.n, it.n.noSubnets ? NOSUB_WHY[it.n.type] || NT_T('구성에 서브넷이 없다 — 들어갈 VPC 를 말하지 않는다') : NT_T('걸친 서브넷이 이 화면에 없다')); Mo.items.delete(it.id); const v = Mo.vpcs.get(it.vpc); v.items.splice(v.items.indexOf(it), 1); continue
+        why(it.n, it.n.noSubnets ? NOSUB_WHY_P[it.n.type] || NT_T.both('구성에 서브넷이 없다 — 들어갈 VPC 를 말하지 않는다') : NT_T.both('걸친 서브넷이 이 화면에 없다')); Mo.items.delete(it.id); const v = Mo.vpcs.get(it.vpc); v.items.splice(v.items.indexOf(it), 1); continue
       }
       for (const sid of it.subnets) Mo.subnets.get(sid).items.push(it)
       // NAT 은 서브넷 하나에만 선다(AWS 규칙 · 엔진 = 부모 서브넷) — 그 서브넷이 이 화면에 없으면 놓을 곳이 없다(#45 리뷰)
-      if (it.kind === 'nat' && it.subnets.length !== 1) why(it.n, NT_T('NAT 게이트웨이가 선 서브넷이 이 화면에 없다'))
+      if (it.kind === 'nat' && it.subnets.length !== 1) why(it.n, NT_T.both('NAT 게이트웨이가 선 서브넷이 이 화면에 없다'))
     }
     // CloudFront → 원본 LB(#43 · §17.1) — 전역 줄의 배포와 VPC 안의 LB 가 둘 다 이 화면에 있을 때만 선이 된다(아니면 정보창 · 잔차)
     //   2.8.0(§17.31) — VPC 원본은 EC2 인스턴스도 원본이다(같은 길 · 끝 = 그 아이콘·묶음 칸) · `via`(VPC 원본 · Route 53 별칭)는 정보창 「오리진 유형」 줄.
@@ -340,7 +343,7 @@
       const t2 = byNat(n, a['transit gateway']); if (t2 && Mo.hubs.has(t2)) tg.add(t2)
       const tgs = [...tg]
       const par = mById.get(n.parent_id); const v = par && par.type === 'vpc' ? Mo.vpcs.get(par.id) : null
-      if (!tgs.length) { why(n, NT_T('연결된 Transit Gateway 가 이 화면에 없습니다(수집 범위 밖일 수 있습니다)')); continue }
+      if (!tgs.length) { why(n, NT_T.both('연결된 Transit Gateway 가 이 화면에 없습니다(수집 범위 밖일 수 있습니다)')); continue }
       for (const t of tgs) push(Mo.attOf, t, n)
       if (v) {
         const t = tgs[0]; const k = v.id + '|' + t
@@ -403,7 +406,7 @@
       if (pk) { c.port = pk; Mo.hidden.set(c.id, pk) } else if (dx) c.dx = dx
       else {
         Mo.hidden.delete(c.id)
-        why(c.n, on ? NT_T('TGW Connect 어태치먼트 — 올라탄 어태치먼트({0})가 이 화면에 없습니다', [natId(mById.get(on) || { id: on })]) : NT_T('TGW Connect 어태치먼트 — 올라탄 어태치먼트({0})가 이 수집본에 없습니다', [(c.n.connect || {}).transport || '?']))
+        why(c.n, on ? NT_T.both('TGW Connect 어태치먼트 — 올라탄 어태치먼트({0})가 이 화면에 없습니다', [natId(mById.get(on) || { id: on })]) : NT_T.both('TGW Connect 어태치먼트 — 올라탄 어태치먼트({0})가 이 수집본에 없습니다', [(c.n.connect || {}).transport || '?']))
       }
     }
     // VPN 연결 ↔ CGW · VGW(엔진 `attachment` · TGW 쪽은 위 어태치먼트 루프)
@@ -417,7 +420,7 @@
     // 스텁(수집 범위 밖 계정의 TGW) = 흐린 허브
     for (const n of live) {
       if (n.type !== 'stub') continue
-      const r = regOk(n); if (!r) { why(n, NT_T('들어갈 리전 상자가 없다')); continue }
+      const r = regOk(n); if (!r) { why(n, NT_T.both('들어갈 리전 상자가 없다')); continue }
       Mo.hubs.set(n.id, { id: n.id, n, kind: 'tgw', ghost: true, stub: true, acct: aiOf(n), region: r.id, name: NT_T('다른 계정'), named: false, subnets: [] })
     }
     // TGW ↔ TGW · TGW → 스텁 (엣지로 온 피어링)
@@ -447,27 +450,27 @@
           Mo.xpeers.push({ a: vs[0], pcx: n.id, n, it: { id: gid, n: { id: gid, type: 'aws-xvpc', parent_id: null, region: null, attrs: {} }, kind: 'xvpc', ghost: true, outside: true,
             side, other: mine && side.acct && mine.acct === side.acct ? NT_T('다른 리전') : NT_T('다른 계정'), acct: v.acct, region: v.region, name: NT_T('범위 밖'), named: false, subnets: [] } })
           Mo.hidden.set(n.id, 'aws:rep')
-        } else why(n, NT_T('VPC 피어링의 두 VPC 가 이 화면에 다 있지 않다'))
+        } else why(n, NT_T.both('VPC 피어링의 두 VPC 가 이 화면에 다 있지 않다'))
       } else if (t === 'direct_connect_virtual_interface') {
         const p = Mo.hubs.get(n.parent_id)
-        if (p && p.kind === 'dxcon') { Mo.hidden.set(n.id, p.id); push(Mo.vifOf, p.id, n) } else why(n, NT_T('이 VIF 의 Direct Connect 연결이 이 화면에 없다'))
+        if (p && p.kind === 'dxcon') { Mo.hidden.set(n.id, p.id); push(Mo.vifOf, p.id, n) } else why(n, NT_T.both('이 VIF 의 Direct Connect 연결이 이 화면에 없다'))
       } else if (t === 'internet') {
         // 픽스처의 인터넷 노드(§16.8) — 칸이 있는 IGW 중 첫째의 칸이 대표한다(§17.24). 칸이 없으면 전처럼 IGW 가
         const gs = eo(n.id).map((e) => other(e, n.id)).filter((id) => Mo.items.has(id) && Mo.items.get(id).kind === 'igw').sort()
         const gc = gs.find((id) => Mo.dflt.has(id))
-        if (gc) Mo.hidden.set(n.id, 'aws:inet:' + gc); else if (gs[0]) Mo.hidden.set(n.id, gs[0]); else why(n, NT_T('이 인터넷 노드에 닿는 인터넷 게이트웨이가 이 화면에 없다'))
+        if (gc) Mo.hidden.set(n.id, 'aws:inet:' + gc); else if (gs[0]) Mo.hidden.set(n.id, gs[0]); else why(n, NT_T.both('이 인터넷 노드에 닿는 인터넷 게이트웨이가 이 화면에 없다'))
       } else if (t === 'external_ip') {
         // 아이콘이 없다(§17.27) — LB → 출구 포트 선이 대표한다(모델 끝의 LB 대상 절이 숨긴다). 그 LB 가 이 화면에 없으면 놓을 곳이 없다
-        if (!eo(n.id).some((e) => e.kind === 'lbtarget' && e.target === n.id && Mo.items.has(e.source) && !gone(e.source))) why(n, NT_T('이 외부 IP 를 대상으로 하는 로드밸런서가 이 화면에 없습니다'))
+        if (!eo(n.id).some((e) => e.kind === 'lbtarget' && e.target === n.id && Mo.items.has(e.source) && !gone(e.source))) why(n, NT_T.both('이 외부 IP 를 대상으로 하는 로드밸런서가 이 화면에 없습니다'))
       } else if (t === 'aws_service' || t === 'endpoint_service') {
         const g = eo(n.id).map((e) => other(e, n.id)).find((id) => Mo.items.has(id) && Mo.items.get(id).kind === 'vpce')
-        if (g) Mo.hidden.set(n.id, g); else why(n, NT_T('이 서비스에 닿는 VPC 엔드포인트가 이 화면에 없다'))
+        if (g) Mo.hidden.set(n.id, g); else why(n, NT_T.both('이 서비스에 닿는 VPC 엔드포인트가 이 화면에 없다'))
       } else if (t === 'transit_gateway_route_table') {
         // TGW 정보창의 「라우트 테이블」 칸이 대표한다(§17.11) — 흐린 TGW(범위 밖·스텁)에는 정보창 칸이 없으므로 사유로 남긴다
         const h = Mo.hubs.get(n.parent_id)
-        if (h && h.kind === 'tgw' && !h.ghost) { Mo.hidden.set(n.id, h.id); push(Mo.tgwRt, h.id, n) } else why(n, NT_T('이 라우트 테이블의 Transit Gateway 가 이 화면에 없다'))
+        if (h && h.kind === 'tgw' && !h.ghost) { Mo.hidden.set(n.id, h.id); push(Mo.tgwRt, h.id, n) } else why(n, NT_T.both('이 라우트 테이블의 Transit Gateway 가 이 화면에 없다'))
       } else if (t === 'route_table' || t === 'security_group' || t === 'network_acl') {
-        const v = up(n, 'vpc'); if (v && Mo.vpcs.has(v.id)) Mo.hidden.set(n.id, v.id); else why(n, NT_T('이 리소스의 VPC 가 이 화면에 없습니다'))
+        const v = up(n, 'vpc'); if (v && Mo.vpcs.has(v.id)) Mo.hidden.set(n.id, v.id); else why(n, NT_T.both('이 리소스의 VPC 가 이 화면에 없습니다'))
       } else if (t === 'elastic_ip') {
         // 탄력적 IP(2.10.0 · §17.34) = 아이콘이 아니라 **주인의 정보창 줄**이다 — 주인이 이 화면에 있으면 주인이 대표한다(규칙상 그리지 않는다).
         //   🔁 연결이 없는 EIP 는 대리 상자가 대표한다 — 「!」 에 없다(사용자 결정 2026-10-21 오전 · 「!」 = 도구가 못 읽거나 못 그린 것만 · 쓰지 않는 EIP 는 AWS 쪽 사실)
@@ -475,9 +478,9 @@
         const o = n.eipOwner
         if (o && (Mo.items.has(o) || Mo.hubs.has(o) || Mo.globs.has(o))) Mo.hidden.set(n.id, o)
         else if (n.eipIdle) Mo.hidden.set(n.id, 'aws:rep')
-        else if (n.eipWhy) why(n, NT_T('연결 대상을 찾지 못한 탄력적 IP입니다 — {0}', [eipWhyWord(n.eipWhy)]))
-        else why(n, o ? NT_T('이 탄력적 IP 가 연결된 리소스가 이 화면에 없습니다') : NT_T('연결 대상을 찾지 못한 탄력적 IP입니다'))
-      } else why(n, NT_T('{0} — 타입 «{1}»', [WHY_NEW, t]))
+        else if (n.eipWhy) why(n, NT_T.both('연결 대상을 찾지 못한 탄력적 IP입니다 — {0}', [{ t: eipWhyWord(n.eipWhy), ko: eipWhyWord(n.eipWhy) }]))
+        else why(n, o ? NT_T.both('이 탄력적 IP 가 연결된 리소스가 이 화면에 없습니다') : NT_T.both('연결 대상을 찾지 못한 탄력적 IP입니다'))
+      } else why(n, NT_T.both('{0} — 타입 «{1}»', [WHY_NEW_P, t]))
     }
     // VPC 피어링 포트(§17.1 · §17.18-11) — VPC 한쪽마다 키 하나. 그 VPC 서브넷이 이 피어링으로 라우트를 보낼 때만 그린다(layoutVpc)
     const ppAdd = (vid, pcx, n, other) => { const key = `aws:pp:${vid}|${pcx}`; Mo.ppOf.set(vid + '|' + pcx, key); Mo.pp.set(key, { key, vpc: vid, pcx, n, other }) }
@@ -3450,12 +3453,12 @@
       const ga = gh(e.source); const gb = gh(e.target)
       if (ga || gb) {
         // 범위 안 ↔ 범위 밖인데 흐린 TGW 로 못 이은 관계 — 조용히 지우지 않는다(§17.22 · 「못 그린 관계 N」에 센다)
-        if (ro(e.source) !== ro(e.target) && !gh(ro(e.source) ? e.target : e.source)) { cnt.unwired++; unwired.push({ e, dead: NT_T('범위 밖'), why: NT_T('보기 범위 밖과 잇는 관계 — 새 화면은 아직 이 관계를 범위 밖 표시에 잇지 못한다(§17.22)') }); continue }
+        if (ro(e.source) !== ro(e.target) && !gh(ro(e.source) ? e.target : e.source)) { cnt.unwired++; const w = NT_T.both('보기 범위 밖과 잇는 관계 — 새 화면은 아직 이 관계를 범위 밖 표시에 잇지 못한다(§17.22)'); const d = NT_T.both('범위 밖'); unwired.push({ e, dead: d.t, deadKo: d.ko, why: w.t, whyKo: w.ko }); continue }
         cnt.hand++; continue
       }
       const ka = keyOf(e.source); const kb = keyOf(e.target)
-      const bad = (w) => { cnt.unwired++; unwired.push({ e, dead: w.dead || null, why: w.why }) }
-      if (e.fallback) { bad({ why: NT_T('{0} — 엣지 종류 «{1}»', [WHY_NEW, e.kind]) }); continue }
+      const bad = (w) => { cnt.unwired++; unwired.push({ e, dead: w.dead ? w.dead.t : null, deadKo: w.dead ? w.dead.ko : null, why: w.why.t, whyKo: w.why.ko }) }
+      if (e.fallback) { bad({ why: NT_T.both('{0} — 엣지 종류 «{1}»', [WHY_NEW_P, e.kind]) }); continue }
       // TGW Connect 어태치먼트의 관계(Connect → TGW) = 그 오버레이 점선(§17.38) — 전송 선(포트 → TGW)에 앉히면 전송의 판정이 Connect 의 것과 섞인다
       const cxk = cnxLine.get(e.source) || cnxLine.get(e.target)
       if (cxk) { cnt.drawn++; B.edgeOf.set(e.id, cxk); tie(cxk, e); continue }
@@ -3471,9 +3474,9 @@
       if (pcxDrawn.has(e.source) || pcxDrawn.has(e.target)) { cnt.drawn++; tie(pcxLine.get(e.source) || pcxLine.get(e.target), e); continue }
       if (!ka || !kb) {
         // 끝점이 모델에 아예 없는 것과 모델에는 있지만 그리지 않는 종류는 다른 말이다(대장 98 · 검사 89 e4)
-        const nw = (id) => (X.mById.has(id) ? NT_T('그리지 않은 종류') : NT_T('모델에 없다'))
-        const dead = !ka && !kb ? (nw(e.source) === nw(e.target) ? NT_T('양쪽 다 {0}', [nw(e.source)]) : NT_T('출발이 {0} · 도착이 {1}', [nw(e.source), nw(e.target)])) : NT_T('{0}이 {1}', [!ka ? NT_T('출발') : NT_T('도착'), nw(!ka ? e.source : e.target)])
-        bad({ dead, why: NT_T('{0} — 끝점이 잔차다({1})', [WHY_NEW, dead]) }); continue
+        const nw = (id) => (X.mById.has(id) ? NT_T.both('그리지 않은 종류') : NT_T.both('모델에 없다'))
+        const dead = !ka && !kb ? (nw(e.source).ko === nw(e.target).ko ? NT_T.both('양쪽 다 {0}', [nw(e.source)]) : NT_T.both('출발이 {0} · 도착이 {1}', [nw(e.source), nw(e.target)])) : NT_T.both('{0}이 {1}', [!ka ? NT_T.both('출발') : NT_T.both('도착'), nw(!ka ? e.source : e.target)])
+        bad({ dead, why: NT_T.both('{0} — 끝점이 잔차다({1})', [WHY_NEW_P, dead]) }); continue
       }
       if (ka === kb || ka === 'aws:rep' || kb === 'aws:rep') { cnt.represented++; tie(attLine.get(e.source) || attLine.get(e.target), e); continue }
       // 픽스처의 인터넷 노드 ↔ 칸이 있는 IGW = 그 IGW 의 인터넷 칸 선이 그렸다(§17.24 · 노드는 첫째 칸 하나로 숨는다)
@@ -3501,7 +3504,7 @@
     SC = { out, W, H, cnt, opt: { ...O } }
     const nXwire = B.lines.filter((l) => M.xg.has(l.a) || M.xg.has(l.b)).length   // 배너 「외부 연결 N」(§17.22)
     const nItems = [...B.boxes.values()].filter((b) => b.kind === 'aws-item' || b.kind === 'aws-hub' || b.kind === 'aws-port').length
-    return { nXwire, boxes: B.boxes, unwired, awsWhy: M.why, awsNotes: gaNotes(), canvasW: W, canvasH: H,
+    return { nXwire, boxes: B.boxes, unwired, awsWhy: M.why, awsWhyKo: M.whyKo, awsNotes: gaNotes(), canvasW: W, canvasH: H,
       nEdges: B.lines.length, nRawEdges: ctx.T.edges.length, ms: performance.now() - t0, nItems, scope: ctx.SCOPE || null }
   }
   function defs () {

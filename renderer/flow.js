@@ -1328,7 +1328,8 @@
   // 🔴 필터(§13-49)·편집 숨김(§13-63)은 잔차가 **아니다**. 사람이 의도한 제거이고 자기 어휘
   //    (확인 모달·스냅샷 배지)를 이미 갖는다 — 섞으면 필터 한 번에 수백 줄이 쏟아진다.
   const WHY_RULE = NT_T('그리지 않는 종류')
-  const WHY_NONE = NT_T('아직 그리지 못하는 종류')
+  const WHY_NONE_P = NT_T.both('아직 그리지 못하는 종류')
+  const WHY_NONE = WHY_NONE_P.t
   const ancTypeOf = (n, t) => {
     let c = byId.get(n.parent_id)
     while (c) { if (c.type === t) return c; c = byId.get(c.parent_id) }
@@ -1358,6 +1359,12 @@
     return !!(SCOPE && !inScope(id))
   }
   function unplacedRows (L) {
+    // `why` = shown reason · `whyKo` = its Korean original (POP_WHY classifies on it, in every language)
+    const whyOf = (n) => {
+      if (L.awsWhy && L.awsWhy.get(n.id)) return { why: L.awsWhy.get(n.id), whyKo: (L.awsWhyKo && L.awsWhyKo.get(n.id)) || L.awsWhy.get(n.id) }
+      const w = NT_T.both('{0} — 타입 «{1}» · 티어 «{2}»', [WHY_NONE_P, n.type, n.tier || NT_T.both('없다')])
+      return { why: w.t, whyKo: w.ko }
+    }
     const rep = repSetOf(L.boxes)
     const out = []
     for (const n of byId.values()) {
@@ -1368,7 +1375,7 @@
         region: r ? r.name : (n.region || '—'),
         detail: NT_T('부모 «') + (n.parent_id || NT_T('없다')) +
           (n.parent_id && !byId.has(n.parent_id) ? NT_T(' — 모델에 없다»') : '»'),
-        why: (L.awsWhy && L.awsWhy.get(n.id)) || NT_T('{0} — 타입 «{1}» · 티어 «{2}»', [WHY_NONE, n.type, n.tier || NT_T('없다')]) })
+        ...whyOf(n) })
     }
     return out.sort((a, b) => a.id.localeCompare(b.id))   // 불변식 ②: 순서는 id 로 고정한다
   }
@@ -1377,18 +1384,19 @@
   //    그 문장이 거짓이 된다. 두 pill·두 상세 행으로 따로 센다.
   function unwiredRows (L) {
     const nm = (id) => { const n = byId.get(id); return n ? (n.name || id) : id }
-    return (L.unwired || []).map(({ e, dead, why }) => {
+    return (L.unwired || []).map(({ e, dead, deadKo, why, whyKo }) => {
       const src = byId.get(e.source)
       const r = src ? ancTypeOf(src, 'region') : null
       // 🔴 `a`·`b` 는 표 열이 아니다(LIST_COLS 밖) — 하네스가 **끝점으로** 맞춰 보기 위한 값이다.
       //    엣지 id 는 어댑터가 순번으로 붙이므로 하네스가 예측할 수 없다.
-      return { id: e.id, a: e.source, b: e.target,
+      const parts = [e.fallback ? NT_T.both('엣지 종류 «{0}»', [e.kind]) : null, dead ? NT_T.both('끝점이 {0}', [{ t: dead, ko: deadKo || dead }]) : null].filter(Boolean)
+      return { id: e.id, a: e.source, b: e.target, rel: true,
         type: NT_T('관계 «{0}»', [e.kind]), name: `${nm(e.source)} → ${nm(e.target)}`,
         vpc: (src && ancTypeOf(src, 'vpc') ? ancTypeOf(src, 'vpc').name : '—'),
         region: r ? r.name : ((src || {}).region || '—'),
         detail: NT_T('출발 «{0}» → 도착 «{1}»', [e.source, e.target]),
-        why: why || `${WHY_NONE} — ` + [e.fallback ? NT_T('엣지 종류 «{0}»', [e.kind]) : null,
-          dead ? NT_T('끝점이 {0}', [dead]) : null].filter(Boolean).join(' · ') }
+        why: why || `${WHY_NONE} — ` + parts.map((p) => p.t).join(' · '),
+        whyKo: why ? (whyKo || why) : `${WHY_NONE_P.ko} — ` + parts.map((p) => p.ko).join(' · ') }
     }).sort((a, b) => a.id.localeCompare(b.id))
   }
 
@@ -1400,18 +1408,21 @@
   const LIST_COLS = [['kind', NT_T('종류')], ['id', 'ID'], ['name', NT_T('이름')],
     ['vpc', 'VPC'], ['region', NT_T('리전')], ['say', NT_T('사유')]]
   // 고객 말(§17.26 표가 정본). 🔴 표에 없는 사유는 「놓을 자리를 찾지 못했다」로 말한다 — 원문(개발 말)을 화면 글자로 내지 않는다.
+  // 🔴 Classification reads the Korean original (`whyKo`, built next to `why`) and the `rel` flag — never the shown text,
+  //    so a row lands in the same category in every language.
+  const koWhy = (r) => String(r.whyKo ?? r.why)
   const POP_WHY = [
-    [(r) => /^관계 «/.test(NT_T.ko(String(r.type))) && NT_T.ko(String(r.why)).startsWith(NT_T.ko(WHY_NONE)) && !/끝점/.test(NT_T.ko(String(r.why))), NT_T('아직 그리지 못하는 연결 종류')],
-    [(r) => /^관계 «/.test(NT_T.ko(String(r.type))) && /보기 범위 밖/.test(NT_T.ko(String(r.why))), NT_T('보기 범위 밖과의 연결(「계정: 전체」에서 표시)')],
-    [(r) => /^관계 «/.test(NT_T.ko(String(r.type))), NT_T('연결된 리소스가 캔버스에 없음')],
-    [(r) => NT_T.ko(String(r.why)).startsWith(NT_T.ko(WHY_NONE)), NT_T('아직 그리지 못하는 종류')],
-    [(r) => /구성 일부를 읽지 못해/.test(NT_T.ko(String(r.why))), NT_T('구성 일부를 읽지 못해 위치를 알 수 없음')],
-    [(r) => /들어갈 (계정|리전|VPC) 상자가 없다|서브넷이 이 화면에 없다|VPC 가 이 화면에 없다|구성에 서브넷이 없다/.test(NT_T.ko(String(r.why))), NT_T('속한 계정·리전·VPC·서브넷이 캔버스에 없음')],
+    [(r) => r.rel && koWhy(r).startsWith(WHY_NONE_P.ko) && !/끝점/.test(koWhy(r)), NT_T('아직 그리지 못하는 연결 종류')],
+    [(r) => r.rel && /보기 범위 밖/.test(koWhy(r)), NT_T('보기 범위 밖과의 연결(「계정: 전체」에서 표시)')],
+    [(r) => r.rel, NT_T('연결된 리소스가 캔버스에 없음')],
+    [(r) => koWhy(r).startsWith(WHY_NONE_P.ko), NT_T('아직 그리지 못하는 종류')],
+    [(r) => /구성 일부를 읽지 못해/.test(koWhy(r)), NT_T('구성 일부를 읽지 못해 위치를 알 수 없음')],
+    [(r) => /들어갈 (계정|리전|VPC) 상자가 없다|서브넷이 이 화면에 없다|VPC 가 이 화면에 없다|구성에 서브넷이 없다/.test(koWhy(r)), NT_T('속한 계정·리전·VPC·서브넷이 캔버스에 없음')],
     // 배치 D(2.10.0 · §17.34) — 탄력적 IP 는 카드가 아니라 주인의 정보창 줄이다. 연결이 있는데 주인을 못 찾으면 여기 선다(사유 = 고객 말 · 원래 사유는 title)
     //   🔁 연결 없는 EIP 는 여기 오지 않는다(사용자 결정 2026-10-21 오전 · 도식이 대리 상자로 대표시킨다)
-    [(r) => /^연결 대상을 찾지 못한 탄력적 IP/.test(NT_T.ko(String(r.why))), NT_T('연결된 리소스를 찾지 못한 탄력적 IP')],
+    [(r) => /^연결 대상을 찾지 못한 탄력적 IP/.test(koWhy(r)), NT_T('연결된 리소스를 찾지 못한 탄력적 IP')],
     // #129(2.11.0 · §17.38) — Connect 는 아이콘이 아니라 올라탄 어태치먼트 선 위의 점선이다. 그 어태치먼트가 이 화면에 없으면 여기 선다
-    [(r) => /^TGW Connect 어태치먼트 — 올라탄 어태치먼트/.test(NT_T.ko(String(r.why))), NT_T('올라탄 어태치먼트가 캔버스에 없는 TGW Connect')]
+    [(r) => /^TGW Connect 어태치먼트 — 올라탄 어태치먼트/.test(koWhy(r)), NT_T('올라탄 어태치먼트가 캔버스에 없는 TGW Connect')]
   ]
   const POP_WHY_ELSE = NT_T('표시할 위치 없음')
   const popWhy = (r) => { const m = POP_WHY.find(([f]) => f(r)); return m ? m[1] : POP_WHY_ELSE }
@@ -1419,7 +1430,7 @@
     const c = S.listSort.col; const d = S.listSort.dir
     const rows = (T.listOnly || []).filter((r) => r.why && r.why !== WHY_RULE)
       .concat(S.unplaced || []).concat(S.unwired || []).concat(S.notes || []).map((r) => ({ ...r, say: r.fixedSay || popWhy(r),
-        kind: /^관계 «/.test(NT_T.ko(String(r.type))) ? NT_T('연결') : (HIST_TYPE[r.type] || TYPE_LABEL[r.type] || r.type) }))
+        kind: r.rel ? NT_T('연결') : (HIST_TYPE[r.type] || TYPE_LABEL[r.type] || r.type) }))
     return rows.sort((a, b) =>
       d * (String(a[c]).localeCompare(String(b[c])) || a.id.localeCompare(b.id)))
   }
@@ -1858,8 +1869,7 @@
         ? NT_T('추가 근거 {0}종을 함께 반영했습니다', [ss.used.length])
         : (ss.unread.length || ss.unknown.length || !ss.off.length)
             ? NT_T('지표만으로 판정했습니다')
-            : NT_T('VPC 흐름 로그·Container Insights 가 꺼져 있어 지표만으로 ') +
-              NT_T('판정했습니다')
+            : NT_T('VPC 흐름 로그·Container Insights 가 꺼져 있어 지표만으로 판정했습니다')
       const parts = []
       if (ss.used.length) parts.push(NT_T('판정에 쓴 근거: {0}', [list(ss.used)]))
       if (ss.unread.length) {
