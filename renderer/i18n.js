@@ -52,8 +52,12 @@
     if (code === want) { lang = code; document.documentElement.lang = lang }
   }
   NT_T.addPatterns = (code, list) => { PATTERNS[code] = (PATTERNS[code] || []).concat(list) }
-  // Only saves. The caller reloads (module-level constants are already fixed in one language).
-  NT_T.save = (code) => { lang = NT_T.has(code) ? code : 'ko'; try { localStorage.setItem(KEY, lang) } catch { /* ignore */ } return lang }
+  // Only saves; true when the choice was actually stored. The caller reloads (module-level constants are already fixed
+  // in one language) — after a failed save a reload would come back in the same language.
+  NT_T.save = (code) => {
+    const c = NT_T.has(code) ? code : 'ko'
+    try { localStorage.setItem(KEY, c); return localStorage.getItem(KEY) === c } catch { return false }
+  }
   const ATTRS = ['title', 'placeholder', 'aria-label']
   NT_T.dom = (root) => {
     if (lang === 'ko') return
@@ -81,23 +85,55 @@
   // Static HTML text + the language switch. The table (i18n-en.js) is loaded **after** this file, so this runs
   // again at the end of `add()` — before that the table is empty and nothing changes. Dynamic text is built by
   // flow.js through NT_T.
+  // Switch guard, set by flow.js: a function that returns a note while switching must not happen (the signed link has
+  // expired — a reload would replace the diagram with the storage's error page), otherwise null.
+  let guard = null
+  NT_T.guard = (fn) => { guard = typeof fn === 'function' ? fn : null; paint() }
+  const NAME = { ko: '한국어', en: 'English' }
+  function paint () {
+    const b = document.getElementById('btn-lang')
+    if (!b) return
+    const why = guard ? guard() : null
+    b.classList.toggle('dis', !!why)
+    if (why) b.setAttribute('aria-disabled', 'true'); else b.removeAttribute('aria-disabled')
+    for (const sp of b.children) sp.title = why || NAME[sp.dataset.lang] || ''
+  }
+  // A short note under the switch for a few seconds (`#lang-note`, created on first use). The text comes translated.
+  let noteT = null
+  function note (msg) {
+    let n = document.getElementById('lang-note')
+    if (!n) { n = document.createElement('div'); n.id = 'lang-note'; n.setAttribute('role', 'status'); document.body.appendChild(n) }
+    const b = document.getElementById('btn-lang'); const r = b ? b.getBoundingClientRect() : null
+    if (r) { n.style.top = Math.round(r.bottom + 6) + 'px'; n.style.right = Math.round(Math.max(8, innerWidth - r.right)) + 'px' }
+    n.textContent = msg; n.hidden = false
+    clearTimeout(noteT); noteT = setTimeout(() => { n.hidden = true }, 6000)
+  }
   function boot () {
     NT_T.dom(document.body)
     if (lang !== 'ko') { const t0 = document.title; const t1 = NT_T(t0); if (t1 !== t0) document.title = t1 }
     const b = document.getElementById('btn-lang')
     if (!b) return
     // KO | EN — the current language is bold (.on). Clicking the other one saves and reloads. A language without a table is hidden.
-    const NAME = { ko: '한국어', en: 'English' }
     b.innerHTML = ''
     for (const code of ['ko', 'en']) {
       if (!NT_T.has(code)) continue
       const sp = document.createElement('span'); sp.className = 'lg' + (code === lang ? ' on' : ''); sp.dataset.lang = code
       sp.textContent = code.toUpperCase(); sp.title = NAME[code]; sp.setAttribute('role', 'radio'); sp.setAttribute('aria-checked', String(code === lang)); sp.tabIndex = 0
-      const go = (e) => { e.stopPropagation(); if (code !== lang) { NT_T.save(code); dropLangParam(); location.reload() } }
+      const go = (e) => {
+        e.stopPropagation()
+        if (code === lang) return
+        const why = guard ? guard() : null
+        if (why) { paint(); note(why); return }
+        if (!NT_T.save(code)) { note(NT_T('언어 선택을 저장하지 못해 바꾸지 않았습니다 — 이 브라우저가 사이트 저장소를 막고 있습니다')); return }
+        // flow.js keeps what has to survive this one reload (this window's live-monitoring role — `liveStash`)
+        try { window.dispatchEvent(new Event('nettopo:lang-reload')) } catch { /* nothing to keep */ }
+        dropLangParam(); location.reload()
+      }
       sp.onclick = go; sp.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') go(e) }
       b.appendChild(sp)
     }
     b.hidden = b.children.length < 2
+    paint()
   }
   const add0 = NT_T.add
   NT_T.add = (code, table) => { add0(code, table); boot() }

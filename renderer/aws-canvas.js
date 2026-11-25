@@ -701,7 +701,7 @@
   // 태그 값도 정보창 규칙(§17.11 「정보창에 넣지 않는 값」)을 따른다 — 키가 `SECRET` 이거나 값이 ARN 이면 값을 가린다.
   //   🔴 `aws:cloudformation:stack-id` 는 키에 「arn」이 없는데 값이 전체 ARN(계정ID 포함)이다 — 키만 보면 샌다.
   const TAG_HIDE = NT_T('(표시하지 않는 값입니다 — ARN·민감 정보)')
-  const tagMask = (r) => (SECRET.test(r.a) || /\barn:aws[\w-]*:/i.test(r.b) ? { ...r, b: TAG_HIDE } : r)
+  const tagMask = (r) => ({ ...(SECRET.test(r.a) || /\barn:aws[\w-]*:/i.test(r.b) ? { ...r, b: TAG_HIDE } : r), raw: true })
   // 태그 칸 — 묶음 머리를 그룹으로 나눠 보여준다(필터의 묶음 순서와 같다 · §17.11)
   const tagSec = (n) => {
     const rs = (X.tagRows ? X.tagRows(n) : []).map(tagMask)
@@ -4372,8 +4372,24 @@
     }
     if (i < t.length) el.appendChild(document.createTextNode(t.slice(i)))
   }
-  function idText (el, text) {
-    text = NT_T(text)   // Korean that comes from data (adapter labels, engine reasons) is translated at display time too — unchanged if not in the table
+  // Display-time translation for text that reaches the panel as a value (adapter labels, engine reasons). 🔴 A string
+  //   that is a resource name or a tag key/value in this snapshot is data and is shown verbatim — a subnet named
+  //   「퍼블릭」 must not turn into "Public". Korean mode never translates, so it is a no-op there.
+  let DATA = null; let DATA_X = null
+  const isData = (v) => {
+    if (DATA_X !== X) {
+      DATA = new Set(); DATA_X = X
+      for (const n of (X && X.T && X.T.nodes) || []) {
+        if (n.name) DATA.add(String(n.name))
+        for (const [k, t] of Object.entries(n.tags || {})) { DATA.add(String(k)); DATA.add(String(t)) }
+      }
+    }
+    return DATA.has(String(v))
+  }
+  const shown = (v) => (typeof v === 'string' && NT_T.lang() !== 'ko' && !isData(v) ? NT_T(v) : v)
+  // `raw` = the caller knows this is data (tag key/value) — never translated
+  function idText (el, text, raw) {
+    if (!raw) text = shown(text)
     const t = String(text ?? ''); let j = 0
     if (!t) { el.appendChild(document.createTextNode('')); return }
     // UUID 먼저(NB_RE 가 UUID 가운데의 `d0e0f00-…` 를 한 줄 묶음으로 잡지 않게)
@@ -4452,14 +4468,14 @@
         box.appendChild(h4)
       }
       // 세부 정보 한 줄(콘솔 「세부 정보」 상자) — 「이름 값 · 이름 값」
-      if (g.dl && g.dl.length) { const e = document.createElement('div'); e.className = 'aw-gd'; e.textContent = g.dl.map(([k, v]) => `${NT_T(k)} ${NT_T(v)}`).join(' · '); box.appendChild(e) }
+      if (g.dl && g.dl.length) { const e = document.createElement('div'); e.className = 'aw-gd'; e.textContent = g.dl.map(([k, v]) => `${shown(k)} ${shown(v)}`).join(' · '); box.appendChild(e) }
       if (g.tabs) box.appendChild(tabsEl(g.tabs))
       else if (g.tbl) box.appendChild(tblEl(g.tbl))
       for (const r of g.rows || []) {
         const e = document.createElement('div'); const tk = r.tk || []
         e.className = 'aw-r' + (r.t !== undefined ? ' aw-t' : '') + (r.cls ? ' aw-' + r.cls : '') + (tk.length ? '' : ' aw-nk')
-        if (r.t !== undefined) { const sp = document.createElement('span'); sp.textContent = NT_T(r.t); e.append(sp) } else {
-          const a = document.createElement('span'); idText(a, r.a ?? ''); const c = document.createElement('span'); idText(c, r.b ?? ''); e.append(a, c)
+        if (r.t !== undefined) { const sp = document.createElement('span'); sp.textContent = shown(r.t); e.append(sp) } else {
+          const a = document.createElement('span'); idText(a, r.a ?? '', r.raw); const c = document.createElement('span'); idText(c, r.b ?? '', r.raw); e.append(a, c)
         }
         bindTk(e, tk)
         box.appendChild(e)
@@ -4520,9 +4536,9 @@
       bt.textContent = bd.members ? NT_T('← {0} 목록으로', [bd.title || NT_T('묶음')]) : NT_T('← {0} 정보창으로 돌아가기', [bd.title || NT_T('이전')]); bt.onclick = (ev) => { ev.stopPropagation(); memBack() }
       body.appendChild(bt)
     }
-    const h = document.createElement('h3'); h.innerHTML = '<span class="aw-tri">▾</span><span></span>'; h.lastChild.textContent = NT_T((d && d.title) || '(정보 없음)'); body.appendChild(h)
+    const h = document.createElement('h3'); h.innerHTML = '<span class="aw-tri">▾</span><span></span>'; h.lastChild.textContent = (d && d.title) ? shown(d.title) : NT_T('(정보 없음)'); body.appendChild(h)
     if (d) {
-      const sb = document.createElement('div'); sb.className = 'aw-sub'; sb.textContent = NT_T(d.sub || ''); body.appendChild(sb)
+      const sb = document.createElement('div'); sb.className = 'aw-sub'; sb.textContent = shown(d.sub || ''); body.appendChild(sb)
       // 대장 58 — 이 자원 하나를 가리키는 카드에만 붙인다(묶음 아이콘·그린 칸·유령은 가리킬 대상이 하나가 아니다).
       //   새 탭으로 연다(`_blank`+`noopener`) — 이 화면을 떠나지 않는다. 불변식 ⑥ 의 「요청 0」은 **누르기 전**의 약속이다.
       const cn = X.mById ? X.mById.get(k) : null
@@ -4538,7 +4554,7 @@
       }
       const t = document.createElement('table')
       for (const [a, b, cl, go] of d.rows || []) {
-        const tr = t.insertRow(); tr.insertCell().textContent = NT_T(a); const td = tr.insertCell(); idText(td, b ?? ''); if (cl) td.className = 'aw-' + cl
+        const tr = t.insertRow(); tr.insertCell().textContent = shown(a); const td = tr.insertCell(); idText(td, b ?? ''); if (cl) td.className = 'aw-' + cl
         // 넷째 칸 = 누르면 열 정보창(§17.41 「웹 ACL」 줄 → 그 WAF) — 도식에 그 칸이 있을 때만 누를 수 있다(없으면 글자 그대로)
         if (go && (B.det.has(go) || B.mem.has(go))) {
           td.classList.add('aw-go'); td.tabIndex = 0; td.setAttribute('role', 'button'); td.dataset.go = go
@@ -4555,7 +4571,7 @@
     if (ob && ob.length) {
       const hd = document.createElement('div'); hd.className = 'aw-sech aw-obsh'; hd.textContent = NT_T('상태(모니터링)'); body.appendChild(hd)
       const t = document.createElement('table'); t.className = 'aw-obst'
-      for (const [a, v, ti, dr] of ob) { const tr = t.insertRow(); if (dr) tr.dataset.row = dr; tr.insertCell().textContent = NT_T(a); const td = tr.insertCell(); td.textContent = NT_T(v ?? ''); if (ti) td.title = NT_T(ti) }
+      for (const [a, v, ti, dr] of ob) { const tr = t.insertRow(); if (dr) tr.dataset.row = dr; tr.insertCell().textContent = shown(a); const td = tr.insertCell(); td.textContent = shown(v ?? ''); if (ti) td.title = shown(ti) }
       body.appendChild(t)
     }
     const op = document.createElement('div'); op.className = 'aw-op'
