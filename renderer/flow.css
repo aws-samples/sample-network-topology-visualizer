@@ -233,6 +233,7 @@ body {
 #modechip[hidden], #btn-live[hidden] { display: none; }
 /* 대장 128(§17.26 C-1): 상태를 얻을 길이 없는 화면(상태 함수 없는 스택 A · 구조만 구운 파일)은 세 버튼을 숨긴다 — 흐리게가 아니다 */
 #btn-mon[hidden], #btn-util[hidden], #btn-hist[hidden] { display: none; }
+#btn-lang[hidden] { display: none; }
 
 /* 빈 상태 (§13-56) — 카드 0일 때만 */
 #empty {
