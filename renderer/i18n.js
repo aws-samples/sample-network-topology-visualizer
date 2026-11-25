@@ -85,7 +85,19 @@
   // Static HTML text + the language switch. The table (i18n-en.js) is loaded **after** this file, so this runs
   // again at the end of `add()` — before that the table is empty and nothing changes. Dynamic text is built by
   // flow.js through NT_T.
+  // Switch guard, set by flow.js: a function that returns a note while switching must not happen (the signed link has
+  // expired — a reload would replace the diagram with the storage's error page), otherwise null.
+  let guard = null
+  NT_T.guard = (fn) => { guard = typeof fn === 'function' ? fn : null; paint() }
   const NAME = { ko: '한국어', en: 'English' }
+  function paint () {
+    const b = document.getElementById('btn-lang')
+    if (!b) return
+    const why = guard ? guard() : null
+    b.classList.toggle('dis', !!why)
+    if (why) b.setAttribute('aria-disabled', 'true'); else b.removeAttribute('aria-disabled')
+    for (const sp of b.children) sp.title = why || NAME[sp.dataset.lang] || ''
+  }
   // A short note under the switch for a few seconds (`#lang-note`, created on first use). The text comes translated.
   let noteT = null
   function note (msg) {
@@ -110,6 +122,8 @@
       const go = (e) => {
         e.stopPropagation()
         if (code === lang) return
+        const why = guard ? guard() : null
+        if (why) { paint(); note(why); return }
         if (!NT_T.save(code)) { note(NT_T('언어 선택을 저장하지 못해 바꾸지 않았습니다 — 이 브라우저가 사이트 저장소를 막고 있습니다')); return }
         dropLangParam(); location.reload()
       }
@@ -117,6 +131,7 @@
       b.appendChild(sp)
     }
     b.hidden = b.children.length < 2
+    paint()
   }
   const add0 = NT_T.add
   NT_T.add = (code, table) => { add0(code, table); boot() }

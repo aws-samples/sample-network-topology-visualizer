@@ -53,6 +53,7 @@ body {
 #btn-lang .lg + .lg { border-left: 1px solid var(--line); }
 #btn-lang .lg:hover { color: var(--text); }
 #btn-lang .lg.on { color: var(--text); font-weight: 600; }
+#btn-lang.dis .lg { cursor: not-allowed; }
 /* Note under the switch (expired link · language choice not saved) — i18n.js creates it on first use. */
 #lang-note { position: fixed; z-index: 60; max-width: 340px; padding: 6px 10px; background: var(--box); border: 1px solid var(--warn);
   border-radius: 4px; color: var(--text); font-size: 12px; line-height: 1.4; }

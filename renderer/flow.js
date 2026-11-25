@@ -4289,6 +4289,18 @@
     return liveOn(t.has('l2'), { monitor: t.has('mon'), util: t.has('util') })
   }
 
+  // Language switch guard — once this page's signed link has expired, a reload in the other language would replace the
+  //   diagram with the storage's error page. The margin covers the reload itself. A page without a signed link
+  //   (file://) is never locked.
+  const LANG_URL_MARGIN_MS = 10 * 1000
+  const langLock = () => (LIVE_SLOT && Date.now() >= LIVE_SLOT.urlUntil - LANG_URL_MARGIN_MS
+    ? NT_T('링크가 만료되어 언어를 바꿀 수 없습니다 — 새 링크로 여세요') : null)
+  if (!CMP && NT_T.guard && LIVE_SLOT) {
+    NT_T.guard(langLock)
+    const ms = LIVE_SLOT.urlUntil - LANG_URL_MARGIN_MS - Date.now() + 50
+    if (ms > 0 && ms < 2 ** 31) setTimeout(() => { NT_T.guard(langLock) }, ms)
+  }
+
   // ---------------- 시작 ----------------
   if (CMP) {
     // 비교 칸은 그림만 보인다 — 상단바·독·배너는 부모 창의 것이다(§3j J1).
