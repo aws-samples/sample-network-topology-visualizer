@@ -125,6 +125,8 @@
         const why = guard ? guard() : null
         if (why) { paint(); note(why); return }
         if (!NT_T.save(code)) { note(NT_T('언어 선택을 저장하지 못해 바꾸지 않았습니다 — 이 브라우저가 사이트 저장소를 막고 있습니다')); return }
+        // flow.js keeps what has to survive this one reload (this window's live-monitoring role — `liveStash`)
+        try { window.dispatchEvent(new Event('nettopo:lang-reload')) } catch { /* nothing to keep */ }
         dropLangParam(); location.reload()
       }
       sp.onclick = go; sp.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') go(e) }

@@ -4289,6 +4289,47 @@
     return liveOn(t.has('l2'), { monitor: t.has('mon'), util: t.has('util') })
   }
 
+  // Language switch (i18n.js saves the choice and reloads this page). The reloaded window would start with live monitoring
+  //   off: it would neither renew the lease nor follow, so monitoring that this window turned on would stop when the lease
+  //   runs out. `liveStash` keeps this window's role for that one reload (this tab only — sessionStorage) and `liveRestore`
+  //   takes it back without asking. Nothing is kept while monitoring is off.
+  //   🔴 The restored owner does not write on load. Its next renewal keeps the 5-minute rhythm and stays conditional
+  //   (If-Match = the ETag this window wrote last), and the first poll reads the control key — a control object that
+  //   another window changed in the meantime goes through the usual path (adopt if it was ours · otherwise follow or stop).
+  const LIVE_KEEP = 'nettopo.live.keep'
+  const LIVE_KEEP_MS = 2 * 60 * 1000
+  function liveStash () {
+    if (!LIVE_SLOT || !LIVE.on) return false
+    const keep = { v: 1, ctl: LIVE_SLOT.controlUrl, at: Date.now(), monitor: !!S.monitor, utilShown: !!S.util,
+      mode: LIVE.mode, lease: LIVE.lease, ctlEtag: LIVE.ctlEtag, ctlSeen: LIVE.ctlSeen, mine: LIVE.mine.slice(-8),
+      layer2: LIVE.layer2, util: LIVE.util, since: LIVE.since, asked: LIVE.asked, until: LIVE.until, untilBy: LIVE.untilBy,
+      cap: LIVE.cap, dur: LIVE.dur, end: LIVE.end }
+    try { sessionStorage.setItem(LIVE_KEEP, JSON.stringify(keep)); return true } catch (e) { return false }
+  }
+  function liveRestore () {
+    let k = null
+    try { k = JSON.parse(sessionStorage.getItem(LIVE_KEEP) || 'null'); sessionStorage.removeItem(LIVE_KEEP) } catch (e) { k = null }
+    if (!k || k.v !== 1 || !LIVE_SLOT || k.ctl !== LIVE_SLOT.controlUrl || LIVE.on || LIVE.busy) return null
+    if (!['lease', 'fixed', 'follow'].includes(k.mode)) return null
+    const now = Date.now()
+    if (now - k.at > LIVE_KEEP_MS || now >= k.until || (k.mode !== 'fixed' && now >= k.lease)) return null
+    LIVE.seq++
+    Object.assign(LIVE, { on: true, layer2: !!k.layer2, util: !!k.util, setWhy: '', since: k.since, asked: k.asked, until: k.until,
+      untilBy: k.untilBy, cap: k.cap, dur: k.dur || LIVE.dur, etag: null, doc: null, docAt: 0, phase: 'wait',
+      why: NT_T('첫 관측을 기다리는 중'), lastCheck: 0, mode: k.mode, lease: k.lease, ctlEtag: k.ctlEtag || null,
+      ctlSeen: k.ctlSeen || null, mine: Array.isArray(k.mine) ? k.mine.slice(-8) : [], renewWhy: '', ctlAt: 0, ctlWhy: '',
+      end: k.end || 0, doneWhat: '', doneReads: -1 })
+    clearTimeout(LIVE.offT)
+    LIVE.offT = setTimeout(() => { liveOff(LIVE.untilBy) }, LIVE.until - now)
+    obsAdopt(null)
+    S.monitor = !!k.monitor; S.util = !!k.utilShown
+    syncToggles()
+    liveRender()
+    // the lease written last ends LIVE_LEASE_MS after that write → its renewal was due LIVE_RENEW_MS after it
+    if (LIVE.mode === 'lease') liveRenewAt(Math.max(0, LIVE.lease - LIVE_LEASE_MS + LIVE_RENEW_MS - now))
+    return livePoll()
+  }
+  if (!CMP) window.addEventListener('nettopo:lang-reload', liveStash)
   // Language switch guard — once this page's signed link has expired, a reload in the other language would replace the
   //   diagram with the storage's error page. The margin covers the reload itself. A page without a signed link
   //   (file://) is never locked.
@@ -4328,6 +4369,7 @@
     window.addEventListener('hashchange', () => { if (!hashLock) applyHash() })
     applyHash()
     resumeFromHash()
+    liveRestore()
   } else {
     // 그림에 자리를 못 찾은 표시를 부모에게 알린다 — 부모의 글자 목록이 그것을 센다(불변식 ④).
     // 제 계획(배율 · 가운데 · 닻)을 같이 보낸다 — 부모가 두 칸을 같은 배율 · 같은 곳으로 맞춘다(§3j J3 · N-01)
