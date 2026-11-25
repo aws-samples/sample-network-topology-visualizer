@@ -1108,13 +1108,14 @@
     if (qCache.has(key)) return qCache.get(key)
     const out = (() => {
       const toks = key.trim().split(/\s+/).filter(Boolean)
-      if (!toks.length) return { ok: true, fn: () => true, empty: true }
-      const ors = []; let cur = []; let neg = false; let want = false
+      if (!toks.length) return { ok: true, fn: () => true, content: () => () => true, empty: true }
+      // `negs` = 그 갈래의 부정 원자만 — `filterSet` 이 «내용(자손)»을 넣을 때 다시 거른다(아래)
+      const ors = []; let cur = []; let negs = []; let neg = false; let want = false
       const bad = { ok: false, err: COPY.error }
       for (const t of toks) {
         if (t === 'or' || t === 'and') {
           if (!cur.length || neg) return bad
-          if (t === 'or') { ors.push(cur); cur = [] }
+          if (t === 'or') { ors.push({ all: cur, negs }); cur = []; negs = [] }
           want = true; continue
         }
         if (t === 'not') { if (neg) return bad; neg = true; continue }
@@ -1122,12 +1123,20 @@
         while (s.startsWith('-') && s.length > 1) { nn = !nn; s = s.slice(1) }
         let f
         try { f = atomFn(s) } catch (e) { return bad }
-        cur.push(nn ? (n) => !f(n) : f)
+        const g = nn ? (n) => !f(n) : f
+        cur.push(g); if (nn) negs.push(g)
         neg = false; want = false
       }
       if (neg || want || !cur.length) return bad
-      ors.push(cur)
-      return { ok: true, fn: (n) => ors.some((and) => and.every((f) => f(n))) }
+      ors.push({ all: cur, negs })
+      const fn = (n) => ors.some((b) => b.all.every((f) => f(n)))
+      // `content(n)` = n 이 맞은 갈래들의 부정 원자를 자손 d 가 모두 통과하는가. 부정 원자가 없으면 늘 참(예전과 같다)
+      const content = (n) => {
+        const bs = ors.filter((b) => b.all.every((f) => f(n)))
+        if (bs.some((b) => !b.negs.length)) return () => true
+        return (d) => bs.some((b) => b.negs.every((f) => f(d)))
+      }
+      return { ok: true, fn, content }
     })()
     qCache.set(key, out)
     return out
@@ -4120,15 +4129,20 @@
   function filterSet (q) {
     const lq = String(q).toLowerCase()
     const keep = new Set()
+    const pq = parseQuery(lq)
+    if (!pq.ok) return keep
     for (const n of T.nodes) {
-      if (!matchQ(n, lq)) continue
+      if (!pq.fn(n)) continue
       for (let p = n; p; p = p.parent_id ? byId.get(p.parent_id) : null) keep.add(p.id)  // 조상=맥락
       // 걸친 서브넷도 맥락이다 — NAT·LB 의 서브넷은 조상 사슬이 아니라 `attachedTo`·`spans` 로만 안다. 빼면 새 도식이
       // 그 자원을 앉힐 서브넷이 없어 「못 그린 리소스」로 떨어진다(검사 48)
       for (const sid of [n.attachedTo, ...(n.spans || [])]) if (sid && byId.has(sid)) keep.add(sid)
-      const st = [n.id]                                                                  // 자손=내용
+      // 자손=내용. 단 **부정 원자가 뺀 것은 내용으로도 다시 넣지 않는다** — `not ec2` 에서 서브넷이 맞았다고 그 안의
+      // EC2 를 «내용»으로 되살리면 필터가 아무것도 빼지 못한다(공개 리포 보고 2026-11-26). 빠진 자원의 자손도 함께 빠진다
+      const ok = pq.content(n)
+      const st = [n.id]
       while (st.length) {
-        for (const c of (kids.get(st.pop()) || [])) { keep.add(c.id); st.push(c.id) }
+        for (const c of (kids.get(st.pop()) || [])) { if (!ok(c)) continue; keep.add(c.id); st.push(c.id) }
       }
     }
     return keep
