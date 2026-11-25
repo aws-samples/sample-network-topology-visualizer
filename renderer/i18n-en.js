@@ -1513,7 +1513,6 @@ NT_T.add('en', {
   'Auto Scaling 그룹은 인스턴스의 논리적 묶음입니다 — 트래픽은 그룹 안의 인스턴스가 처리하며, 그룹의 인스턴스 수로는 트래픽 흐름을 판단할 수 없습니다': 'An Auto Scaling group is a logical set of instances — traffic is handled by the instances in it, and the instance count says nothing about traffic flow',
   '보안 그룹 참조는 규칙이 만든 관계입니다 — AWS 가 이 관계의 상태를 보고하지 않습니다': 'A security group reference is a relationship created by a rule — AWS reports no status for it',
   '켜진 흐름 로그를 하나도 읽지 못했다 — 이유는 로그마다 적었다': 'None of the enabled flow logs could be read — the reason is noted per log',
-  '삭제 중 — AWS 가 보고한 {0} = {1}입니다. 삭제 중인 리소스는 이상으로 판정하지 않습니다(삭제가 끝나면 이력에 「없어짐」으로 남습니다)': 'Deleting — AWS reports {0} = {1}. A resource being deleted is not assessed as down (once deleted it is recorded as "disappeared" in the history)',
   '이 경로에 blackhole 값이 없습니다 — 구조 수집기가 그 필드를 담지 않았습니다(개발)': 'This route has no blackhole value — the structure collector did not include that field (dev)',
   '목적지 미기록': 'destination not recorded',
   '2층 응답에 이 대상의 결과가 없습니다 — 쿼리 id 대응이 깨졌습니다(개발)': 'The layer-2 response has no result for this target — the query id mapping is broken (dev)',
@@ -1521,15 +1520,6 @@ NT_T.add('en', {
   '사용률 대상이 구조 문서에 없다': 'Utilization target is not in the structure document',
   '흐름 로그 판독 결과는 출처를 탐지했을 때만 붙인다(판독기의 입력이 탐지 결과다)': 'Flow log readings are attached only when a source was detected (the reader takes the detection result as input)',
   '상세 응답을 읽지 못해 상태 값이 없습니다 — 사유는 이 리소스의 거부 사유와 같습니다': 'The detail response could not be read, so there is no status value — the reason is the same as the denial reason of this resource',
-  '아직 수집할 수 없는 리소스 종류: {0}': 'Resource types that cannot be collected yet: {0}',
-  // Observation sentences of the older engine (October 2026 deployments) — worded differently from the current observe.py. Kept so older state files also show English.
-  'VPN 연결은 available 인데 터널이 전부 DOWN 이다 — 온프레미스로 통하지 않는다': 'The VPN connection is available but all tunnels are DOWN — no connectivity to on-premises',
-  'VPN 연결은 available 인데 터널 일부가 DOWN 이다 — 나머지 터널로 통한다': 'The VPN connection is available but some tunnels are DOWN — connected through the remaining tunnels',
-  'NACL↔서브넷 연관에는 AWS 가 상태를 주지 않는다 — 수집기가 상수 `associated` 를 넣는다(`services/network_acl.py:31`). 그 값을 `up` 으로 읽으면 판정이 죽어도 같은 그림이 된다': 'AWS provides no status for a NACL↔subnet association — the collector writes the constant `associated` (`services/network_acl.py:31`). Reading that as `up` would draw the same picture even if the assessment were broken',
-  '오토 스케일링 그룹은 인스턴스의 논리 묶음이다 — 트래픽은 안에 있는 인스턴스가 들고, 그룹의 인스턴스 수는 「흐르나」의 답이 아니다': 'An Auto Scaling group is a logical set of instances — traffic is handled by the instances in it, and the instance count does not answer "is it flowing"',
-  '네트워크 ACL 은 규칙의 그릇이고 AWS 가 「상태」를 주지 않는다 — 위와 같은 이유다': 'A network ACL is a container of rules and AWS provides no "status" for it — same reason as above',
-  '보안 그룹은 규칙의 그릇이고 AWS 가 「상태」를 주지 않는다 — 「막고 있나」는 규칙과 트래픽을 같이 봐야 답이 되고, 그 관측 수단이 없다': 'A security group is a container of rules and AWS provides no "status" for it — "is it blocking" can only be answered from the rules and the traffic together, and there is no way to observe that',
-  'SG 참조는 규칙이 만든 관계다 — 그 관계가 「살아 있나」를 AWS 가 보고하지 않는다': 'A security group reference is a relationship created by a rule — AWS does not report whether it is "alive"',
   'vpc-cni add-on 을 읽을 수 없는 클러스터가 있다(Helm 설치 가능) — 켜짐·꺼짐을 판정할 수 없다': 'Some clusters have an unreadable vpc-cni add-on (possibly installed via Helm) — on/off cannot be determined',
   '흐름 로그 읽기를 켜지 않았다 — 켜면 인터넷·피어링 선의 흐름을 이 로그의 왕복 기록으로 확인한다(스택 파라미터 FlowLogReading · 로컬은 --flow-logs)': 'Flow log reading is not enabled — when enabled, flow on internet and peering lines is confirmed from the round-trip records in these logs (stack parameter FlowLogReading · locally --flow-logs)'
 })
@@ -1560,7 +1550,7 @@ NT_T.addPatterns('en', [
   [/^인바운드 (\d+|\?) · 아웃바운드 (\d+|\?) · 자기참조$/, 'inbound $1 · outbound $2 · self-referencing'],
   [/^인바운드 (\d+|\?) · 아웃바운드 (\d+|\?)$/, 'inbound $1 · outbound $2'],
   [/^(\d+)개$/, '$1'],
-  // older engine sentences with values
+  // flow-log source sentences with values (sources.py, collect.py)
   [/^(\d+)개 클러스터는 vpc-cni add-on 밖\(Helm 설치 가능\) — 꺼짐이 아니라 모름$/, '$1 clusters are outside the vpc-cni add-on (possibly installed via Helm) — unknown, not off'],
   [/^logFormat v2 기본 (\d+)건 — 구간을 특정하는 필드가 없다$/, '$1 logs use the default logFormat v2 — no field identifies the segment'],
   [/^BGP 로그는 (\d+)\/(\d+)개 연결에서만 켜져 있다 — 구간의 양끝은 BGP 쪽에만 있다$/, 'BGP logs are enabled on only $1/$2 connections — both ends of the segment exist only on the BGP side'],
