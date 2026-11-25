@@ -1537,19 +1537,28 @@ NT_T.add('en', {
 NT_T.addPatterns('en', [
   [/^대상 (\d+)개 중 정상 0 — AWS 가 비정상 (\d+)개로 보고$/, '0 of $1 targets healthy — AWS reports $2 unhealthy'],
   [/^이 선의 대상 (\d+)개 중 정상 0 — AWS 가 비정상 (\d+)개로 보고$/, '0 of the $1 targets on this line healthy — AWS reports $2 unhealthy'],
-  [/^삭제 중 — AWS 가 보고한 (\S+) = (.+?)입니다\. 삭제 중인 리소스는 이상으로 판정하지 않습니다(\(삭제가 끝나면 이력에 「없어짐」으로 남습니다\))?$/, 'Deleting — AWS reports $1 = $2. A resource being deleted is not assessed as down (once deleted it is recorded as "disappeared" in the history)'],
+  [/^삭제 중 — AWS 가 보고한 (\S+) = (.+?)입니다\. 삭제 중인 리소스는 이상으로 판정하지 않습니다\(삭제가 끝나면 이력에 「없어짐」으로 남습니다\)$/, 'Deleting — AWS reports $1 = $2. A resource being deleted is not assessed as down (once deleted it is recorded as "disappeared" in the history)'],
+  [/^삭제 중 — AWS 가 보고한 (\S+) = (.+?)입니다\. 삭제 중인 리소스는 이상으로 판정하지 않습니다$/, 'Deleting — AWS reports $1 = $2. A resource being deleted is not assessed as down'],
   [/^AWS 가 보고한 (\S+) = (.+?) 를 판정할 규칙이 ADR 0006 §O7 에 없습니다 — 표에 값을 더해야 합니다\(개발\)$/, 'No rule in ADR 0006 §O7 assesses $1 = $2 reported by AWS — the table needs the value (dev)'],
   [/^AWS 가 보고한 (\S+) = (.+)$/, 'AWS reports $1 = $2'],
   [/^경로가 blackhole 입니다 — 대상이 사라졌는데 경로만 남았습니다\. 이 선의 목적지 중 \[(.*)\] 가 blackhole 입니다$/, 'The route is a blackhole — the target is gone but the route remains. Of the destinations on this line, [$1] are blackholed'],
+  // The engine writes 「목적지 미기록」 inside the brackets when the route has no destinations — translate it instead of copying it through $1.
+  [/^경로가 blackhole 입니다 — 대상이 사라졌는데 경로만 남았습니다\. 이 선의 목적지 \[목적지 미기록\] 중 하나 이상이 blackhole 이며, 목적지별 상태를 수집하지 않아 어느 목적지인지는 알 수 없습니다$/, 'The route is a blackhole — the target is gone but the route remains. One or more of the destinations [destination not recorded] on this line are blackholed; per-destination state is not collected, so which one is unknown'],
   [/^경로가 blackhole 입니다 — 대상이 사라졌는데 경로만 남았습니다\. 이 선의 목적지 \[(.*)\] 중 하나 이상이 blackhole 이며, 목적지별 상태를 수집하지 않아 어느 목적지인지는 알 수 없습니다$/, 'The route is a blackhole — the target is gone but the route remains. One or more of the destinations [$1] on this line are blackholed; per-destination state is not collected, so which one is unknown'],
   [/^(\S+): 값이 0 이면 발행되지 않는 지표입니다 — 창 (\d+)초 안에 데이터포인트가 없었고, 「흐름이 없었다」와 「관측하지 못했다」를 구별할 수 없습니다$/, '$1: this metric is not published when the value is 0 — there were no data points in the $2 s window, and "no flow" cannot be told from "not observed"'],
   [/^(\S+): 값 0 도 발행하는 지표인데 창 (\d+)초 안에 데이터포인트가 없었습니다 — 차원 조합 또는 발행 시작을 확인해야 합니다$/, '$1: this metric publishes 0 values too, yet there were no data points in the $2 s window — check the dimension combination or whether publishing has started'],
   [/^(\S+) 타입 (.+?) 에 1층 판정 규칙이 없습니다 — ADR 0006 §O7 에 행을 먼저 더해야 합니다\(개발\)$/, 'No layer-1 assessment rule for $1 type $2 — add a row to ADR 0006 §O7 first (dev)'],
   [/^(\S+): up·down·deleting 이 겹친다$/, '$1: up, down and deleting overlap'],
-  [/^(.+) \(수집하지 않은 로드밸런서\)$/, '$1 (load balancer not collected)'],
-  [/^라우트 (\d+) · 연관 (\d+)( · 기본)?$/, 'routes $1 · associations $2$3'],
-  [/^규칙 (\d+) · 연관 (\d+)( · 자기참조)?$/, 'rules $1 · associations $2$3'],
-  [/^인바운드 (\d+) · 아웃바운드 (\d+)$/, 'inbound $1 · outbound $2'],
+  // CloudFront origins: the adapter appends the marker to each unresolved origin and joins them with ', ', so it can appear
+  // several times and not only at the end — replace every occurrence.
+  [/^.* \(수집하지 않은 로드밸런서\).*$/, (s) => s.replaceAll(' (수집하지 않은 로드밸런서)', ' (load balancer not collected)')],
+  // List-row details built by adapt-core.js. Counts may be '?' when the key is missing. Each optional marker gets its own
+  // pattern so no Korean is copied through: route table ' · main' (already English), default NACL ' · 기본', self-referencing SG ' · 자기참조'.
+  [/^라우트 (\d+|\?) · 연관 (\d+|\?)( · main)?$/, 'routes $1 · associations $2$3'],
+  [/^규칙 (\d+|\?) · 연관 (\d+|\?) · 기본$/, 'rules $1 · associations $2 · default'],
+  [/^규칙 (\d+|\?) · 연관 (\d+|\?)$/, 'rules $1 · associations $2'],
+  [/^인바운드 (\d+|\?) · 아웃바운드 (\d+|\?) · 자기참조$/, 'inbound $1 · outbound $2 · self-referencing'],
+  [/^인바운드 (\d+|\?) · 아웃바운드 (\d+|\?)$/, 'inbound $1 · outbound $2'],
   [/^(\d+)개$/, '$1'],
   // older engine sentences with values
   [/^(\d+)개 클러스터는 vpc-cni add-on 밖\(Helm 설치 가능\) — 꺼짐이 아니라 모름$/, '$1 clusters are outside the vpc-cni add-on (possibly installed via Helm) — unknown, not off'],
