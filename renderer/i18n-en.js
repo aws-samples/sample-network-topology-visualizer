@@ -1588,6 +1588,8 @@ NT_T.addPatterns('en', [
   [/^인바운드 (\d+|\?) · 아웃바운드 (\d+|\?) · 자기참조$/, 'inbound $1 · outbound $2 · self-referencing'],
   [/^인바운드 (\d+|\?) · 아웃바운드 (\d+|\?)$/, 'inbound $1 · outbound $2'],
   [/^(\d+)개$/, '$1'],
+  // RDS Proxy idle client timeout — adapt-core.js builds `${n}초` (same style as the '{0}초' key).
+  [/^(\d+)초$/, '$1 s'],
   // flow-log source sentences with values (sources.py, collect.py)
   [/^(\d+)개 클러스터는 vpc-cni add-on 밖\(Helm 설치 가능\) — 꺼짐이 아니라 모름$/, '$1 clusters are outside the vpc-cni add-on (possibly installed via Helm) — unknown, not off'],
   [/^logFormat v2 기본 (\d+)건 — 구간을 특정하는 필드가 없다$/, '$1 logs use the default logFormat v2 — no field identifies the segment'],
