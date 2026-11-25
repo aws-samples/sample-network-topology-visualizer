@@ -59,7 +59,7 @@
     if (lang === 'ko') return
     const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT)
     for (let n = w.nextNode(); n; n = w.nextNode()) {
-      if (n.nodeType === Node.TEXT_NODE) { const v = n.nodeValue; const s = v.trim(); if (s) { const k = s.replace(/\s+/g, ' '); const e = NT_T(k); if (e !== k) n.nodeValue = v.replace(s, e) } } else {
+      if (n.nodeType === Node.TEXT_NODE) { const v = n.nodeValue; const s = v.trim(); if (s) { const k = s.replace(/\s+/g, ' '); const e = NT_T(k); if (e !== k) n.nodeValue = v.replace(s, () => e) } } else {
         for (const at of ATTRS) if (n.hasAttribute(at)) { const v = n.getAttribute(at); const e = NT_T(v); if (e !== v) n.setAttribute(at, e) }
       }
     }
